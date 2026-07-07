@@ -1,0 +1,59 @@
+% ======================================================================
+% caratula.tex — Portada / carátula institucional UPeU
+% ======================================================================
+\begin{titlepage}
+\begin{center}
+
+% ---------- LOGO INSTITUCIONAL (opcional) ----------
+% Si existe imagenes/logo_upeu.png se muestra; si no, la carátula sigue limpia.
+\IfFileExists{imagenes/logo_upeu.png}{%
+  \includegraphics[width=0.28\textwidth]{imagenes/logo_upeu.png}\par
+  \vspace{0.6cm}
+}{}
+
+% ---------- INSTITUCIÓN ----------
+{\Large\bfseries UNIVERSIDAD PERUANA UNIÓN\par}
+\vspace{0.3cm}
+{\large Escuela Profesional de Ingeniería de Sistemas\par}
+
+\vspace{1.3cm}
+
+% ---------- TÍTULO DEL PROYECTO ----------
+{\color{upeublue}\bfseries\LARGE
+Sistema de Gestión Integral para ISP\\[4pt]
+de Fibra Óptica Multi-Zona\par}
+
+\vspace{0.5cm}
+{\normalsize\bfseries\color{upeugray}%
+LÍNEA: GESTIÓN DE TECNOLOGÍAS DE INFORMACIÓN (GTI)\par}
+
+\vspace{1.2cm}
+
+% ---------- LOGO DEL CASO DE ESTUDIO (WISP) ----------
+\includegraphics[width=0.48\textwidth]{imagenes/Wisp.png}\par
+\vspace{0.4cm}
+{\large Caso de estudio:\par}
+{\Large\bfseries WISP Ingeniería en Redes y Telecomunicaciones\par}
+
+\vfill
+
+% ---------- INTEGRANTES ----------
+{\large\bfseries Integrantes\par}
+\vspace{0.35cm}
+{\normalsize
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}l l@{}}
+Cabana Sulca, Cristian & \textbf{202212416} \\
+Montes Mamani, Andrés Lino & \textbf{202212423} \\
+Fernández Sánchez, Jean Piero & \textbf{202212439} \\
+Mamani Mamani, Alessandro Pastor & \textbf{202212452} \\
+\end{tabular}\par}
+
+\vfill
+
+% ---------- LUGAR Y AÑO ----------
+{\large Juliaca, Puno --- Perú\par}
+{\large 2026\par}
+
+\end{center}
+\end{titlepage}

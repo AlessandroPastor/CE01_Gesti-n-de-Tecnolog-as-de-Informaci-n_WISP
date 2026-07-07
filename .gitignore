@@ -1,0 +1,23 @@
+# LaTeX build artifacts
+*.aux
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.out
+*.toc
+*.synctex.gz
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.dvi
+*.ps
+
+# Compiled PDF (keep source only)
+*.pdf
+
+# Temporary / auto-save files
+~$*
+*~

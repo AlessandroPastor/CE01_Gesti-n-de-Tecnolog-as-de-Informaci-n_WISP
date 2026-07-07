@@ -1,0 +1,525 @@
+% ======================================================================
+% capitulos/capitulo2.tex
+% ----------------------------------------------------------------------
+% ENTREGABLE 2 — BUSINESS CASE (Caso de Negocio)
+% Empresa caso de estudio: WISP Ingeniería en Redes y Telecomunicaciones
+% Contenido trasladado desde Entregable2_BusinessCase_GTI_WISP.docx
+% ======================================================================
+\chapter{Business Case — Caso de Negocio del Proyecto}
+\label{chap:businesscase}
+
+% ----------------------------------------------------------------------
+% Descripción del producto (introducción del capítulo)
+% ----------------------------------------------------------------------
+El presente documento constituye el Business Case (Caso de Negocio) del Proyecto
+de Evaluación de Fin de Carrera para la empresa WISP Ingeniería en Redes y
+Telecomunicaciones. Es un documento formal que justifica la viabilidad y
+conveniencia del proyecto de tecnologías de información, presentando el problema
+identificado, los objetivos del proyecto, las alternativas evaluadas y la solución
+seleccionada, sustentando su aporte de valor.
+
+El análisis incluye la evaluación de beneficios tangibles e intangibles, la
+estimación de la inversión inicial, los costos operativos y de mantenimiento, el
+retorno esperado mediante indicadores financieros (ROI, Payback, VAN y TIR) y una
+evaluación preliminar de riesgos, demostrando que la iniciativa contribuye
+estratégicamente al desempeño organizacional de WISP.
+
+\begin{upeubox}{Continuidad con el Entregable~1 (Diagnóstico)}
+Este Business Case toma como insumo el diagnóstico organizacional previamente
+desarrollado (contexto, cadena de valor, FODA, cinco fuerzas de Porter y problema
+identificado). Mientras el diagnóstico respondió \emph{«¿cuál es el problema y por
+qué importa?»}, este documento responde \emph{«¿vale la pena resolverlo, cómo y con
+qué retorno?»}.
+\end{upeubox}
+
+% ======================================================================
+\section{Justificación del Proyecto}
+\label{sec:justificacion}
+
+\subsection{Problema que se resuelve}
+
+Conforme al diagnóstico realizado, WISP gestiona la operación de aproximadamente
+455 clientes de internet por fibra óptica distribuidos en 13 zonas geográficamente
+dispersas, mediante un sistema heredado deficiente (PHP) y procesos manuales
+apoyados en WhatsApp y registros en papel. Esta forma de operar genera pérdida y
+dispersión de información, ausencia de trazabilidad en la captación e instalación,
+gestión manual y repetitiva de la red en cada MikroTik, y una excesiva dependencia
+de una sola persona.
+
+El proyecto resuelve este problema mediante el desarrollo e implementación de un
+\textbf{Sistema de Gestión Integral para ISP de Fibra Óptica Multi-Zona}, compuesto
+por un sistema web de administración, una aplicación móvil con roles de técnico y
+vendedor, y la integración directa con los 13 MikroTiks vía VPN (WireGuard) y la API
+de RouterOS, junto con la automatización de notificaciones por WhatsApp.
+
+\subsection{Objetivos del proyecto (SMART)}
+
+\begin{upeubox}{Fundamento metodológico: objetivos SMART}
+Los objetivos se formulan siguiendo el criterio SMART propuesto por George~T. Doran
+(1981), según el cual todo objetivo debe ser Específico (\textit{Specific}), Medible
+(\textit{Measurable}), Alcanzable (\textit{Achievable}), Relevante (\textit{Relevant})
+y Temporal (\textit{Time-bound}).
+\end{upeubox}
+
+\begin{upeubox}{Objetivo general}
+Desarrollar e implementar, en un plazo de 5 meses, un sistema de gestión integral
+(web $+$ móvil) que centralice y automatice los procesos de captación, instalación,
+activación y control de clientes de WISP en sus 13 zonas, reemplazando el uso de
+WhatsApp y el sistema heredado, y habilitando la escalabilidad de la operación.
+\end{upeubox}
+
+Los objetivos específicos, formulados bajo el criterio SMART, se presentan a
+continuación junto con su métrica de verificación:
+
+\begin{center}
+\captionof{table}{Objetivos específicos del proyecto (SMART).}
+\label{tab:objetivos-smart}
+\begin{tabularx}{\textwidth}{C{1.1cm} X X}
+\toprule
+\textbf{ID} & \textbf{Objetivo específico} & \textbf{Métrica de verificación} \\
+\midrule
+OP-1 &
+Digitalizar el 100\% del proceso de captación mediante una app móvil para
+vendedores, eliminando el registro en papel/WhatsApp, al finalizar el proyecto. &
+\% de prospectos registrados por app vs.\ total \\
+OP-2 &
+Implementar el registro estructurado del 100\% de las instalaciones técnicas
+(fotos de caja NAP, borne, equipos, fachada) vinculado a cada cliente. &
+\% de instalaciones con evidencia completa en el sistema \\
+OP-3 &
+Automatizar la gestión de usuarios PPPoE (alta, corte, reactivación) sobre los 13
+MikroTiks desde el sistema central vía API de RouterOS. &
+N° de MikroTiks integrados / 13 \\
+OP-4 &
+Centralizar en una única base de datos la información de los $\approx$455 clientes,
+migrando los datos dispersos del sistema heredado y los MikroTiks. &
+\% de clientes migrados y consolidados \\
+OP-5 &
+Reducir el tiempo administrativo de gestión diaria en al menos un 50\% respecto a la
+operación manual actual, a los 3 meses de la puesta en marcha. &
+Horas/día de gestión antes vs.\ después \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Beneficios esperados}
+
+La ejecución del proyecto generará beneficios en tres niveles: operativo,
+estratégico y para el cliente final.
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Operativos:} eliminación del retrabajo manual, reducción de errores,
+  trazabilidad completa del ciclo de vida del cliente y automatización de la gestión
+  de red.
+  \item \textbf{Estratégicos:} habilitación de la escalabilidad para expandirse a
+  nuevos distritos, reducción de la dependencia de una sola persona y disponibilidad
+  de información para la toma de decisiones.
+  \item \textbf{Para el cliente:} activación más rápida del servicio, atención más
+  ágil de averías y comunicación más ordenada.
+\end{itemize}
+
+% ======================================================================
+\section{Análisis de Alternativas}
+\label{sec:alternativas}
+
+\subsection{Alternativas tecnológicas consideradas}
+
+Se evaluaron cuatro alternativas para resolver el problema identificado, desde no
+intervenir hasta el desarrollo de una solución propia a medida:
+
+\begin{center}
+\captionof{table}{Alternativas tecnológicas evaluadas.}
+\label{tab:alternativas}
+\begin{tabularx}{\textwidth}{L{2.2cm} X X X}
+\toprule
+\textbf{Alternativa} & \textbf{Descripción} & \textbf{Ventaja} & \textbf{Desventaja} \\
+\midrule
+A1. Statu quo &
+Mantener el sistema heredado (PHP) y la operación por WhatsApp. &
+Costo cero inmediato. &
+No resuelve nada; el problema se agrava con el crecimiento. \\
+A2. Software ISP comercial &
+Adquirir una plataforma existente (ej.\ WISPHub, Mikrowisp, SmartOLT). &
+Rápido de adoptar; ya probado. &
+Costo mensual por suscripción; poca personalización; dependencia del proveedor;
+puede no cubrir apps de campo a medida. \\
+A3. Desarrollo externo &
+Contratar una empresa de software para desarrollo a medida. &
+Solución personalizada. &
+Costo elevado (S/~25\,000--40\,000); plazos largos; dependencia del proveedor para
+mantenimiento. \\
+A4. Desarrollo propio &
+Desarrollar la solución a medida con el equipo del proyecto (4 integrantes). &
+Personalización total; sin costo de desarrollo para WISP; conocimiento interno. &
+Requiere tiempo del equipo; curva de aprendizaje. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Criterios de evaluación}
+
+\begin{upeubox}{Fundamento metodológico: modelo de puntuación ponderada}
+La comparación se realiza mediante un modelo de puntuación ponderada
+(\textit{weighted scoring model}), técnica de análisis multicriterio de decisiones.
+A cada criterio se le asigna un peso relativo según su importancia; cada alternativa
+se puntúa de 1 a 5 en cada criterio; el puntaje ponderado total determina la mejor
+opción.
+\end{upeubox}
+
+Se definieron seis criterios de evaluación con sus respectivos pesos:
+
+\begin{center}
+\captionof{table}{Criterios de evaluación y pesos asignados.}
+\label{tab:criterios}
+\begin{tabularx}{\textwidth}{L{3.6cm} C{1.2cm} X}
+\toprule
+\textbf{Criterio} & \textbf{Peso} & \textbf{Justificación del peso} \\
+\midrule
+Ajuste a la necesidad & 25\% &
+Qué tanto la solución cubre los 3 flujos (captación, instalación, gestión) y la
+integración con MikroTik. \\
+Costo total (inversión $+$ operación) & 20\% &
+Impacto económico sobre una MYPE con recursos limitados. \\
+Personalización & 20\% &
+Capacidad de adaptarse a la operación específica de WISP (apps de campo, cobertura). \\
+Tiempo de implementación & 15\% &
+Rapidez en poner la solución en producción. \\
+Escalabilidad & 12\% &
+Capacidad de crecer con nuevas zonas y clientes. \\
+Independencia del proveedor & 8\% &
+Menor dependencia externa para operar y mantener el sistema. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Matriz comparativa (scoring ponderado)}
+
+Cada alternativa se puntuó de 1 (muy deficiente) a 5 (excelente) en cada criterio.
+La columna final muestra el puntaje ponderado total sobre un máximo de 5.00:
+
+\begin{center}
+\captionof{table}{Matriz comparativa de alternativas (scoring ponderado).}
+\label{tab:scoring}
+{\small
+\begin{tabularx}{\textwidth}{X C{1.05cm} C{1.05cm} C{1.05cm} C{1.05cm} C{1.05cm} C{1.05cm} C{1.1cm}}
+\toprule
+\textbf{Alternativa} & \textbf{Ajuste (25\%)} & \textbf{Costo (20\%)} &
+\textbf{Person. (20\%)} & \textbf{Tiempo (15\%)} & \textbf{Escala (12\%)} &
+\textbf{Indep. (8\%)} & \textbf{TOTAL} \\
+\midrule
+A1. Statu quo            & 1 & 5 & 1 & 5 & 1 & 3 & 2.56 \\
+A2. Software comercial   & 3 & 3 & 2 & 5 & 3 & 2 & 3.02 \\
+A3. Desarrollo externo   & 5 & 2 & 5 & 2 & 4 & 2 & 3.59 \\
+\rowcolor{upeublue!10}
+\textbf{A4. Desarrollo propio} $\star$ & \textbf{5} & \textbf{5} & \textbf{5} &
+\textbf{3} & \textbf{5} & \textbf{5} & \textbf{4.70} \\
+\bottomrule
+\end{tabularx}
+}
+\end{center}
+
+\begin{upeubox}{Alternativa seleccionada: A4 — Desarrollo propio}
+Con un puntaje ponderado de \textbf{4.70/5.00}, la alternativa de desarrollo propio
+es la de mayor valor. Supera a las demás por su ajuste total a la necesidad, su
+personalización completa (apps de campo e integración con MikroTik a medida), su
+nulo costo de desarrollo para WISP y su alta escalabilidad e independencia. Su única
+desventaja ---el tiempo del equipo--- es asumible en el marco del proyecto de fin de
+carrera.
+\end{upeubox}
+
+% ======================================================================
+\section{Evaluación de Beneficios}
+\label{sec:beneficios}
+
+Los beneficios del proyecto se clasifican en cuantificables (traducibles a un valor
+monetario) y cualitativos (de valor estratégico no monetario directo). Las
+estimaciones son conservadoras y se basan en los datos operativos de WISP.
+
+\subsection{Beneficios cuantificables (anuales)}
+
+Sobre una base estimada de $\approx$455 clientes activos y un ticket promedio de
+S/~55 mensuales (ingreso anual aproximado de S/~300\,300), se estiman los siguientes
+beneficios económicos anuales:
+
+\begin{center}
+\captionof{table}{Beneficios cuantificables anuales estimados.}
+\label{tab:beneficios-cuant}
+\begin{tabularx}{\textwidth}{L{4cm} X R{2cm}}
+\toprule
+\textbf{Beneficio cuantificable} & \textbf{Cálculo / supuesto} & \textbf{Valor anual (S/)} \\
+\midrule
+Ahorro de tiempo administrativo &
+2.5 h/día liberadas $\times$ 26 días $\times$ S/~10/h $\times$ 12 meses. & 7\,800 \\
+Recuperación por menor morosidad &
+2\% del ingreso anual recuperado por cortes/reactivaciones oportunos y automatizados. & 6\,006 \\
+Ingreso por clientes extra captados &
+3 clientes nuevos extra/mes por mejor captación $\times$ S/~55 $\times$ $\sim$6 meses
+activos promedio. & 11\,880 \\
+Reducción de errores y pérdida de prospectos &
+Menor pérdida de datos de campo, papel y retrabajo de coordinación. & 1\,800 \\
+\midrule
+\textbf{BENEFICIO BRUTO ANUAL} & \textbf{Suma de beneficios cuantificables} & \textbf{27\,486} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Beneficios cualitativos}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Trazabilidad total:} historial completo por cliente (instalación,
+  caja NAP, borne, equipos), valioso para soporte y mantenimiento.
+  \item \textbf{Reducción del riesgo operativo:} la operación deja de depender de una
+  sola persona y de WhatsApp.
+  \item \textbf{Escalabilidad:} capacidad de crecer a nuevos distritos sin aumentar
+  proporcionalmente la carga administrativa.
+  \item \textbf{Imagen y profesionalización:} una operación digitalizada mejora la
+  percepción de la empresa frente a clientes y competidores.
+  \item \textbf{Información para decisiones:} datos centralizados que permiten
+  analizar zonas, morosidad y crecimiento.
+\end{itemize}
+
+\subsection{Indicadores de valor}
+
+Los principales indicadores de valor (KPI) que evidenciarán el beneficio del proyecto
+tras su implementación son:
+
+\begin{center}
+\captionof{table}{Indicadores de valor (KPI) del proyecto.}
+\label{tab:kpi}
+\begin{tabularx}{\textwidth}{L{4.2cm} X X}
+\toprule
+\textbf{Indicador de valor (KPI)} & \textbf{Situación actual} & \textbf{Meta con el sistema} \\
+\midrule
+Tiempo de gestión administrativa diaria & $\sim$4--5 h/día & $\le$ 2 h/día \\
+Tiempo de activación de un cliente nuevo & Variable (días) & $<$ 24 h desde validación \\
+Trazabilidad de instalaciones & 0\% (WhatsApp) & 100\% en el sistema \\
+Prospectos registrados digitalmente & 0\% (papel/WhatsApp) & 100\% por app \\
+Tasa de morosidad & Sin control preciso & Reducción $\ge$ 2\% \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% ======================================================================
+\section{Estimación de Costos}
+\label{sec:costos}
+
+La estimación de costos distingue entre la inversión inicial (única, al arranque),
+los costos operativos y de mantenimiento (recurrentes) y el valor de mercado del
+desarrollo (que WISP no paga, pues lo aporta el equipo del proyecto, pero que se
+cuantifica para medir el ahorro y el retorno real).
+
+\subsection{Inversión inicial (asumida por WISP)}
+
+El modelo del proyecto establece que el equipo de 4 integrantes desarrolla e
+implementa la solución, mientras que WISP asume únicamente la infraestructura de
+producción y la puesta en marcha:
+
+\begin{center}
+\captionof{table}{Inversión inicial asumida por WISP.}
+\label{tab:inversion}
+\begin{tabularx}{\textwidth}{L{4.2cm} X R{1.8cm}}
+\toprule
+\textbf{Concepto} & \textbf{Detalle} & \textbf{Costo (S/)} \\
+\midrule
+VPS en la nube (setup $+$ 1.er mes) & Servidor cloud nuevo para producción. & 150 \\
+Dominio web & Registro de dominio nuevo (.com/.pe), anual. & 60 \\
+Certificado SSL / correo corporativo & Seguridad y correo institucional. & 90 \\
+Migración de datos y puesta en marcha & Migración de clientes del sistema heredado
+y MikroTiks. & 300 \\
+Capacitación al personal & 2 sesiones para admin, técnicos y vendedores. & 200 \\
+Contingencia / imprevistos & Reserva para imprevistos ($\sim$10\%). & 200 \\
+\midrule
+\textbf{TOTAL INVERSIÓN INICIAL} & \textbf{Desembolso real de WISP al arranque} & \textbf{1\,000} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Costos operativos y de mantenimiento (anuales)}
+
+\begin{center}
+\captionof{table}{Costos operativos y de mantenimiento anuales.}
+\label{tab:costos-op}
+\begin{tabularx}{\textwidth}{L{4.2cm} X R{1.8cm}}
+\toprule
+\textbf{Concepto} & \textbf{Detalle} & \textbf{Costo anual (S/)} \\
+\midrule
+VPS mensual & Hosting del sistema en producción (S/~130 $\times$ 12). & 1\,560 \\
+Renovación de dominio & Renovación anual del dominio. & 60 \\
+Mantenimiento y soporte evolutivo & Ajustes, mejoras y soporte (S/~150 $\times$ 12). & 1\,800 \\
+Respaldo / backup en nube & Copias de seguridad (S/~30 $\times$ 12). & 360 \\
+\midrule
+\textbf{TOTAL COSTO OPERATIVO ANUAL} & \textbf{$\approx$ S/~315 mensuales} & \textbf{3\,780} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{upeubox}{Valor de mercado del desarrollo (ahorro para WISP)}
+Si WISP hubiera contratado el desarrollo de este sistema (web $+$ app móvil $+$
+integración con MikroTik) a una empresa de software, el costo de mercado se estima en
+aproximadamente \textbf{S/~30\,000}. Al ser desarrollado por el equipo del proyecto de
+fin de carrera, WISP no incurre en este costo, lo que representa un ahorro directo de
+esa magnitud. Este valor se utiliza como referencia en el escenario riguroso de la
+evaluación financiera.
+\end{upeubox}
+
+% ======================================================================
+\section{Retorno Esperado — Evaluación Financiera}
+\label{sec:retorno}
+
+\begin{upeubox}{Fundamento metodológico: indicadores financieros}
+La evaluación se realiza con los indicadores de finanzas corporativas: ROI (retorno
+sobre la inversión), Período de Recuperación (Payback), VAN (Valor Actual Neto) y TIR
+(Tasa Interna de Retorno). VAN y TIR incorporan el valor del dinero en el tiempo
+mediante una tasa de descuento del 12\% anual, referencial para proyectos de TI en el
+contexto peruano (ajustable por la empresa).
+\end{upeubox}
+
+El beneficio neto anual del proyecto se obtiene restando los costos operativos al
+beneficio bruto anual: S/~27\,486 $-$ S/~3\,780 $=$ \textbf{S/~23\,706}. Se presentan
+dos escenarios de evaluación:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Escenario A (costo real para WISP):} considera solo el desembolso real
+  de la empresa (S/~1\,000). Refleja el retorno efectivo que obtiene WISP.
+  \item \textbf{Escenario B (riguroso, con valor de mercado):} considera la inversión
+  como si se hubiera pagado el desarrollo a precio de mercado (S/~30\,000). Es el
+  análisis financiero conservador y defendible.
+\end{itemize}
+
+\begin{center}
+\captionof{table}{Indicadores financieros por escenario.}
+\label{tab:financiero}
+\begin{tabularx}{\textwidth}{L{2.8cm} C{2.3cm} C{2.5cm} X}
+\toprule
+\textbf{Indicador} & \textbf{Escenario A (costo real WISP)} &
+\textbf{Escenario B (valor de mercado)} & \textbf{Interpretación} \\
+\midrule
+Inversión & S/~1\,000 & S/~30\,000 & Desembolso considerado. \\
+Beneficio neto anual & S/~23\,706 & S/~23\,706 & Igual en ambos: el flujo es el mismo. \\
+ROI (año 1) & 1\,876\% & $-$21\% & En B se recupera desde el año 2. \\
+Payback & 0.6 meses & 15.2 meses & Recuperación rápida en ambos casos. \\
+VAN (3 años, 12\%) & S/~55\,738 & S/~26\,938 & VAN $>0$ \textrightarrow{} proyecto viable. \\
+TIR & $>$1\,000\% & 60\% & TIR $\gg$ 12\% \textrightarrow{} muy rentable. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{upeubox}{Conclusión de la evaluación financiera}
+En ambos escenarios el proyecto es financieramente viable: el VAN es positivo y la
+TIR supera ampliamente la tasa de descuento del 12\%. Incluso bajo el escenario
+riguroso B ---que asume el costo de mercado completo del desarrollo--- el proyecto se
+recupera en poco más de 15 meses y genera un VAN de S/~26\,938 en tres años. Bajo el
+escenario real A, el retorno para WISP es prácticamente inmediato. La inversión está
+plenamente justificada.
+\end{upeubox}
+
+% ======================================================================
+\section{Riesgos Iniciales}
+\label{sec:riesgos}
+
+\begin{upeubox}{Fundamento metodológico: enfoque PMBOK (PMI)}
+Los riesgos se evalúan siguiendo el enfoque de la Guía PMBOK (PMI): cada riesgo se
+valora por su Probabilidad y su Impacto, y el producto de ambos determina su nivel de
+severidad (Bajo, Medio, Alto), priorizando así la atención y las respuestas.
+\end{upeubox}
+
+\subsection{Identificación de riesgos estratégicos}
+
+Se identifican los principales riesgos que podrían afectar la ejecución y adopción
+del proyecto:
+
+\begin{center}
+\captionof{table}{Identificación de riesgos estratégicos.}
+\label{tab:riesgos-id}
+\begin{tabularx}{\textwidth}{C{1cm} X L{2.8cm}}
+\toprule
+\textbf{ID} & \textbf{Riesgo} & \textbf{Categoría} \\
+\midrule
+R1 & Baja adopción del sistema por el personal (técnicos/vendedoras) acostumbrado a
+WhatsApp. & Organizacional \\
+R2 & Fallo o incompatibilidad en la integración con los MikroTik vía API en alguna
+zona. & Técnico \\
+R3 & Pérdida o inconsistencia de datos durante la migración desde el sistema
+heredado. & Técnico / Datos \\
+R4 & Conectividad inestable en zonas rurales que afecte el uso de las apps en campo. &
+Operativo \\
+R5 & Retrasos en el desarrollo por la carga académica del equipo. & Proyecto \\
+R6 & Dependencia del VPS en la nube: caída del servicio afectaría la gestión central. &
+Infraestructura \\
+R7 & Brechas de seguridad / acceso no autorizado a los datos de clientes. & Seguridad \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Evaluación preliminar de impacto (matriz probabilidad $\times$ impacto)}
+
+Cada riesgo se valora en una escala de 1 (muy bajo) a 5 (muy alto) para probabilidad
+e impacto. La severidad es el producto de ambos: 1--6 Bajo, 8--12 Medio, 15--25 Alto.
+
+\begin{center}
+\captionof{table}{Matriz de evaluación de riesgos y estrategias de mitigación.}
+\label{tab:riesgos-matriz}
+{\small
+\begin{tabularx}{\textwidth}{C{0.8cm} C{0.9cm} C{0.9cm} C{0.9cm} L{1.4cm} X}
+\toprule
+\textbf{ID} & \textbf{Prob. (1-5)} & \textbf{Imp. (1-5)} & \textbf{Sev.} &
+\textbf{Nivel} & \textbf{Estrategia de respuesta (mitigación)} \\
+\midrule
+R1 & 4 & 4 & 16 & Alto &
+Capacitación práctica, interfaz simple tipo app conocida, acompañamiento inicial y
+apoyo del administrador. \\
+R2 & 3 & 4 & 12 & Medio &
+Pruebas de integración por zona antes del despliegue; los 13 MikroTik usan el mismo
+modelo y RouterOS 7 (homogéneo). \\
+R3 & 3 & 5 & 15 & Alto &
+Respaldo previo, migración por etapas, validación de datos y conservación del sistema
+heredado hasta confirmar consistencia. \\
+R4 & 4 & 3 & 12 & Medio &
+Apps con modo offline / sincronización diferida para registrar en campo aun sin señal. \\
+R5 & 4 & 3 & 12 & Medio &
+Metodología ágil con entregables incrementales; priorización de módulos críticos;
+cronograma con holgura. \\
+R6 & 2 & 4 & 8 & Medio &
+Backups automáticos, proveedor cloud confiable y plan de recuperación; posibilidad de
+respaldo local. \\
+R7 & 3 & 5 & 15 & Alto &
+Autenticación por roles, cifrado, VPN WireGuard para acceso a MikroTik y buenas
+prácticas de seguridad. \\
+\bottomrule
+\end{tabularx}
+}
+\end{center}
+
+\begin{upeubox}{Conclusión de la evaluación de riesgos}
+Los riesgos de mayor severidad son la baja adopción del personal (R1), la pérdida de
+datos en la migración (R3) y la seguridad de la información (R7). Todos cuentan con
+estrategias de mitigación viables dentro del alcance del proyecto. Ninguno constituye
+un impedimento crítico: el proyecto es ejecutable con un nivel de riesgo gestionable.
+\end{upeubox}
+
+% ======================================================================
+\section{Conclusión del Business Case}
+\label{sec:conclusion-bc}
+
+El análisis desarrollado demuestra que el proyecto es conveniente, viable y
+estratégicamente alineado con los objetivos de WISP:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Justificado:} resuelve un problema real y crítico (operación manual,
+  sin trazabilidad y dependiente de una persona), con objetivos SMART verificables.
+  \item \textbf{Óptimo:} el análisis multicriterio selecciona el desarrollo propio
+  (4.70/5.00) como la mejor alternativa frente a mantener lo actual, comprar software
+  comercial o contratar desarrollo externo.
+  \item \textbf{Rentable:} con VAN positivo y TIR muy superior al costo de capital en
+  ambos escenarios, y un Payback de entre 0.6 y 15 meses.
+  \item \textbf{Gestionable:} los riesgos identificados tienen respuestas de mitigación
+  viables y ninguno es un impedimento crítico.
+\end{itemize}
+
+\begin{upeubox}{Recomendación final}
+Se recomienda \textbf{aprobar y ejecutar el proyecto}. La inversión requerida por WISP
+es mínima frente a los beneficios operativos, estratégicos y económicos esperados, y
+la iniciativa habilita directamente la escalabilidad y competitividad de la empresa en
+su mercado. Este Business Case constituye la base para el Plan de Gestión del Proyecto
+(Entregable~3).
+\end{upeubox}

@@ -1,0 +1,766 @@
+% ======================================================================
+% capitulos/capitulo1.tex
+% ----------------------------------------------------------------------
+% ENTREGABLE 1 — Diagnóstico Organizacional y Alineamiento Estratégico
+% Empresa caso de estudio: WISP Ingeniería en Redes y Telecomunicaciones
+% Contenido trasladado desde Entregable1_GTI_WISP.docx
+% ======================================================================
+\chapter{Diagnóstico Organizacional y Alineamiento Estratégico}
+\label{chap:diagnostico}
+
+% ----------------------------------------------------------------------
+% Descripción del producto (introducción del capítulo)
+% ----------------------------------------------------------------------
+El presente documento constituye el Entregable~1 de la línea de Gestión de
+Tecnologías de Información (GTI) del Proyecto de Evaluación de Fin de Carrera.
+Corresponde a un análisis estructurado de la situación actual de la empresa
+WISP Ingeniería en Redes y Telecomunicaciones, orientado a identificar sus
+brechas estratégicas, operativas y tecnológicas.
+
+El análisis incluye la evaluación del contexto interno y externo de la
+organización, el grado de madurez en tecnologías de información y la coherencia
+entre los objetivos estratégicos institucionales y las capacidades digitales
+existentes. Este componente fundamenta la necesidad del proyecto y garantiza su
+alineamiento con el plan estratégico organizacional y el plan estratégico de TI,
+sentando las bases para el desarrollo de una solución tecnológica integral que
+abarca las líneas de Gestión de TI, Ingeniería de Software e Infraestructura
+Tecnológica.
+
+\begin{upeubox}{Alcance del documento}
+Este entregable cubre los cuatro componentes exigidos por la rúbrica:
+(1.1)~Contexto Organizacional, (1.2)~Análisis Estratégico,
+(1.3)~Diagnóstico Digital~/~TI y (1.4)~Identificación del Problema. Los
+resultados de este diagnóstico alimentan directamente el Business Case, el Plan
+de Gestión del Proyecto y el diseño de la solución técnica integrada.
+\end{upeubox}
+
+% ======================================================================
+\section{Contexto Organizacional}
+\label{sec:contexto}
+
+\subsection{Descripción del sector y entorno competitivo}
+
+WISP Ingeniería en Redes y Telecomunicaciones (en adelante, WISP) es una empresa
+peruana del sector de telecomunicaciones, especializada en la provisión del
+servicio de acceso a internet mediante red de fibra óptica (FTTH~--~\textit{Fiber
+To The Home}) y televisión digital en zonas rurales y semi-rurales de la región
+Puno. La empresa opera en un segmento de mercado caracterizado por una baja
+penetración de servicios de conectividad de banda ancha y una limitada presencia
+de los operadores de telecomunicaciones de escala nacional.
+
+El sector de telecomunicaciones en el Perú es un mercado regulado por el
+Organismo Supervisor de Inversión Privada en Telecomunicaciones (OSIPTEL) y el
+Ministerio de Transportes y Comunicaciones (MTC). En las grandes ciudades de la
+región, como Puno y Juliaca, la competencia es intensa y está conformada tanto
+por operadores nacionales ---Movistar, Claro, Entel y WOW--- como por operadores
+locales de fibra óptica de creciente presencia, entre los que destacan Fibramax,
+WiwiTel, FiberUltra y otros proveedores regionales. Estos actores concentran su
+inversión en las zonas urbanas de alta densidad poblacional, donde la
+rentabilidad por kilómetro de red desplegada es mayor.
+
+Sin embargo, en los distritos rurales alejados donde opera WISP, la presencia de
+estos operadores es marginal o inexistente, debido a la baja densidad
+poblacional, la dispersión geográfica y la complejidad logística que implica el
+despliegue de infraestructura de fibra en dichas zonas. Esta característica del
+mercado configura una ventaja competitiva estructural para WISP: la empresa
+atiende un mercado desatendido por los grandes operadores y por la mayoría de los
+ISP locales, contribuyendo activamente a la reducción de la brecha digital en la
+región Puno. WISP ya cuenta con infraestructura de fibra óptica desplegada y
+operativa en trece~(13) zonas distribuidas en distintas provincias de la región.
+
+\subsubsection{Zonas de cobertura y modalidad de servicio}
+
+WISP brinda el servicio de internet por fibra óptica en las siguientes zonas de
+la región Puno:
+
+\begin{center}
+\captionof{table}{Zonas de cobertura de fibra óptica de WISP en la región Puno.}
+\label{tab:zonas}
+\begin{tabularx}{\textwidth}{C{1.1cm} X C{1.1cm} X}
+\toprule
+\textbf{N°} & \textbf{Zona / Distrito} & \textbf{N°} & \textbf{Zona / Distrito} \\
+\midrule
+1 & Cabana        & 8  & Mañazo  \\
+2 & Cabanilla     & 9  & Muñani  \\
+3 & Cabanillas    & 10 & Ñuñoa   \\
+4 & Capachica     & 11 & Pucara  \\
+5 & Choquehuanca  & 12 & Sucasco \\
+6 & Domingo       & 13 & Vilque  \\
+7 & Huata         &    &         \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{upeubox}{Nota sobre el entorno competitivo (dato de campo)}
+Debe distinguirse entre el mercado urbano y el rural, porque la competencia que
+enfrenta WISP es radicalmente distinta en cada uno:
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{En las ciudades (Puno y Juliaca):} el mercado es altamente
+  competitivo, con operadores nacionales (Movistar, Claro, Entel, WOW) y locales
+  de fibra (Fibramax, WiwiTel, FiberUltra, entre otros). WISP no compite
+  directamente en este segmento.
+  \item \textbf{En los distritos rurales (zona de operación de WISP):} el único
+  competidor con fibra óptica es FiberUltra, y solo en dos distritos: Cabanillas
+  y Mañazo. En el resto de zonas ---e incluso en esos dos distritos--- la
+  competencia se limita a pequeños proveedores de internet inalámbrico
+  (radioenlaces), de menor estabilidad y capacidad que la fibra. En la mayoría de
+  sus zonas, WISP es el único proveedor de fibra óptica, una posición de ventaja
+  competitiva difícil de replicar en el corto plazo.
+\end{itemize}
+\end{upeubox}
+
+\subsection{Estructura organizacional}
+
+WISP opera bajo una estructura organizacional funcional y de tamaño reducido,
+característica de una micro/pequeña empresa (MYPE) del sector tecnológico. La toma
+de decisiones está centralizada en la administración, y las áreas operativas
+(técnica y comercial) se despliegan sobre las trece zonas de cobertura. La
+estructura actual del personal es la siguiente:
+
+\begin{center}
+\includegraphics[width=\textwidth]{organigrama.png}
+\captionof{figure}{Estructura del personal de WISP por área y responsabilidades.}
+\label{fig:estructura}
+\end{center}
+
+\begin{upeubox}{Observación estructural crítica}
+Un solo administrador concentra la gestión de aproximadamente 455 clientes
+distribuidos en 13 zonas geográficamente dispersas. Esta alta concentración de
+responsabilidades en una sola persona constituye un \textbf{punto único de falla}
+operativo y una limitación severa para el crecimiento, aspecto que se profundiza
+en el diagnóstico de TI (Sección~\ref{sec:diagnostico}) y en la identificación
+del problema (Sección~\ref{sec:problema}).
+\end{upeubox}
+
+\subsection{Cadena de valor}
+
+Siguiendo el modelo de Michael Porter, la cadena de valor de WISP descompone la
+empresa en sus actividades constitutivas para identificar las fuentes de ventaja
+competitiva. Las actividades se dividen en primarias (directamente involucradas
+en la creación y entrega del servicio al cliente) y de apoyo (que respaldan a las
+primarias). El margen resulta de la diferencia entre el valor que el cliente está
+dispuesto a pagar y el costo de desarrollar dichas actividades.
+
+El análisis revela un hallazgo central: el flujo de información atraviesa
+transversalmente toda la cadena, y su gestión deficiente ---actualmente basada en
+WhatsApp, papel y un sistema heredado--- erosiona el margen al elevar los costos
+operativos y de coordinación en cada eslabón.
+
+\begin{center}
+\includegraphics[width=\textwidth]{cadena_de_valor.png}
+\captionof{figure}{Cadena de valor de WISP según el modelo de Michael Porter.}
+\label{fig:cadena-valor}
+\end{center}
+
+\begin{upeubox}{Diagnóstico de la cadena de valor}
+La ventaja competitiva de WISP se sustenta hoy en su Desarrollo Tecnológico de red
+(infraestructura de fibra madura) y en su cercanía al cliente en Marketing/Ventas
+y Servicio postventa. Sin embargo, el margen se ve comprometido porque la
+Infraestructura de la empresa (sistemas de información y gestión) opera en un nivel
+deficiente que encarece y ralentiza todas las actividades primarias. El proyecto
+interviene precisamente sobre esta actividad de apoyo transversal para liberar el
+potencial de toda la cadena.
+\end{upeubox}
+
+\subsection{Mapa de stakeholders}
+
+Se identifican los grupos de interés (\textit{stakeholders}) internos y externos
+que se relacionan con la operación de WISP y que serán impactados directa o
+indirectamente por el proyecto de transformación tecnológica. Se clasifican según
+su naturaleza, su rol y su nivel de influencia e interés en el proyecto.
+
+\begin{center}
+\captionof{table}{Mapa de stakeholders del proyecto.}
+\label{tab:stakeholders}
+\begin{tabularx}{\textwidth}{L{2.9cm} C{1.4cm} X C{1.5cm} C{1.3cm}}
+\toprule
+\textbf{Stakeholder} & \textbf{Tipo} & \textbf{Rol / Interés principal} & \textbf{Influencia} & \textbf{Interés} \\
+\midrule
+Administrador / Gerente & Interno &
+Decisor. Busca control total de la operación y eficiencia administrativa. & Alta & Alto \\
+Técnicos (4) & Interno &
+Operativo. Requieren herramientas que simplifiquen instalaciones y registro de averías. & Media & Alto \\
+Vendedoras tienda (2) & Interno &
+Comercial. Registro rápido y validación de prospectos. & Media & Alto \\
+Vendedoras campo (4) & Interno &
+Comercial. Necesitan app móvil para registrar clientes sin papel ni WhatsApp. & Media & Alto \\
+Clientes finales ($\approx$455) & Externo &
+Usuario. Buscan servicio estable, atención rápida y comunicación clara. & Baja & Alto \\
+Proveedor mayorista de internet & Externo &
+Soporte. Provee el transporte de última milla; interesa continuidad. & Alta & Medio \\
+Competidores (FiberUltra, ISP inalámbricos) & Externo &
+Amenaza. Compiten por captación de clientes en zonas compartidas. & Media & Bajo \\
+Entes reguladores (OSIPTEL, MTC) & Externo &
+Regulación. Supervisan cumplimiento normativo del servicio. & Alta & Bajo \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{upeubox}{Priorización de stakeholders (matriz Poder--Interés)}
+Los stakeholders de mayor prioridad para el proyecto (alta influencia $+$ alto
+interés) son el administrador y, en su conjunto, el personal operativo (técnicos y
+vendedoras). Estos serán los usuarios directos del sistema y su adopción
+determinará el éxito de la iniciativa. Los clientes finales, aunque de baja
+influencia directa, tienen alto interés porque percibirán la mejora en la calidad
+y rapidez del servicio.
+\end{upeubox}
+
+% ======================================================================
+\section{Análisis Estratégico}
+\label{sec:estrategico}
+
+El análisis estratégico establece el marco de referencia sobre el cual se sustenta
+la necesidad del proyecto. Se formaliza la misión, visión y objetivos estratégicos
+de WISP, se evalúa su situación interna y externa mediante el análisis FODA, se
+complementa con un análisis PESTEL del macroentorno y se determinan los factores
+críticos de éxito.
+
+\subsection{Misión, visión y objetivos estratégicos}
+
+\begin{upeubox}{Justificación de la propuesta}
+Dado que WISP, por ser una MYPE de estructura reducida y decisiones
+centralizadas, no contaba con una misión y visión formalmente declaradas,
+este documento las formula por primera vez aplicando el marco teórico del
+planeamiento estratégico.
+\end{upeubox}
+
+\begin{upeubox}{Misión (propuesta formalizada)}
+"Proveer acceso a internet de alta velocidad por fibra óptica y televisión digital,
+con estándares de calidad, estabilidad y trazabilidad, a las familias y negocios
+de las zonas de la región Puno, sustentados en infraestructura propia,
+un servicio técnico cercano y un modelo de gestión eficiente que garantiza
+continuidad y precios accesibles."
+\end{upeubox}
+
+La \textbf{misión} responde a las tres preguntas fundamentales del modelo de
+formulación estratégica: \emph{qué} necesidad satisface WISP (acceso a internet
+de calidad en zonas desatendidas), \emph{cómo} la satisface (mediante
+infraestructura propia de fibra óptica y atención cercana) y \emph{a quiénes}
+atiende (las familias y negocios de las comunidades de la región Puno). Su
+contenido no es arbitrario: se deriva del diagnóstico organizacional (FODA,
+cadena de valor) y de los valores institucionales de la empresa.
+
+\begin{upeubox}{Visión (propuesta formalizada)}
+"Al 2030, ser el proveedor líder de internet por fibra óptica de Puno,
+llevando conectividad de calidad y nuevas oportunidades a las zonas donde otros no llegan."
+\end{upeubox}
+
+La \textbf{visión} cumple las cinco características que exige el marco teórico:
+es \emph{inspiradora} (proyecta el propósito de llegar donde otros no llegan),
+\emph{clara y concisa} (con un horizonte definido al 2030), \emph{ambiciosa
+pero realista} (el liderazgo en fibra es una posición que WISP ya casi
+ocupa), \emph{relevante y sostenible} (alineada con los objetivos estratégicos
+de expansión y escalabilidad) y \emph{flexible y adaptativa} (no se limita a un
+número fijo de zonas, permitiendo el crecimiento futuro).
+
+En conjunto, misión y visión quedan alineadas entre sí y con los valores
+institucionales, garantizando la coherencia estratégica que el planeamiento
+requiere.
+
+\subsubsection{Valores institucionales}
+
+Los valores constituyen la brújula ética que orienta el comportamiento y las
+decisiones de WISP, y sirven de base a su cultura organizacional:
+
+\begin{center}
+\captionof{table}{Valores institucionales de WISP.}
+\label{tab:valores}
+\begin{tabularx}{\textwidth}{L{3.4cm} X}
+\toprule
+\textbf{Valor} & \textbf{Significado en WISP} \\
+\midrule
+Cercanía & Atención personalizada y trato directo con el cliente rural, entendiendo su realidad y necesidades. \\
+Compromiso social & Vocación de cerrar la brecha digital y llevar conectividad a zonas que otros operadores no atienden. \\
+Calidad y confiabilidad & Provisión de un servicio estable, con infraestructura de fibra óptica robusta y soporte técnico propio. \\
+Innovación & Adopción de tecnología para mejorar continuamente la operación y la experiencia del cliente. \\
+Integridad & Transparencia en el cobro, en los contratos y en la relación con clientes y colaboradores. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+A partir de la misión, visión y valores, se derivan los siguientes objetivos
+estratégicos institucionales:
+
+\begin{center}
+\captionof{table}{Objetivos estratégicos institucionales de WISP.}
+\label{tab:objetivos}
+\begin{tabularx}{\textwidth}{C{1.4cm} X L{2.3cm}}
+\toprule
+\textbf{Código} & \textbf{Objetivo estratégico} & \textbf{Perspectiva} \\
+\midrule
+OE-01 & Expandir la cobertura de fibra óptica a nuevos distritos de la región Puno actualmente desatendidos. & Crecimiento \\
+OE-02 & Mejorar la eficiencia operativa mediante la digitalización y automatización de los procesos de captación, instalación, soporte y gestión de clientes. & Procesos \\
+OE-03 & Incrementar la satisfacción y retención de clientes a través de un servicio estable y una atención más rápida y trazable. & Cliente \\
+OE-04 & Fortalecer el control administrativo y financiero, reduciendo la morosidad y la dependencia de procesos manuales. & Financiera \\
+OE-05 & Consolidar una plataforma tecnológica escalable que soporte el crecimiento de la empresa sin incrementar proporcionalmente la carga administrativa. & Tecnología \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Análisis FODA}
+
+El análisis FODA sintetiza los factores internos (fortalezas y debilidades) y
+externos (oportunidades y amenazas) que condicionan la posición estratégica de
+WISP. Se presenta primero en forma de matriz y luego se detalla cada cuadrante.
+
+\begin{center}
+\captionof{table}{Matriz FODA de WISP.}
+\label{tab:foda}
+\begin{tabularx}{\textwidth}{X X}
+\toprule
+\rowcolor{upeublue!10}
+\textbf{FORTALEZAS (F)} & \textbf{DEBILIDADES (D)} \\
+\midrule
+\begin{itemize}[leftmargin=1.4em,nosep]
+  \item F1. Infraestructura propia de fibra óptica en 13 zonas.
+  \item F2. Único proveedor de fibra en la mayoría de sus zonas.
+  \item F3. Servicio técnico propio (4 técnicos).
+  \item F4. Fuerza de ventas en campo desplegada por zonas.
+  \item F5. Portafolio de planes con TV integrada (\textit{triple play}).
+  \item F6. Conocimiento del mercado rural y cercanía con el cliente.
+\end{itemize}
+&
+\begin{itemize}[leftmargin=1.4em,nosep]
+  \item D1. Sistema de gestión heredado (PHP) lento y mal diseñado.
+  \item D2. Operación dependiente de WhatsApp, sin trazabilidad.
+  \item D3. Sin aplicación móvil para técnicos ni vendedoras.
+  \item D4. Un solo administrador para 13 zonas (punto único de falla).
+  \item D5. Sin historial técnico por cliente (caja NAP, borne, ONU).
+  \item D6. Inconsistencia de datos entre MikroTiks y planes comerciales.
+\end{itemize}
+\\
+\midrule
+\rowcolor{upeublue!10}
+\textbf{OPORTUNIDADES (O)} & \textbf{AMENAZAS (A)} \\
+\midrule
+\begin{itemize}[leftmargin=1.4em,nosep]
+  \item O1. Numerosos distritos rurales aún sin cobertura de fibra.
+  \item O2. Baja competencia de fibra (solo inalámbricos en la mayoría de zonas).
+  \item O3. Programas estatales de conectividad rural y masificación de internet.
+  \item O4. Creciente demanda de internet (educación, trabajo, streaming).
+  \item O5. Abaratamiento de tecnología GPON y equipos de red.
+\end{itemize}
+&
+\begin{itemize}[leftmargin=1.4em,nosep]
+  \item A1. Competidor FiberUltra con fibra en Cabanillas y Mañazo.
+  \item A2. Proveedores inalámbricos que compiten por precio.
+  \item A3. Posible expansión futura de operadores nacionales a zonas rurales.
+  \item A4. Cambios regulatorios de OSIPTEL/MTC.
+  \item A5. Dependencia de un proveedor mayorista de internet.
+\end{itemize}
+\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection{Estrategias derivadas del cruce FODA}
+
+Del cruce entre los factores internos y externos se derivan estrategias que
+orientan la intervención del proyecto:
+
+\begin{center}
+\captionof{table}{Estrategias derivadas del cruce FODA.}
+\label{tab:foda-cruce}
+\begin{tabularx}{\textwidth}{L{2.7cm} L{2.5cm} X}
+\toprule
+\textbf{Estrategia} & \textbf{Cruce} & \textbf{Descripción} \\
+\midrule
+Ofensiva (FO) & F1$\cdot$F2 $+$ O1$\cdot$O2 &
+Aprovechar la infraestructura propia y la baja competencia para expandirse
+agresivamente a nuevos distritos rurales sin fibra. \\
+Adaptativa (DO) & D1$\cdot$D2$\cdot$D3 $+$ O4 &
+Digitalizar la operación (sistema web $+$ apps móviles) para atender la creciente
+demanda con eficiencia y escalar sin colapsar la administración.
+\textrightarrow{}~\textit{Justifica directamente el proyecto.} \\
+Defensiva (FA) & F3$\cdot$F6 $+$ A1$\cdot$A2 &
+Reforzar la ventaja de servicio técnico propio y cercanía al cliente para
+diferenciarse de FiberUltra y de los inalámbricos. \\
+Supervivencia (DA) & D4$\cdot$D5 $+$ A1$\cdot$A3 &
+Superar la dependencia de una sola persona y la falta de trazabilidad antes de que
+la competencia o la escala pongan en riesgo la continuidad del negocio. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Análisis PESTEL del macroentorno}
+
+El análisis PESTEL complementa el diagnóstico externo evaluando las fuerzas del
+macroentorno que afectan a WISP:
+
+\begin{center}
+\captionof{table}{Análisis PESTEL del macroentorno de WISP.}
+\label{tab:pestel}
+\begin{tabularx}{\textwidth}{L{2cm} X L{2.3cm}}
+\toprule
+\textbf{Factor} & \textbf{Descripción e impacto en WISP} & \textbf{Efecto} \\
+\midrule
+Político &
+Políticas públicas de cierre de brecha digital y programas de conectividad rural
+(FITEL/PRONATEL) favorecen la expansión del servicio. & Oportunidad \\
+Económico &
+Economía rural con ingresos limitados exige planes accesibles; a la vez, el
+internet se ha vuelto un servicio básico y su demanda es inelástica. & Mixto \\
+Social &
+Aumento del teletrabajo, educación virtual y consumo de streaming eleva la demanda
+y la exigencia de estabilidad del servicio. & Oportunidad \\
+Tecnológico &
+Madurez y abaratamiento de GPON, MikroTik y cloud permiten operar y escalar a bajo
+costo; RouterOS~7 habilita integración por API. & Oportunidad \\
+Ecológico &
+Presión por eficiencia energética y correcta disposición de residuos electrónicos
+(equipos, ONU en desuso). & Neutro \\
+Legal &
+Regulación de OSIPTEL/MTC sobre calidad de servicio, contratos y protección de
+datos personales (Ley N° 29733). & Amenaza \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Análisis de las cinco fuerzas de Porter}
+
+El modelo de las cinco fuerzas de Porter permite evaluar el nivel de competencia e
+intensidad del sector en el que opera WISP, y determinar el atractivo del mercado.
+Se analiza cada fuerza en el contexto específico de las zonas rurales de Puno donde
+la empresa presta servicio.
+
+\begin{center}
+\captionof{table}{Análisis de las cinco fuerzas de Porter aplicado a WISP.}
+\label{tab:porter}
+\begin{tabularx}{\textwidth}{L{3.2cm} X L{2cm}}
+\toprule
+\textbf{Fuerza competitiva} & \textbf{Análisis aplicado a WISP} & \textbf{Intensidad} \\
+\midrule
+1. Amenaza de nuevos competidores &
+El despliegue de fibra en zonas rurales exige alta inversión, conocimiento técnico y
+logística compleja, lo que genera fuertes barreras de entrada. Sin embargo, los ISP
+inalámbricos entran con bajo costo. & Media \\
+2. Poder de negociación de proveedores &
+WISP depende de un proveedor mayorista de transporte de internet (última milla). La
+concentración de esta oferta otorga poder al proveedor. Los equipos (MikroTik, OLT,
+ONU) tienen múltiples proveedores. & Alta \\
+3. Poder de negociación de clientes &
+En las zonas donde WISP es el único proveedor de fibra, el poder del cliente es
+bajo. Donde compite con inalámbricos o FiberUltra, el cliente puede comparar precio
+y calidad, elevando su poder. & Baja--Media \\
+4. Amenaza de productos sustitutos &
+El internet móvil (4G/5G) de operadores nacionales y el internet inalámbrico local
+son sustitutos parciales, de menor estabilidad, pero disponibles. El satelital (ej.
+Starlink) es un sustituto emergente de mayor costo. & Media \\
+5. Rivalidad entre competidores &
+En el segmento rural la rivalidad es baja: FiberUltra solo en 2 distritos y algunos
+inalámbricos. En Puno/Juliaca la rivalidad es alta (Movistar, Claro, Entel, WOW,
+Fibramax, WiwiTel), pero WISP no compite allí. & Baja (rural) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{upeubox}{Conclusión del análisis de Porter}
+El sector rural donde opera WISP resulta atractivo: la rivalidad directa y el poder
+de los clientes son bajos gracias a la posición de único proveedor de fibra en la
+mayoría de zonas, y las barreras de entrada son significativas. La principal presión
+proviene del poder del proveedor mayorista de internet y de la amenaza de sustitutos
+(internet móvil, satelital e inalámbrico). La estrategia de WISP debe orientarse a
+consolidar su ventaja de fibra mediante eficiencia operativa y expansión, que es
+justamente lo que habilita el proyecto.
+\end{upeubox}
+
+\subsection{Factores críticos de éxito (FCE)}
+
+Los factores críticos de éxito son aquellas condiciones que WISP debe garantizar
+obligatoriamente para cumplir sus objetivos estratégicos y para que el proyecto de
+transformación tecnológica genere el valor esperado:
+
+\begin{description}[leftmargin=0pt, style=nextline]
+  \item[FCE-1. Estabilidad y calidad del servicio:] mantener una red confiable con
+  mínima interrupción, base de la retención de clientes en un mercado donde el
+  internet es servicio esencial.
+  \item[FCE-2. Digitalización de la operación:] contar con un sistema centralizado
+  que reemplace WhatsApp y el sistema heredado, con trazabilidad de extremo a extremo.
+  \item[FCE-3. Escalabilidad administrativa:] poder crecer en clientes y zonas sin
+  aumentar proporcionalmente la carga sobre la administración.
+  \item[FCE-4. Agilidad en captación e instalación:] reducir el tiempo entre que un
+  vendedor capta un cliente y el técnico lo activa.
+  \item[FCE-5. Control financiero y de morosidad:] gestionar cortes y reactivaciones
+  de forma oportuna y automatizada por zona.
+  \item[FCE-6. Adopción por el personal:] que técnicos y vendedoras usen efectivamente
+  las herramientas digitales desde su celular.
+\end{description}
+
+% ======================================================================
+\section{Diagnóstico Digital / TI}
+\label{sec:diagnostico}
+
+Esta sección evalúa el estado actual de las capacidades digitales y tecnológicas de
+WISP. Se inventarían los sistemas de información existentes, se determina el nivel de
+madurez digital de la organización, se identifican las brechas tecnológicas y se
+detallan los problemas operativos asociados a la gestión de TI.
+
+\subsection{Inventario de sistemas de información existentes}
+
+El siguiente inventario recoge las herramientas y sistemas que WISP utiliza
+actualmente para soportar su operación:
+
+\begin{center}
+\captionof{table}{Inventario de sistemas de información existentes en WISP.}
+\label{tab:inventario}
+\begin{tabularx}{\textwidth}{L{2.9cm} X L{2.7cm} L{1.7cm}}
+\toprule
+\textbf{Sistema / Herramienta} & \textbf{Función} & \textbf{Tecnología} & \textbf{Estado} \\
+\midrule
+Sistema heredado de clientes &
+Registro y administración de clientes, planes y cobros. &
+PHP $+$ frontend Bootstrap (web) & Deficiente \\
+MikroTik RouterOS 7 ($\times$13) &
+Gestión de usuarios PPPoE, control de ancho de banda y corte de morosos por zona. &
+RouterOS 7.13.5 / RB4011iGS+ & Operativo \\
+OLT VSOL ($\times$13) &
+Concentración de fibra óptica y gestión de ONU/ONT por zona. &
+GPON / VSOL & Operativo \\
+Bot de pagos WhatsApp &
+Recepción de comprobantes de pago (Yape, Plin, transferencia). &
+Node.js (WhatsApp Web) & Parcial \\
+WhatsApp operativo &
+Canal informal para captación, coordinación de instalaciones y envío de evidencias. &
+WhatsApp (mensajería) & Informal \\
+Registros manuales / papel &
+Anotación de prospectos en campo por las vendedoras. &
+Papel / hojas sueltas & Deficiente \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Nivel de madurez digital}
+
+Para evaluar la madurez digital de WISP se utiliza una escala de cinco niveles
+(Inicial, Básico, Definido, Gestionado, Optimizado), aplicada a distintas
+dimensiones de la organización. El resultado ubica a WISP predominantemente en un
+nivel Inicial--Básico.
+
+\begin{center}
+\captionof{table}{Nivel de madurez digital de WISP por dimensión.}
+\label{tab:madurez}
+\begin{tabularx}{\textwidth}{L{3cm} L{2.2cm} X}
+\toprule
+\textbf{Dimensión} & \textbf{Nivel actual} & \textbf{Situación observada} \\
+\midrule
+Sistemas de información & Inicial &
+Sistema heredado deficiente y herramientas dispersas sin integración. \\
+Automatización de procesos & Inicial &
+Procesos mayormente manuales; WhatsApp como eje operativo. \\
+Gestión de datos & Inicial &
+Datos dispersos entre MikroTiks, papel y chats; sin fuente única de verdad. \\
+Infraestructura de red & Gestionado &
+Red de fibra y equipos MikroTik/OLT sólidos y estandarizados. \\
+Movilidad / trabajo en campo & Inicial &
+Sin apps móviles; el personal usa navegador y WhatsApp desde el celular. \\
+Experiencia del cliente & Básico &
+Canal de pagos por WhatsApp, pero sin autoservicio ni información de cobertura en línea. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{upeubox}{Lectura del nivel de madurez}
+WISP presenta una notable asimetría: su infraestructura de red (capa física) está
+madura y bien gestionada, pero su capa de sistemas de información, datos y
+automatización se encuentra en un nivel inicial. Esta brecha entre una red robusta y
+una gestión digital incipiente es precisamente el espacio de oportunidad del proyecto.
+\end{upeubox}
+
+\subsection{Brechas tecnológicas}
+
+Se identifican las siguientes brechas entre la situación actual (AS-IS) y la
+situación deseada (TO-BE) que el proyecto busca cerrar:
+
+\begin{center}
+\captionof{table}{Brechas tecnológicas entre la situación actual y la deseada.}
+\label{tab:brechas}
+\begin{tabularx}{\textwidth}{L{2.9cm} X X}
+\toprule
+\textbf{Brecha} & \textbf{Situación actual} & \textbf{Situación deseada} \\
+\midrule
+B1. Integración de sistemas &
+Sistema PHP, MikroTiks, papel y WhatsApp funcionan de forma aislada. &
+Plataforma única (web $+$ móvil) integrada con los 13 MikroTiks vía API. \\
+B2. Movilidad &
+Sin apps; técnicos y vendedoras dependen de WhatsApp y navegador lento. &
+App móvil con roles de técnico y vendedor para registro en campo. \\
+B3. Trazabilidad &
+No hay historial técnico ni seguimiento del ciclo de vida del cliente. &
+Trazabilidad completa: prospecto \textrightarrow{} validación \textrightarrow{} instalación \textrightarrow{} activación. \\
+B4. Automatización de red &
+Alta/corte/reactivación de PPPoE se hace manualmente en cada MikroTik. &
+Gestión automática de PPPoE y cortes desde el sistema central. \\
+B5. Consistencia de datos &
+Datos de cliente embebidos en comentarios del MikroTik; planes inconsistentes. &
+Base de datos centralizada como fuente única de verdad. \\
+B6. Escalabilidad &
+La carga administrativa crece linealmente con cada nuevo cliente/zona. &
+Arquitectura en nube escalable que soporta el crecimiento. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Problemas operativos asociados a TI}
+
+Como consecuencia de las brechas anteriores, WISP enfrenta los siguientes problemas
+operativos concretos en su día a día:
+
+\begin{description}[leftmargin=0pt, style=nextline]
+  \item[Captación ineficiente:] las vendedoras de campo anotan datos en papel o los
+  envían por WhatsApp, lo que genera pérdida de información, errores de transcripción
+  y demoras en la validación.
+  \item[Instalaciones sin registro estructurado:] los técnicos envían por WhatsApp las
+  fotos de la caja NAP, el borne del splitter, los equipos instalados y la fachada, sin
+  vincularlas formalmente al cliente ni conservar un historial técnico.
+  \item[Gestión manual de la red:] el administrador debe ingresar manualmente a cada
+  MikroTik para dar de alta, cortar o reactivar clientes PPPoE, tarea repetitiva y
+  propensa a errores en 13 zonas.
+  \item[Información dispersa y no confiable:] no existe una fuente única de datos; la
+  información del cliente vive parcialmente en el sistema PHP, en comentarios del
+  MikroTik y en chats de WhatsApp.
+  \item[Dependencia de una sola persona:] toda la operación administrativa recae en el
+  administrador, generando cuellos de botella y riesgo de continuidad.
+  \item[Sistema heredado lento:] el frontend actual en Bootstrap es lento y poco usable
+  desde el celular, dificultando el trabajo de quienes no tienen acceso a una computadora.
+\end{description}
+
+% ======================================================================
+\section{Identificación del Problema}
+\label{sec:problema}
+
+\subsection{Definición estructurada del problema}
+
+\begin{upeubox}{Problema central}
+WISP Ingeniería en Redes y Telecomunicaciones gestiona la operación de
+aproximadamente 455 clientes de internet por fibra óptica, distribuidos en 13 zonas
+geográficamente dispersas, mediante un sistema heredado deficiente y procesos
+manuales apoyados en WhatsApp y registros en papel. Esta forma de operar genera
+pérdida y dispersión de información, ausencia de trazabilidad en la captación e
+instalación, gestión manual y repetitiva de la red, y una excesiva dependencia de
+una sola persona, lo que limita la eficiencia operativa, incrementa el riesgo de
+errores y restringe la capacidad de crecimiento de la empresa.
+\end{upeubox}
+
+El problema puede descomponerse en tres dimensiones interrelacionadas,
+correspondientes a los tres flujos operativos críticos de la empresa:
+
+\begin{center}
+\captionof{table}{Descomposición del problema por flujo operativo.}
+\label{tab:dimensiones}
+\begin{tabularx}{\textwidth}{L{2.8cm} X X}
+\toprule
+\textbf{Dimensión / Flujo} & \textbf{Problema específico} & \textbf{Consecuencia} \\
+\midrule
+Captación (vendedoras) &
+Registro de prospectos en papel o WhatsApp, sin validación de cobertura. &
+Pérdida de datos, prospectos en zonas sin fibra, retrabajo administrativo. \\
+Instalación (técnicos) &
+Evidencias de instalación enviadas por WhatsApp, sin historial técnico. &
+Imposibilidad de rastrear la instalación para soporte y mantenimiento futuro. \\
+Administración (gestión) &
+Alta/corte/reactivación manual en 13 MikroTiks y datos dispersos. &
+Cuellos de botella, errores, dependencia de una persona, baja escalabilidad. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Análisis de causas raíz}
+
+Aplicando el enfoque de causa--efecto (diagrama de Ishikawa), se agrupan las causas
+raíz del problema en seis categorías:
+
+\begin{center}
+\captionof{table}{Causas raíz del problema agrupadas por categoría (Ishikawa).}
+\label{tab:causas}
+\begin{tabularx}{\textwidth}{L{2.6cm} X}
+\toprule
+\textbf{Categoría} & \textbf{Causas raíz identificadas} \\
+\midrule
+Tecnología &
+Sistema heredado obsoleto (PHP); ausencia de integración con los MikroTiks; sin
+aplicación móvil; frontend lento. \\
+Procesos &
+Procesos de captación, instalación y gestión no digitalizados ni estandarizados;
+dependencia de WhatsApp como flujo de trabajo. \\
+Personas &
+Un solo administrador concentra la operación; personal de campo sin herramientas
+adecuadas para su celular. \\
+Información / Datos &
+Datos dispersos y duplicados; sin fuente única de verdad; información crítica embebida
+en comentarios de red o chats. \\
+Infraestructura &
+Conexión de zonas por SSTP; falta de un canal seguro y unificado (VPN) para que el
+sistema central administre los MikroTiks. \\
+Gestión / Control &
+Sin indicadores ni trazabilidad; cortes y reactivaciones gestionados de forma reactiva
+y manual. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Impacto estratégico}
+
+El problema descrito no es meramente operativo: compromete directamente el logro de
+los objetivos estratégicos de WISP y su sostenibilidad a mediano plazo.
+
+\begin{center}
+\captionof{table}{Impacto del problema sobre los objetivos estratégicos.}
+\label{tab:impacto}
+\begin{tabularx}{\textwidth}{L{3.6cm} X}
+\toprule
+\textbf{Objetivo estratégico afectado} & \textbf{Impacto del problema} \\
+\midrule
+OE-01 Expansión &
+La carga manual limita la capacidad de crecer a nuevos distritos sin colapsar la
+administración. \\
+OE-02 Eficiencia operativa &
+Los procesos manuales y el retrabajo consumen tiempo y elevan el costo por cliente
+gestionado. \\
+OE-03 Satisfacción del cliente &
+Las demoras en activación y la falta de trazabilidad afectan la experiencia y la
+retención. \\
+OE-04 Control financiero &
+La gestión reactiva de morosidad y la dispersión de datos dificultan el control de
+ingresos. \\
+OE-05 Escalabilidad tecnológica &
+La ausencia de una plataforma integrada impide que la empresa escale de forma
+sostenible. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Justificación de la intervención}
+
+La intervención propuesta consiste en el desarrollo e implementación de un
+\textbf{Sistema de Gestión Integral para ISP de Fibra Óptica Multi-Zona}, compuesto
+por un sistema web de administración (Django $+$ Angular $+$ PostgreSQL) desplegado en
+la nube, una aplicación móvil con roles de técnico y vendedor, y la integración
+directa con los 13 MikroTiks mediante una VPN (WireGuard) y la API de RouterOS, junto
+con la automatización de notificaciones vía WhatsApp.
+
+La intervención se justifica desde cuatro perspectivas:
+
+\begin{description}[leftmargin=0pt, style=nextline]
+  \item[Justificación operativa:] elimina el uso de WhatsApp y papel como sistema de
+  información, digitaliza los tres flujos críticos y reduce drásticamente el retrabajo
+  y los errores.
+  \item[Justificación estratégica:] habilita la escalabilidad necesaria para expandirse
+  a nuevos distritos, alineándose con los objetivos estratégicos de crecimiento y
+  eficiencia.
+  \item[Justificación económica:] sobre una base estimada de $\approx$455 clientes con
+  un ticket promedio aproximado de S/~55 mensuales, la operación gestiona del orden de
+  S/~25\,000 mensuales; mejorar su control y reducir la morosidad y el retrabajo tiene un
+  retorno directo (detallado en el Business Case).
+  \item[Justificación tecnológica:] aprovecha la infraestructura madura existente
+  (MikroTik RouterOS 7 con API, fibra GPON) y tecnologías accesibles (cloud, WireGuard)
+  para construir una solución moderna y sostenible.
+\end{description}
+
+\begin{upeubox}{Conclusión del diagnóstico}
+WISP posee una infraestructura de red sólida y una posición competitiva privilegiada
+en su mercado, pero su gestión digital se encuentra en un nivel inicial que frena su
+crecimiento y su eficiencia. Cerrar esta brecha mediante un sistema de gestión integral
+---abordado conjuntamente por las líneas de Gestión de TI, Software e Infraestructura---
+es una intervención necesaria, viable y estratégicamente alineada, cuyo detalle de
+viabilidad económica se desarrolla en el Business Case (Entregable~2).
+\end{upeubox}

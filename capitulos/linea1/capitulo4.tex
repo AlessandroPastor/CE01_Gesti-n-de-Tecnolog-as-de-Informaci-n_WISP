@@ -1,0 +1,268 @@
+% ======================================================================
+% capitulos/capitulo4.tex
+% ----------------------------------------------------------------------
+% ENTREGABLE 4 — MODELADO DE PROCESOS AS-IS / TO-BE
+% Empresa caso de estudio: WISP Ingeniería en Redes y Telecomunicaciones
+% Proceso modelado: Ciclo de vida del cliente (captación -> activación)
+% Contenido trasladado desde Entregrable4_Procesos_ASIS_TOBE_WISP.docx
+% ======================================================================
+\chapter{Modelado de Procesos AS-IS / TO-BE}
+\label{chap:procesos}
+
+% ----------------------------------------------------------------------
+% Descripción del producto (introducción del capítulo)
+% ----------------------------------------------------------------------
+El presente documento contiene la representación estructurada de los procesos
+organizacionales actuales (AS-IS) de la empresa WISP y su rediseño propuesto
+(TO-BE). Permite visualizar las ineficiencias, redundancias y puntos críticos del
+modo de operar vigente, y proponer mejoras mediante la automatización y la
+reestructuración apoyada en TIC.
+
+El proceso seleccionado para el modelado es el \textbf{ciclo de vida del cliente},
+que abarca desde que un vendedor capta a un prospecto en campo hasta que el cliente
+queda activo con servicio de internet. Se eligió este proceso \textit{end-to-end}
+porque integra en un solo flujo los tres problemas operativos críticos de WISP
+(captación, instalación y activación en red), lo que permite cuantificar de forma
+agregada la mejora en tiempo, costo y calidad del servicio.
+
+\begin{upeubox}{Fundamento metodológico: notación BPMN 2.0}
+El modelado utiliza la notación BPMN 2.0 (\textit{Business Process Model and
+Notation}, estándar OMG). Los diagramas emplean piscinas y carriles
+(\textit{pools/lanes}) para representar los responsables, tareas (rectángulos
+redondeados), compuertas de decisión (rombos), eventos de inicio y fin (círculos) y
+flujos de secuencia (flechas), garantizando una representación normalizada e
+interpretable del proceso.
+\end{upeubox}
+
+% ======================================================================
+\section{Proceso Actual (AS-IS)}
+\label{sec:asis}
+
+\subsection{Descripción narrativa del proceso}
+
+Actualmente, el ciclo de vida del cliente en WISP se desarrolla de la siguiente
+manera: un vendedor de campo capta a un prospecto y le explica el servicio, en una
+conversación que dura entre 5 y 10 minutos. Los datos del prospecto se anotan en
+papel o se registran informalmente por WhatsApp. Luego, el vendedor debe avisar
+manualmente al administrador (\emph{«tengo un cliente para instalar»}), ya que no
+existe ningún mecanismo de notificación automática; este aviso y la transferencia de
+datos pueden demorar desde 1 minuto hasta 2 horas, según la disponibilidad del
+administrador.
+
+El administrador recibe los datos, evalúa si la instalación procede según la
+cobertura de la zona, y sube manualmente la orden al sistema de órdenes. El técnico
+visualiza la orden y realiza la instalación, generalmente de un día para otro (si el
+cliente solicita hoy, se instala al día siguiente); como excepción, si el técnico ya
+se encuentra en la zona y capta directamente al cliente, puede instalar en el
+momento. Tras la instalación, el técnico avisa nuevamente, y el administrador debe
+dar de alta manualmente al cliente como usuario PPPoE en el MikroTik de la zona
+correspondiente, tarea que toma alrededor de 15 minutos. Recién entonces el cliente
+queda activo con servicio.
+
+\subsection{Diagrama BPMN — Proceso Actual (AS-IS)}
+
+\begin{center}
+\includegraphics[width=\textwidth]{bpmn_asis.png}
+\captionof{figure}{Diagrama BPMN del ciclo de vida del cliente actual (AS-IS). En
+rojo, las tareas manuales críticas que generan demoras y pérdidas.}
+\label{fig:bpmn-asis}
+\end{center}
+
+\subsection{Indicadores actuales (AS-IS)}
+
+A partir de los tiempos reales observados en la operación de WISP, se establecen los
+siguientes indicadores del proceso actual:
+
+\begin{center}
+\captionof{table}{Indicadores del proceso actual (AS-IS).}
+\label{tab:ind-asis}
+\begin{tabularx}{\textwidth}{L{4.3cm} L{2.6cm} X}
+\toprule
+\textbf{Indicador} & \textbf{Valor actual} & \textbf{Observación} \\
+\midrule
+Tiempo de captación & 5--10 min & Conversación con el prospecto (humano). \\
+Tiempo de transferencia al admin & 1 min -- 2 h &
+Aviso manual, sin notificación automática. Cuello de botella. \\
+Alta manual en MikroTik & $\sim$15 min & El admin entra manualmente a cada MikroTik. \\
+Lead time total (captación \textrightarrow{} activación) & $\sim$27 h ($\sim$1.1 días) &
+Incluye espera de instalación de un día para otro. \\
+Tiempo de trabajo efectivo & $\sim$198 min & Suma de tareas activas (sin esperas). \\
+Clientes perdidos en el proceso & 1--2 por ciclo & Prospectos captados que nunca se activan. \\
+Trazabilidad de la instalación & 0\% & Evidencias por WhatsApp, sin vínculo al cliente. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Problemas detectados}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Dependencia del aviso manual:} el proceso se detiene hasta que el
+  vendedor logra contactar al administrador; no hay notificaciones automáticas.
+  \item \textbf{Pérdida y dispersión de datos:} la información se anota en papel o
+  WhatsApp, lo que genera errores de transcripción y prospectos perdidos.
+  \item \textbf{Doble digitación:} los datos se registran informalmente y luego el
+  admin los reingresa al sistema de órdenes.
+  \item \textbf{Alta manual en MikroTik:} el administrador debe ingresar a cada
+  router para activar al cliente, tarea repetitiva y propensa a error en 13 zonas.
+  \item \textbf{Sin trazabilidad técnica:} las evidencias de instalación (caja NAP,
+  borne, equipos) se envían por WhatsApp y no quedan vinculadas al cliente.
+  \item \textbf{Cuello de botella en el administrador:} toda la operación depende de
+  una sola persona disponible.
+\end{itemize}
+
+% ======================================================================
+\section{Proceso Propuesto (TO-BE)}
+\label{sec:tobe}
+
+\subsection{Rediseño del flujo}
+
+El proceso rediseñado incorpora el sistema de gestión integral como un actor activo
+(carril «Sistema») que automatiza las transferencias de información y elimina los
+avisos manuales. El vendedor registra al prospecto directamente en la aplicación
+móvil, en el momento y lugar de la captación. El sistema valida automáticamente la
+cobertura de la zona y notifica de inmediato al administrador, sin que el vendedor
+tenga que contactarlo.
+
+El administrador valida el prospecto con un solo clic (los datos ya están
+estructurados y disponibles), y el sistema genera automáticamente la orden de
+instalación, notificando al técnico en su aplicación. El técnico realiza la
+instalación y registra la evidencia (fotos de caja NAP, borne, equipos, fachada)
+directamente en la app, vinculada al cliente. Al cerrar la orden, el sistema da de
+alta automáticamente al cliente como usuario PPPoE en el MikroTik correspondiente
+mediante la API de RouterOS, dejándolo activo de forma inmediata.
+
+\subsection{Diagrama BPMN — Proceso Propuesto (TO-BE)}
+
+\begin{center}
+\includegraphics[width=\textwidth]{bpmn_tobe.png}
+\captionof{figure}{Diagrama BPMN del ciclo de vida del cliente propuesto (TO-BE). El
+carril «Sistema» automatiza validaciones, notificaciones y el alta en MikroTik.}
+\label{fig:bpmn-tobe}
+\end{center}
+
+\subsection{Automatizaciones propuestas}
+
+El rediseño introduce las siguientes automatizaciones apoyadas en TIC:
+
+\begin{center}
+\captionof{table}{Automatizaciones introducidas por el rediseño.}
+\label{tab:automatizaciones}
+\begin{tabularx}{\textwidth}{L{3.8cm} X L{3.8cm}}
+\toprule
+\textbf{Automatización} & \textbf{Reemplaza a} & \textbf{Tecnología} \\
+\midrule
+Registro digital en campo & Anotación en papel/WhatsApp & App móvil (rol vendedor) \\
+Notificación automática al admin & Aviso manual (1 min--2 h) & Notificaciones push / backend \\
+Validación de cobertura & Verificación mental del admin & Sistema (zonas georreferenciadas) \\
+Generación de orden & Subida manual a órdenes & Backend Django \\
+Registro de evidencia técnica & Fotos sueltas por WhatsApp & App móvil (rol técnico) \\
+Alta automática en MikroTik & Alta manual ($\sim$15 min) & API RouterOS $+$ WireGuard \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Nuevos indicadores (TO-BE)}
+
+\begin{center}
+\captionof{table}{Indicadores del proceso propuesto (TO-BE).}
+\label{tab:ind-tobe}
+\begin{tabularx}{\textwidth}{L{4.3cm} L{3.2cm} X}
+\toprule
+\textbf{Indicador} & \textbf{Valor propuesto} & \textbf{Mejora} \\
+\midrule
+Tiempo de transferencia al admin & Instantáneo ($\sim$0.1 min) & Notificación automática \\
+Alta en MikroTik & $\sim$0.5 min (automática) & Vía API RouterOS \\
+Lead time total & $\sim$14 h ($\sim$0.6 días) & Mejor coordinación \\
+Tiempo de trabajo efectivo & $\sim$111 min & Menos pasos manuales \\
+Tiempo de admin por cliente & $\sim$5.5 min & Antes $\sim$86 min \\
+Trazabilidad de instalación & 100\% & Evidencia vinculada \\
+Clientes perdidos & $\approx$ 0 & Registro inmediato \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{upeubox}{Mejora estimada en eficiencia}
+El rediseño reduce el tiempo total del ciclo (\textit{lead time}) en aproximadamente
+un \textbf{49\%}, el tiempo de trabajo efectivo en un \textbf{44\%}, y el tiempo de
+gestión del administrador por cliente en un \textbf{94\%}. El impacto más
+significativo se da en la transferencia de información (de hasta 2 horas a
+instantánea, una reducción del 96\%) y en el alta en MikroTik (de 15 minutos manuales
+a medio minuto automático, un 97\% menos).
+\end{upeubox}
+
+% ======================================================================
+\section{Análisis Comparativo}
+\label{sec:comparativo}
+
+Se comparan cuantitativamente los procesos AS-IS y TO-BE en las tres dimensiones
+exigidas: tiempo, costo y calidad.
+
+\subsection{Reducción de tiempos}
+
+\begin{center}
+\captionof{table}{Comparación de tiempos entre AS-IS y TO-BE.}
+\label{tab:comp-tiempos}
+\begin{tabularx}{\textwidth}{L{3.8cm} X X C{1.9cm}}
+\toprule
+\textbf{Métrica de tiempo} & \textbf{AS-IS} & \textbf{TO-BE} & \textbf{Reducción} \\
+\midrule
+Transferencia al admin & 1 min--2 h & Instantáneo & 96\% \\
+Alta en MikroTik & $\sim$15 min & $\sim$0.5 min & 97\% \\
+Trabajo efectivo total & $\sim$198 min & $\sim$111 min & 44\% \\
+Lead time (ciclo completo) & $\sim$27 h & $\sim$14 h & 49\% \\
+Gestión admin por cliente & $\sim$86 min & $\sim$5.5 min & 94\% \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Reducción de costos}
+
+La reducción de tiempos se traduce en ahorro de costos operativos, principalmente por
+la liberación de tiempo del administrador y la reducción de clientes perdidos:
+
+\begin{center}
+\captionof{table}{Comparación de costos entre AS-IS y TO-BE.}
+\label{tab:comp-costos}
+\begin{tabularx}{\textwidth}{L{4cm} X X X}
+\toprule
+\textbf{Concepto} & \textbf{AS-IS} & \textbf{TO-BE} & \textbf{Impacto} \\
+\midrule
+Tiempo admin/cliente valorizado & $\sim$86 min & $\sim$5.5 min & $-$94\% \\
+Clientes perdidos por ciclo & 1--2 & $\approx$ 0 & Ingreso recuperado \\
+Retrabajo (doble digitación) & Sí & Eliminado & $-$100\% \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textit{Nota:} la valorización económica detallada de estos ahorros se desarrolla en
+el Business Case (beneficio de ahorro administrativo y recuperación por menor pérdida
+de clientes).
+
+\subsection{Mejora en calidad del servicio}
+
+\begin{center}
+\captionof{table}{Comparación de la calidad del servicio entre AS-IS y TO-BE.}
+\label{tab:comp-calidad}
+\begin{tabularx}{\textwidth}{L{4cm} X X}
+\toprule
+\textbf{Dimensión de calidad} & \textbf{AS-IS} & \textbf{TO-BE} \\
+\midrule
+Trazabilidad del cliente & 0\% (WhatsApp/papel) & 100\% en el sistema \\
+Historial técnico (NAP, borne, ONU) & Inexistente & Registrado y vinculado \\
+Errores de transcripción & Frecuentes & Minimizados (registro directo) \\
+Consistencia de datos & Datos dispersos & Fuente única de verdad \\
+Experiencia del cliente & Activación variable & Activación más rápida \\
+Dependencia de una persona & Total (admin) & Distribuida (sistema) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{upeubox}{Conclusión del análisis comparativo}
+El rediseño del proceso (TO-BE) mejora simultáneamente las tres dimensiones: reduce
+el tiempo del ciclo en $\sim$49\% y la carga del administrador en $\sim$94\%, elimina
+el retrabajo y la pérdida de clientes, y eleva la calidad al garantizar trazabilidad
+total, historial técnico y una fuente única de datos. La mejora no es incremental sino
+estructural: se pasa de un proceso dependiente de avisos manuales y personas, a un
+proceso automatizado, trazable y escalable. Este rediseño constituye la justificación
+operativa directa del sistema propuesto.
+\end{upeubox}

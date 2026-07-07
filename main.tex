@@ -1,0 +1,202 @@
+% ======================================================================
+% UNIVERSIDAD PERUANA UNIÓN (UPeU)
+% Escuela Profesional de Ingeniería de Sistemas
+% Proyecto de Evaluación de Fin de Carrera
+% ----------------------------------------------------------------------
+% main.tex — Documento maestro (modular, usa \input{} para cada parte)
+% Compilar con: pdflatex -> pdflatex (2 veces, para generar el índice)
+% ======================================================================
+
+\documentclass[12pt,a4paper]{report}
+
+% ----------------------------------------------------------------------
+% 1. CODIFICACIÓN, IDIOMA Y FUENTES
+% ----------------------------------------------------------------------
+\usepackage[utf8]{inputenc}      % Codificación de entrada UTF-8
+\usepackage[T1]{fontenc}         % Salida de fuentes T1 (acentos, "N°", etc.)
+\usepackage[spanish,es-noshorthands]{babel} % Español: "Capítulo", guionado, fechas
+\usepackage{lmodern}             % Fuente vectorial nítida en PDF
+
+% ----------------------------------------------------------------------
+% 2. GEOMETRÍA DE PÁGINA (márgenes estándar de tesis / estilo APA)
+% ----------------------------------------------------------------------
+\usepackage[a4paper,left=3cm,right=2.5cm,top=2.5cm,bottom=2.5cm,headheight=30pt]{geometry}
+\usepackage{setspace}
+\onehalfspacing                  % Interlineado 1.5 (estándar en tesis)
+
+% ----------------------------------------------------------------------
+% 3. COLOR INSTITUCIONAL UPeU
+% ----------------------------------------------------------------------
+\usepackage[table]{xcolor}       % [table] habilita \rowcolor/\cellcolor si se requieren
+\definecolor{upeublue}{RGB}{0,32,91}   % Azul institucional UPeU
+\definecolor{upeugray}{RGB}{88,88,90}  % Gris de apoyo (texto secundario)
+
+% Celda coloreada para el diagrama de Gantt (capítulo 3): \gc marca una semana activa
+\newcommand{\gc}{\cellcolor{upeublue!35}}
+
+% ----------------------------------------------------------------------
+% 4. IMÁGENES
+% ----------------------------------------------------------------------
+\usepackage{graphicx}
+\graphicspath{{imagenes/}{./}}   % Busca imágenes en /imagenes y en la raíz
+
+% ----------------------------------------------------------------------
+% 5. TABLAS PROFESIONALES (booktabs + tabularx, sin bordes verticales)
+% ----------------------------------------------------------------------
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{caption}
+\captionsetup{
+  labelfont={bf,color=upeublue},
+  font=small,
+  justification=justified,
+  singlelinecheck=false
+}
+\renewcommand{\arraystretch}{1.25}
+
+% Columnas reutilizables para tabularx: ancho fijo con alineación fija
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+
+% ----------------------------------------------------------------------
+% 6. LISTAS Y RECUADROS DESTACADOS (cajas de nota / conclusión tipo UPeU)
+% ----------------------------------------------------------------------
+\usepackage{enumitem}
+\setlist{itemsep=2pt, topsep=4pt, parsep=0pt}
+
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{breakable,skins}
+
+% Caja destacada institucional: \begin{upeubox}{Título} ... \end{upeubox}
+\newtcolorbox{upeubox}[1]{
+  enhanced,
+  breakable,
+  colback=upeublue!5,
+  colframe=upeublue,
+  colbacktitle=upeublue,
+  coltitle=white,
+  fonttitle=\bfseries,
+  title={#1},
+  boxrule=0.6pt,
+  arc=1.5pt,
+  left=8pt, right=8pt, top=6pt, bottom=6pt,
+  before skip=10pt, after skip=10pt
+}
+
+% ----------------------------------------------------------------------
+% 7. TÍTULOS DE CAPÍTULO / SECCIÓN CON COLOR INSTITUCIONAL
+% ----------------------------------------------------------------------
+\usepackage{titlesec}
+
+% Portada de PARTE = una LÍNEA de la evaluación (CE01 / CE02 / CE03)
+\titleformat{\part}[display]
+  {\normalfont\bfseries\color{upeublue}\filcenter}
+  {\Large\MakeUppercase{\partname}~\thepart}
+  {14pt}
+  {\titlerule[1.2pt]\vspace{12pt}\Huge}
+\titlespacing*{\part}{0pt}{60pt}{40pt}
+
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\huge\color{upeublue}}
+  {\filright\Large\MakeUppercase{\chaptertitlename}~\thechapter}
+  {10pt}
+  {\titlerule[1pt]\vspace{10pt}\Huge}
+\titlespacing*{\chapter}{0pt}{0pt}{30pt}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{upeublue}}{\thesection}{0.8em}{}
+\titlespacing*{\section}{0pt}{18pt}{8pt}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{upeublue!85!black}}{\thesubsection}{0.8em}{}
+\titlespacing*{\subsection}{0pt}{14pt}{6pt}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\itshape\color{upeugray}}{\thesubsubsection}{0.8em}{}
+\titlespacing*{\subsubsection}{0pt}{12pt}{4pt}
+
+% ----------------------------------------------------------------------
+% 8. ENCABEZADOS Y PIES DE PÁGINA
+% ----------------------------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% La marca de encabezado muestra únicamente "Capítulo N" (sin título ni secciones)
+\renewcommand{\chaptermark}[1]{\markboth{\chaptername\ \thechapter}{}}
+
+% Izquierda: logo WISP en pequeño · Derecha: "Capítulo N"
+\fancyhead[L]{\raisebox{-0.35\height}{\includegraphics[height=7mm]{imagenes/Wisp.png}}}
+\fancyhead[R]{\small\itshape\color{upeugray}\nouppercase{\leftmark}}
+\fancyfoot[C]{\small\thepage}
+
+\fancypagestyle{plain}{ % Estilo de la primera página de cada capítulo
+  \fancyhf{}
+  \fancyfoot[C]{\small\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+% ----------------------------------------------------------------------
+% 9. HIPERVÍNCULOS (se carga al final del preámbulo, según buenas prácticas)
+% ----------------------------------------------------------------------
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks   = true,
+  linkcolor    = upeublue,
+  citecolor    = upeublue,
+  urlcolor     = upeublue,
+  filecolor    = upeublue,
+  pdftitle     = {Sistema de Gestión Integral para ISP de Fibra Óptica Multi-Zona},
+  pdfauthor    = {Universidad Peruana Unión - Escuela Profesional de Ingeniería de Sistemas},
+  pdfsubject   = {Proyecto de Evaluación de Fin de Carrera - Línea GTI},
+  pdfkeywords  = {UPeU, GTI, WISP, Fibra Óptica, ISP, Ingeniería de Sistemas},
+  bookmarksnumbered = true,
+  bookmarksopen     = true
+}
+\usepackage[capitalise,spanish]{cleveref} % \Cref{} / \cref{} para referencias cruzadas
+
+% ======================================================================
+% DOCUMENTO
+% ======================================================================
+\begin{document}
+
+% --------------------------- PÁGINAS PRELIMINARES ---------------------
+\pagenumbering{roman}
+
+\input{caratula}
+
+\tableofcontents
+\listoftables
+\listoffigures
+
+\clearpage
+\pagenumbering{arabic}
+
+% --------------------------- CUERPO DEL DOCUMENTO ----------------------
+% El documento integra las TRES líneas de la evaluación de perfil de proyecto de
+% egreso. Cada línea es una \part{}; sus entregables son los capítulos internos.
+% La numeración de capítulos es continua a lo largo de todo el documento.
+
+% ====================== LÍNEA CE01 · GESTIÓN DE TI (GTI) ======================
+\part{Línea CE01 — Gestión de Tecnologías de Información}
+\input{capitulos/linea1/capitulo1} % Entregable 1: Diagnóstico Organizacional y Alineamiento Estratégico
+\input{capitulos/linea1/capitulo2} % Entregable 2: Business Case — Caso de Negocio del Proyecto
+\input{capitulos/linea1/capitulo3} % Entregable 3: Plan de Gestión del Proyecto (PMBOK + Scrum)
+\input{capitulos/linea1/capitulo4} % Entregable 4: Modelado de Procesos AS-IS / TO-BE
+\input{capitulos/linea1/capitulo5} % Entregable 5: Solución TIC Integrada al Ecosistema de Sistemas de Información
+
+% ====================== LÍNEA CE02 · INGENIERÍA DE SOFTWARE ======================
+\part{Línea CE02 — Ingeniería de Software}
+\input{capitulos/linea2/ce02_ingenieria_software} % (en desarrollo) SRS, prototipos, arquitectura/UML, base de datos, construcción
+
+% ====================== LÍNEA CE03 · INFRAESTRUCTURA TECNOLÓGICA ======================
+\part{Línea CE03 — Infraestructura Tecnológica}
+\input{capitulos/linea3/ce03_infraestructura} % (en desarrollo) diseño de red, direccionamiento, equipamiento, VPN, seguridad, monitoreo
+
+\end{document}
+  

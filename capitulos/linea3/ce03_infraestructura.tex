@@ -1,0 +1,46 @@
+% ======================================================================
+% capitulos/ce03_infraestructura.tex
+% ----------------------------------------------------------------------
+% LÍNEA CE03 — INFRAESTRUCTURA TECNOLÓGICA
+% Esqueleto / marcador de posición. Reemplazar por los capítulos reales
+% conforme se desarrollen los entregables de esta línea.
+% ======================================================================
+\chapter{Infraestructura Tecnológica — Presentación de la línea}
+\label{chap:ce03-intro}
+
+Esta línea (CE03) define la infraestructura de red y de despliegue que soporta el
+sistema: la red de fibra óptica multi-zona de WISP, la interconexión de las 13 zonas
+y el entorno donde se ejecuta la solución de software (línea CE02). Se apoya en la
+\hyperref[chap:soluciontic]{solución TIC} definida en la línea CE01.
+
+\begin{upeubox}{Entregables planificados de la línea CE03 (en desarrollo)}
+El alcance previsto para esta línea comprende:
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Diseño de la topología de red:} arquitectura multi-zona (OLT, ONU,
+  NAP, enlaces de fibra) y diagrama físico y lógico.
+  \item \textbf{Direccionamiento y segmentación:} plan de direccionamiento IP, VLAN
+  y separación de tráfico por zona/servicio.
+  \item \textbf{Equipamiento y configuración:} routers MikroTik RB4011 (RouterOS~7),
+  OLT/ONU y parámetros PPPoE.
+  \item \textbf{Interconexión y acceso remoto:} VPN WireGuard para gestión
+  centralizada de los 13 MikroTik desde el sistema.
+  \item \textbf{Seguridad de red:} \textit{hardening}, control de accesos, firewall y
+  buenas prácticas.
+  \item \textbf{Monitoreo y gestión:} disponibilidad, SNMP y tableros de control de la
+  red.
+\end{itemize}
+\end{upeubox}
+
+\medskip
+\textit{Nota: los capítulos de esta línea se incorporarán aquí a medida que se
+completen sus entregables. Este archivo es un marcador de posición para mantener
+integrada la estructura de las tres líneas del proyecto.}
+
+% Al desarrollar, sustituir este archivo (o añadir \input adicionales en main.tex)
+% por capítulos como:
+%   \input{capitulos/ce03_topologia}
+%   \input{capitulos/ce03_direccionamiento}
+%   \input{capitulos/ce03_equipamiento}
+%   \input{capitulos/ce03_vpn_interconexion}
+%   \input{capitulos/ce03_seguridad}
+%   \input{capitulos/ce03_monitoreo}

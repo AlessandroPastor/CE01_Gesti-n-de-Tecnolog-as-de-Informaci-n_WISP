@@ -1,0 +1,550 @@
+% ======================================================================
+% capitulos/capitulo3.tex
+% ----------------------------------------------------------------------
+% ENTREGABLE 3 — PLAN DE GESTIÓN DEL PROYECTO
+% Empresa caso de estudio: WISP Ingeniería en Redes y Telecomunicaciones
+% Enfoque híbrido: PMBOK (PMI) + Scrum
+% Contenido trasladado desde Entregable3_PlanGestion_GTI_WISP.docx
+% ======================================================================
+\chapter{Plan de Gestión del Proyecto}
+\label{chap:plangestion}
+
+% ----------------------------------------------------------------------
+% Descripción del producto (introducción del capítulo)
+% ----------------------------------------------------------------------
+El presente documento constituye el Plan de Gestión del Proyecto para el desarrollo
+del \textbf{Sistema de Gestión Integral para ISP de Fibra Óptica Multi-Zona} de la
+empresa WISP. Es el instrumento técnico que describe cómo será planificado,
+ejecutado, monitoreado y controlado el proyecto, integrando la definición del
+alcance, el cronograma, el presupuesto, la gestión de riesgos, la gestión de
+interesados y los mecanismos de control.
+
+Este plan adopta un enfoque \textbf{híbrido}, reconocido por la Guía PMBOK 7.ª
+edición (PMI). La planificación general ---acta, alcance, cronograma, presupuesto y
+línea base--- sigue el enfoque predictivo del PMI, mientras que el desarrollo del
+software se ejecuta bajo un enfoque adaptativo (Scrum: \textit{backlog}, sprints e
+incrementos). Esta combinación asegura disciplina metodológica y trazabilidad de
+resultados, adecuada a la naturaleza mixta del proyecto (documentación de gestión y
+construcción iterativa de software).
+
+\begin{upeubox}{Alcance temporal del proyecto integrador}
+El proyecto integrador abarca las tres líneas (GTI, Software e Infraestructura) y se
+organiza en dos semestres:
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Semestre 1 (16/03/2026 -- 30/06/2026):} fase de iniciación y
+  planificación. Se completa íntegramente la línea de GTI y se produce la
+  documentación base de Infraestructura y Software (diseño, SRS, arquitectura).
+  \item \textbf{Semestre 2 (agosto -- inicios de diciembre 2026):} fase de ejecución.
+  Se implementan y despliegan las soluciones de Infraestructura y Software. La GTI,
+  ya cerrada, gobierna el proyecto integrador.
+\end{itemize}
+\end{upeubox}
+
+% ======================================================================
+\section{Acta de Constitución del Proyecto}
+\label{sec:acta}
+
+El Acta de Constitución (\textit{Project Charter}) es el documento que autoriza
+formalmente el proyecto, nombra al director del proyecto y establece los objetivos,
+el alcance preliminar, los interesados clave, las restricciones y los supuestos. Es
+la salida del proceso «Desarrollar el Acta de Constitución» del Grupo de Procesos de
+Inicio (PMBOK).
+
+\begin{center}
+\captionof{table}{Acta de constitución del proyecto.}
+\label{tab:acta}
+\begin{tabularx}{\textwidth}{L{4.2cm} X}
+\toprule
+\textbf{Campo} & \textbf{Contenido} \\
+\midrule
+Nombre del proyecto & Sistema de Gestión Integral para ISP de Fibra Óptica
+Multi-Zona -- WISP. \\
+Sponsor (patrocinador) & Gerencia de WISP Ingeniería en Redes y Telecomunicaciones
+(asume la infraestructura de producción y valida los entregables). \\
+Product Owner & Cristian Cabana Sulca (conoce el negocio; define y prioriza los
+requerimientos). \\
+Scrum Master & Jherson Jean Piero Fernández Sánchez (facilita el proceso, remueve
+impedimentos). \\
+Equipo de desarrollo & Alessandro Pastor Mamani Mamani (backend y móvil) y Andrés
+Lino Montes Mamani (backend y frontend). \\
+Fecha de inicio & 16 de marzo de 2026. \\
+Fecha de cierre (GTI) & 30 de junio de 2026 (fin del semestre 1). \\
+Justificación & WISP opera con procesos manuales y un sistema heredado deficiente, lo
+que limita su eficiencia y escalabilidad (según diagnóstico y Business Case previos). \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Objetivos del proyecto}
+
+\begin{center}
+\captionof{table}{Objetivos del proyecto y métricas de éxito.}
+\label{tab:objetivos-acta}
+\begin{tabularx}{\textwidth}{L{2.2cm} X L{4cm}}
+\toprule
+\textbf{Tipo} & \textbf{Objetivo} & \textbf{Métrica de éxito} \\
+\midrule
+Alcance & Entregar el sistema web y app móvil integrado con los 13 MikroTik. &
+100\% de módulos y entregables definidos. \\
+Tiempo & Completar la documentación de gestión (GTI) en el semestre 1. &
+Cierre al 30/06/2026. \\
+Costo & Mantener la inversión de WISP dentro del presupuesto aprobado. &
+$\leq$ S/ 1\,000 de inversión inicial. \\
+Calidad & Cumplir criterios de calidad ISO/IEC~25010 en el software. &
+Aprobación de pruebas y jurado. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Alcance preliminar}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Incluye:} sistema web de administración (Django + Angular +
+  PostgreSQL), app móvil con roles de técnico y vendedor, integración con los 13
+  MikroTik (WireGuard + API RouterOS), migración de datos y automatización de
+  notificaciones WhatsApp.
+  \item \textbf{No incluye:} automatización del sistema de pagos (Yape/Plin),
+  provisión automática de ONU en la OLT, ni el módulo contable/facturación
+  electrónica (fuera del alcance de esta fase).
+\end{itemize}
+
+\subsection{Restricciones y supuestos}
+
+\begin{center}
+\captionof{table}{Restricciones y supuestos del proyecto.}
+\label{tab:restricciones}
+\begin{tabularx}{\textwidth}{X X}
+\toprule
+\textbf{Restricciones} & \textbf{Supuestos} \\
+\midrule
+El proyecto documental de GTI debe cerrar en el semestre 1 (30/06/2026). &
+WISP proveerá el VPS, dominio y accesos a los MikroTik a tiempo. \\
+El equipo desarrolla en paralelo a su carga académica. &
+Los 13 MikroTik usan el mismo modelo (RB4011) y RouterOS~7 (homogéneo). \\
+Inversión de WISP limitada (MYPE). &
+El personal de WISP colaborará en la validación y capacitación. \\
+Conectividad variable en zonas rurales. &
+La infraestructura de red actual se mantiene operativa durante el proyecto. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% ======================================================================
+\section{Gestión del Alcance}
+\label{sec:alcance}
+
+La Estructura de Desglose del Trabajo (EDT/WBS) es una descomposición jerárquica del
+trabajo total del proyecto en entregables y paquetes de trabajo. Cumple la
+\textbf{regla del 100\,\%}: la suma de los niveles inferiores representa la totalidad
+del trabajo del nivel superior, sin trabajo adicional ni faltante.
+
+\subsection{Estructura de Desglose del Trabajo (EDT / WBS)}
+
+La EDT del proyecto se organiza en cinco entregables de primer nivel, cada uno
+descompuesto en paquetes de trabajo:
+
+\begin{center}
+\captionof{table}{Estructura de Desglose del Trabajo (EDT/WBS).}
+\label{tab:edt}
+\begin{tabularx}{\textwidth}{L{1.6cm} X}
+\toprule
+\textbf{Código} & \textbf{Entregable / Paquete de trabajo} \\
+\midrule
+\textbf{1} & \textbf{GESTIÓN DEL PROYECTO (GTI)} \\
+1.1 & Diagnóstico organizacional y alineamiento estratégico. \\
+1.2 & Business Case (caso de negocio). \\
+1.3 & Plan de gestión del proyecto. \\
+1.4 & Mejora de procesos (AS-IS / TO-BE). \\
+1.5 & Solución TIC integrada (arquitectura). \\
+\addlinespace
+\textbf{2} & \textbf{DEFINICIÓN DEL SISTEMA (Software E1)} \\
+2.1 & SRS (IEEE~29148): requerimientos funcionales y no funcionales. \\
+2.2 & Prototipos navegables (Figma) validados. \\
+2.3 & Documento de arquitectura (C4 / IEEE~42010) y modelado UML. \\
+\addlinespace
+\textbf{3} & \textbf{BASE DE DATOS (Software E2)} \\
+3.1 & Modelo de datos (ER + lógico + diccionario). \\
+3.2 & Scripts SQL (DDL + DML), procedimientos, seguridad. \\
+\addlinespace
+\textbf{4} & \textbf{CONSTRUCCIÓN DEL SISTEMA (Software E3 -- Semestre 2)} \\
+4.1 & Backend Django (API REST) e integración MikroTik (WireGuard + RouterOS API). \\
+4.2 & Frontend web Angular (administración). \\
+4.3 & App móvil (roles técnico y vendedor). \\
+4.4 & Módulo WhatsApp (notificaciones) y despliegue en nube. \\
+\addlinespace
+\textbf{5} & \textbf{VALIDACIÓN Y CIERRE (Software E4-E5 -- Semestre 2)} \\
+5.1 & Pruebas, CI/CD, auditoría de calidad. \\
+5.2 & Video pitch y sustentación ante jurado. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{upeubox}{Foco de este plan}
+Este Plan de Gestión pertenece a la línea GTI, que se ejecuta y cierra en el semestre
+1. Por ello, el cronograma, el presupuesto y los sprints detallados a continuación se
+centran en el paquete~1 (Gestión del Proyecto) y en la documentación base de los
+paquetes~2 y~3, que son las salidas del semestre~1. Los paquetes~4 y~5 (construcción
+y validación) corresponden al semestre~2 y se planifican a nivel de hitos.
+\end{upeubox}
+
+\subsection{Diccionario de la EDT (entregables principales)}
+
+El diccionario de la EDT describe cada entregable de primer nivel, su descripción y
+su criterio de aceptación:
+
+\begin{center}
+\captionof{table}{Diccionario de la EDT.}
+\label{tab:diccionario-edt}
+\begin{tabularx}{\textwidth}{L{2.9cm} X X}
+\toprule
+\textbf{Entregable} & \textbf{Descripción} & \textbf{Criterio de aceptación} \\
+\midrule
+1. Gestión (GTI) & Documentación completa de diagnóstico, caso de negocio, plan,
+procesos y arquitectura. & Aprobación de los 4 componentes por el jurado. \\
+2. Definición del sistema & SRS, prototipos, arquitectura y UML del sistema. &
+SRS validado y prototipos aprobados por WISP. \\
+3. Base de datos & Modelo, scripts y seguridad de la base de datos. &
+BD normalizada y scripts ejecutables. \\
+4. Construcción & Sistema web y móvil funcional e integrado con MikroTik. &
+Sistema operativo y desplegado (semestre 2). \\
+5. Validación y cierre & Pruebas, CI/CD y sustentación final. &
+Aprobación del jurado (semestre 2). \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% ======================================================================
+\section{Gestión del Cronograma}
+\label{sec:cronograma}
+
+El cronograma se construye definiendo las actividades, secuenciándolas, estimando su
+duración y desarrollando el modelo de programación. Se representa mediante un diagrama
+de Gantt, con hitos que marcan eventos significativos del proyecto (PMBOK, Área de
+Conocimiento: Gestión del Cronograma).
+
+\subsection{Lista de actividades}
+
+Las actividades del semestre~1 (línea GTI), organizadas por fase:
+
+\begin{center}
+\captionof{table}{Lista de actividades del semestre 1.}
+\label{tab:actividades}
+\begin{tabularx}{\textwidth}{C{1cm} X L{2.4cm} L{2.6cm}}
+\toprule
+\textbf{ID} & \textbf{Actividad} & \textbf{Duración} & \textbf{Responsable} \\
+\midrule
+A1 & Inducción y conformación de equipos & Semana 1-2 & Equipo \\
+A2 & Diagnóstico organizacional y alineamiento estratégico & 2 semanas & Product Owner \\
+A3 & Business Case (caso de negocio) & 2 semanas & Product Owner \\
+A4 & Plan de gestión del proyecto & 2 semanas & Scrum Master \\
+A5 & Modelado de procesos AS-IS / TO-BE & 2 semanas & PO + equipo \\
+A6 & SRS y prototipos del sistema & 3 semanas & Developers \\
+A7 & Arquitectura de solución TIC + UML & 2 semanas & Developers \\
+A8 & Diseño de base de datos & 2 semanas & Developers \\
+A9 & Consolidación y sustentación (semestre 1) & 2 semanas & Equipo \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Diagrama de Gantt (Semestre 1: 16/03 -- 30/06/2026)}
+
+Cada columna representa una semana. Las celdas coloreadas indican el período de
+ejecución de cada actividad:
+
+\begin{center}
+\captionof{table}{Diagrama de Gantt del semestre 1 (15 semanas).}
+\label{tab:gantt}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.15}
+{\footnotesize
+\begin{tabular}{l *{15}{c}}
+\toprule
+\textbf{Act.} & \textbf{S1} & \textbf{S2} & \textbf{S3} & \textbf{S4} & \textbf{S5}
+& \textbf{S6} & \textbf{S7} & \textbf{S8} & \textbf{S9} & \textbf{S10} & \textbf{S11}
+& \textbf{S12} & \textbf{S13} & \textbf{S14} & \textbf{S15} \\
+\midrule
+A1 Inducción      & \gc & \gc &     &     &     &     &     &     &     &     &     &     &     &     &     \\
+A2 Diagnóstico    &     & \gc & \gc &     &     &     &     &     &     &     &     &     &     &     &     \\
+A3 Business Case  &     &     & \gc & \gc &     &     &     &     &     &     &     &     &     &     &     \\
+A4 Plan gestión   &     &     &     & \gc & \gc & \gc &     &     &     &     &     &     &     &     &     \\
+A5 Procesos       &     &     &     &     &     & \gc & \gc &     &     &     &     &     &     &     &     \\
+A6 SRS+Prototipos &     &     &     &     &     &     &     & \gc & \gc & \gc &     &     &     &     &     \\
+A7 Arquitect.+UML &     &     &     &     &     &     &     &     &     & \gc & \gc & \gc &     &     &     \\
+A8 Base datos     &     &     &     &     &     &     &     &     &     &     &     & \gc & \gc &     &     \\
+A9 Consol.+Sust.  &     &     &     &     &     &     &     &     &     &     &     &     &     & \gc & \gc \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsection{Hitos principales}
+
+\begin{center}
+\captionof{table}{Hitos principales del semestre 1.}
+\label{tab:hitos}
+\begin{tabularx}{\textwidth}{C{1cm} X L{4cm}}
+\toprule
+\textbf{Hito} & \textbf{Descripción} & \textbf{Fecha estimada} \\
+\midrule
+H1 & Acta de conformidad e inducción aprobada & Semana 2 (fin marzo) \\
+H2 & Revisión de avance 1 (diagnóstico + business case) & Semana 5-6 (abril) \\
+H3 & Brief aprobado (problema y alcance validados) & Semana 8 (mayo) \\
+H4 & Revisión de avance 2 (procesos + arquitectura) & Semana 11-12 (junio) \\
+H5 & Sustentación final semestre 1 (GTI cerrada) & Semana 15-16 (30/06) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% ======================================================================
+\section{Gestión de Costos}
+\label{sec:costos-plan}
+
+El presupuesto es la suma de los costos estimados de las actividades, agregada para
+establecer la \textbf{línea base de costos}, contra la cual se mide y controla el
+desempeño del proyecto (PMBOK, Gestión de los Costos).
+
+\subsection{Presupuesto detallado}
+
+El presupuesto integra la inversión que asume WISP (única) y los costos operativos del
+primer año. Se retoma la estimación del Business Case (Entregable~2), organizada aquí
+por categorías de gestión de costos:
+
+\begin{center}
+\captionof{table}{Presupuesto detallado del proyecto (soles).}
+\label{tab:presupuesto}
+\begin{tabularx}{\textwidth}{L{3.2cm} X R{2.2cm}}
+\toprule
+\textbf{Categoría} & \textbf{Concepto} & \textbf{Monto (S/)} \\
+\midrule
+Infraestructura & VPS en la nube (setup + 1.er mes) & 150 \\
+Infraestructura & Dominio web + SSL + correo corporativo & 150 \\
+Implementación & Migración de datos y puesta en marcha & 300 \\
+Gestión del cambio & Capacitación al personal (2 sesiones) & 200 \\
+Reserva & Contingencia / imprevistos ($\sim$10\%) & 200 \\
+\midrule
+\textbf{INVERSIÓN INICIAL} & Desembolso único de WISP al arranque & \textbf{1\,000} \\
+Operación (anual) & VPS mensual + dominio + mantenimiento + backup & 3\,780 \\
+\textbf{TOTAL AÑO 1} & Inversión inicial + operación del primer año & \textbf{4\,780} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{upeubox}{Costo del desarrollo (recurso humano del equipo)}
+El esfuerzo de desarrollo del equipo de 4 integrantes no representa un costo monetario
+para WISP (es el aporte del proyecto de fin de carrera), pero su valor de mercado se
+estima en \textbf{S/ 30\,000}. Se registra como costo asumido por el equipo para
+efectos de trazabilidad y cálculo del retorno, conforme se detalló en el Business Case.
+\end{upeubox}
+
+\subsection{Línea base de costos}
+
+La línea base de costos distribuye el gasto acumulado a lo largo del tiempo (curva~S).
+Para el semestre~1, la inversión se concentra hacia el final (puesta en marcha),
+mientras que los costos operativos inician tras el despliegue:
+
+\begin{center}
+\captionof{table}{Línea base de costos (curva S).}
+\label{tab:linea-base}
+\begin{tabularx}{\textwidth}{X R{3.2cm} R{3.2cm}}
+\toprule
+\textbf{Momento} & \textbf{Costo del período (S/)} & \textbf{Costo acumulado (S/)} \\
+\midrule
+Inicio (planificación) & 0 & 0 \\
+Setup infraestructura & 300 & 300 \\
+Puesta en marcha + capacitación & 700 & 1\,000 \\
+Operación (resto del año) & 3\,780 & 4\,780 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% ======================================================================
+\section{Gestión de Riesgos}
+\label{sec:riesgos-plan}
+
+La gestión de riesgos comprende identificar los riesgos, realizar el análisis
+cualitativo (evaluando probabilidad e impacto para priorizarlos) y planificar la
+respuesta a los riesgos (estrategias: evitar, mitigar, transferir o aceptar), conforme
+al PMBOK.
+
+\subsection{Identificación y análisis cualitativo}
+
+Se retoman y amplían los riesgos del Business Case, evaluándolos por probabilidad e
+impacto (escala 1-5) y priorizándolos por severidad ($P\times I$):
+
+\begin{center}
+\captionof{table}{Identificación y análisis cualitativo de riesgos.}
+\label{tab:riesgos-identificacion}
+\begin{tabularx}{\textwidth}{C{1cm} X C{1.1cm} C{1.1cm} C{1.1cm} C{1.6cm}}
+\toprule
+\textbf{ID} & \textbf{Riesgo} & \textbf{Prob} & \textbf{Imp} & \textbf{Sev} &
+\textbf{Nivel} \\
+\midrule
+R1 & Baja adopción del sistema por el personal. & 4 & 4 & 16 & Alto \\
+R2 & Fallo en la integración con MikroTik vía API. & 3 & 4 & 12 & Medio \\
+R3 & Pérdida de datos en la migración. & 3 & 5 & 15 & Alto \\
+R4 & Conectividad inestable en zonas rurales. & 4 & 3 & 12 & Medio \\
+R5 & Retrasos por carga académica del equipo. & 4 & 3 & 12 & Medio \\
+R6 & Caída del VPS en la nube. & 2 & 4 & 8 & Medio \\
+R7 & Brechas de seguridad / acceso no autorizado. & 3 & 5 & 15 & Alto \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Plan de respuesta a los riesgos}
+
+\begin{center}
+\captionof{table}{Plan de respuesta a los riesgos.}
+\label{tab:riesgos-respuesta}
+\begin{tabularx}{\textwidth}{C{1cm} L{2.4cm} X}
+\toprule
+\textbf{ID} & \textbf{Estrategia} & \textbf{Plan de respuesta} \\
+\midrule
+R1 & Mitigar & Capacitación práctica, interfaz simple tipo app conocida,
+acompañamiento inicial y respaldo del administrador. \\
+R2 & Mitigar & Pruebas de integración por zona; los 13 MikroTik son homogéneos
+(RB4011, RouterOS~7); ambiente de prueba previo. \\
+R3 & Evitar / Mitigar & Respaldo previo, migración por etapas, validación de datos y
+conservación del sistema heredado hasta confirmar consistencia. \\
+R4 & Mitigar & Apps con modo offline / sincronización diferida para operar en campo
+sin señal. \\
+R5 & Mitigar & Metodología ágil con entregables incrementales, priorización de módulos
+críticos y cronograma con holgura. \\
+R6 & Transferir & Proveedor cloud confiable con SLA, backups automáticos y plan de
+recuperación; respaldo local opcional. \\
+R7 & Mitigar & Autenticación por roles, cifrado, VPN WireGuard para acceso a MikroTik
+y buenas prácticas de seguridad. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% ======================================================================
+\section{Gestión Ágil (Scrum)}
+\label{sec:scrum}
+
+Para la construcción del software se adopta el marco \textbf{Scrum}: el trabajo se
+organiza en un Product Backlog priorizado, se planifica y ejecuta en Sprints de
+duración fija, y cada Sprint entrega un Incremento potencialmente utilizable. Este
+enfoque adaptativo es reconocido por el PMBOK 7.ª edición para proyectos con requisitos
+que evolucionan.
+
+\subsection{Roles del equipo Scrum}
+
+\begin{center}
+\captionof{table}{Roles del equipo Scrum.}
+\label{tab:roles-scrum}
+\begin{tabularx}{\textwidth}{L{2.6cm} L{3.6cm} X}
+\toprule
+\textbf{Rol Scrum} & \textbf{Integrante} & \textbf{Responsabilidad} \\
+\midrule
+Product Owner & Cristian Cabana Sulca & Define y prioriza el backlog; representa al
+negocio (conoce a WISP); valida los incrementos. \\
+Scrum Master & Jherson J. P. Fernández S. & Facilita las ceremonias, remueve
+impedimentos y protege al equipo. \\
+Developer & Alessandro Pastor Mamani M. & Desarrollo backend y aplicación móvil. \\
+Developer & Andrés Lino Montes Mamani & Desarrollo backend y frontend web. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Product Backlog priorizado}
+
+El Product Backlog recoge las historias de usuario priorizadas por valor. Se muestran
+las principales, con su prioridad y estimación en puntos de historia
+(\textit{Story Points}):
+
+\begin{center}
+\captionof{table}{Product Backlog priorizado (principales historias de usuario).}
+\label{tab:backlog}
+\begin{tabularx}{\textwidth}{L{1.6cm} X C{1.8cm} C{1cm}}
+\toprule
+\textbf{ID} & \textbf{Historia de usuario} & \textbf{Prioridad} & \textbf{SP} \\
+\midrule
+HU-01 & Como vendedor, quiero registrar prospectos desde la app móvil para no usar
+papel ni WhatsApp. & Alta & 8 \\
+HU-02 & Como administrador, quiero validar prospectos y generar órdenes de
+instalación. & Alta & 5 \\
+HU-03 & Como técnico, quiero registrar la instalación (fotos NAP, borne, equipos)
+desde la app. & Alta & 8 \\
+HU-04 & Como administrador, quiero crear/cortar/reactivar clientes PPPoE en el
+MikroTik desde el sistema. & Alta & 13 \\
+HU-05 & Como administrador, quiero gestionar clientes, planes y zonas desde el panel
+web. & Media & 8 \\
+HU-06 & Como visitante, quiero ver la cobertura de la empresa en el sitio web. &
+Media & 5 \\
+HU-07 & Como cliente, quiero recibir notificaciones automáticas por WhatsApp. &
+Baja & 5 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Sprint Planning (planificación de sprints)}
+
+El desarrollo se organiza en sprints de 2 semanas. La documentación de GTI (semestre~1)
+se distribuye en los primeros sprints, y la construcción del software (semestre~2) en
+sprints posteriores. Planificación de referencia:
+
+\begin{center}
+\captionof{table}{Planificación de sprints de referencia.}
+\label{tab:sprints}
+\begin{tabularx}{\textwidth}{L{2.2cm} L{2.8cm} X}
+\toprule
+\textbf{Sprint} & \textbf{Fechas} & \textbf{Foco / Incremento} \\
+\midrule
+Sprint 1 & 16/03 -- 29/03 & Inducción, diagnóstico organizacional. \\
+Sprint 2 & 30/03 -- 12/04 & Business Case, inicio del plan de gestión. \\
+Sprint 3 & 13/04 -- 26/04 & Plan de gestión, procesos AS-IS. \\
+Sprint 4 & 27/04 -- 10/05 & Procesos TO-BE, inicio SRS. \\
+Sprint 5 & 11/05 -- 24/05 & SRS y prototipos (Brief aprobado). \\
+Sprint 6 & 25/05 -- 07/06 & Arquitectura TIC, UML. \\
+Sprint 7 & 08/06 -- 21/06 & Diseño de base de datos, consolidación. \\
+Sprints 8+ & Semestre 2 & Construcción: backend + MikroTik, frontend, móvil, WhatsApp,
+pruebas, despliegue. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Incrementos y Definición de Terminado (DoD)}
+
+Cada sprint produce un incremento que cumple la Definición de Terminado
+(\textit{Definition of Done}) del proyecto:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item El entregable/funcionalidad está completo según su criterio de aceptación.
+  \item Ha sido revisado por el Product Owner (documentos) o probado (software).
+  \item Está versionado en el repositorio Git (para el software).
+  \item Cumple los estándares de calidad definidos (IEEE/ISO según corresponda).
+\end{itemize}
+
+\subsection{Mecanismos de control y seguimiento}
+
+El control del proyecto se realiza mediante las ceremonias Scrum y el seguimiento del
+avance:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Daily / reuniones de sincronización:} coordinación frecuente del
+  equipo sobre avance e impedimentos.
+  \item \textbf{Sprint Review:} al cierre de cada sprint se presenta el incremento al
+  Product Owner y, en hitos, a los revisores.
+  \item \textbf{Sprint Retrospective:} mejora continua del proceso del equipo.
+  \item \textbf{Revisiones de avance (hitos H2, H4):} control formal ante la escuela
+  en las semanas 5-6 y 11-12.
+  \item \textbf{Tablero Kanban / gestión visual:} seguimiento del estado de las tareas
+  (Por hacer / En progreso / Hecho).
+\end{itemize}
+
+% ======================================================================
+\begin{upeubox}{Conclusión del Plan de Gestión}
+El presente Plan de Gestión establece la hoja de ruta completa del proyecto bajo un
+enfoque híbrido PMBOK + Scrum. Define formalmente el proyecto (acta de constitución),
+delimita su trabajo (EDT y diccionario), programa sus actividades (cronograma, Gantt e
+hitos), establece su línea base de costos, gestiona sus riesgos con un plan de
+respuesta, y organiza la construcción del software bajo Scrum (backlog, sprints e
+incrementos).
+
+\medskip
+\textbf{Trazabilidad y disciplina metodológica.} Cada componente se alinea a su marco
+de referencia: el acta al \textit{Project Charter} del PMI, la EDT a la regla del
+100\,\%, el cronograma a la gestión del tiempo con hitos, el presupuesto a la línea
+base de costos, los riesgos al análisis cualitativo $P\times I$ con estrategias de
+respuesta, y la gestión ágil a Scrum. Con ello, el proyecto cuenta con la disciplina
+metodológica y la trazabilidad de resultados exigidas, y queda listo para su ejecución.
+\end{upeubox}

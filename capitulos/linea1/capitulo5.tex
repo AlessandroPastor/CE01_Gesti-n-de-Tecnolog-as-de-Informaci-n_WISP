@@ -1,0 +1,401 @@
+% ======================================================================
+% capitulos/capitulo5.tex
+% ----------------------------------------------------------------------
+% ENTREGABLE 5 — SOLUCIÓN TIC INTEGRADA al Ecosistema de Sistemas de Información
+% Empresa caso de estudio: WISP Ingeniería en Redes y Telecomunicaciones
+% Stack: Django · Angular · PostgreSQL · App móvil · WireGuard · API RouterOS
+% Contenido trasladado desde Entregable5_SolucionTIC_GTI_WISP.docx
+% ======================================================================
+\chapter{Solución TIC Integrada al Ecosistema de Sistemas de Información}
+\label{chap:soluciontic}
+
+% ----------------------------------------------------------------------
+% Descripción del producto (introducción del capítulo)
+% ----------------------------------------------------------------------
+El presente documento constituye el diseño conceptual y técnico de la solución
+tecnológica propuesta para WISP: el \textbf{Sistema de Gestión Integral para ISP de
+Fibra Óptica Multi-Zona}. Considera su integración con los sistemas y la
+infraestructura existentes, la arquitectura organizacional, los flujos de datos y los
+requisitos de seguridad.
+
+Se describe la arquitectura de la solución y sus componentes, el ecosistema de
+sistemas de información y su interoperabilidad, los mecanismos de seguridad y
+gobernanza (alineados a COBIT 2019 y a la normativa peruana de protección de datos),
+y los lineamientos de escalabilidad y sostenibilidad, asegurando la coherencia con el
+ecosistema institucional y con los objetivos estratégicos definidos en los
+entregables previos.
+
+\begin{upeubox}{Fundamento metodológico: descripción de arquitectura}
+La arquitectura se documenta siguiendo el enfoque de vistas del modelo C4 (contexto,
+contenedores, componentes) y el estándar ISO/IEC/IEEE~42010 de descripción de
+arquitectura, complementados con un modelo de capas (\textit{layered architecture})
+para representar la separación de responsabilidades.
+\end{upeubox}
+
+% ======================================================================
+\section{Arquitectura de la Solución}
+\label{sec:arquitectura}
+
+La solución adopta una arquitectura cliente-servidor multicapa, desplegada en la nube
+y conectada de forma segura con la infraestructura física distribuida en las 13 zonas
+de WISP. El backend centralizado expone una API REST que consumen tanto el frontend
+web como la aplicación móvil, y se comunica con los 13 MikroTik a través de una red
+privada virtual (WireGuard) usando la API nativa de RouterOS~7.
+
+\subsection{Diagrama de arquitectura (vista de despliegue)}
+
+\begin{center}
+\includegraphics[width=\textwidth]{arq_despliegue.png}
+\captionof{figure}{Arquitectura de despliegue: componentes en la nube (VPS) conectados
+vía WireGuard con los 13 MikroTik y OLT de cada zona.}
+\label{fig:arq-despliegue}
+\end{center}
+
+\subsection{Arquitectura por capas}
+
+La solución se organiza en cinco capas con responsabilidades bien separadas, lo que
+favorece el mantenimiento, la seguridad y la escalabilidad:
+
+\begin{center}
+\includegraphics[width=0.9\textwidth]{arq_capas.png}
+\captionof{figure}{Arquitectura en capas (\textit{layered architecture}) de la
+solución.}
+\label{fig:arq-capas}
+\end{center}
+
+\subsection{Componentes principales}
+
+\begin{center}
+\captionof{table}{Componentes principales de la solución.}
+\label{tab:componentes}
+\begin{tabularx}{\textwidth}{L{3cm} L{3.2cm} X}
+\toprule
+\textbf{Componente} & \textbf{Tecnología} & \textbf{Función} \\
+\midrule
+Frontend web & Angular &
+Panel de administración: gestión de clientes, planes, zonas, órdenes y cobertura. \\
+Aplicación móvil & App móvil (roles) &
+Registro de prospectos (vendedor) y evidencias de instalación (técnico) desde el celular. \\
+Backend / API & Django REST Framework &
+Lógica de negocio, autenticación por roles, exposición de API REST y orquestación de
+integraciones. \\
+Base de datos & PostgreSQL &
+Fuente única de verdad: clientes, planes, zonas, órdenes, instalaciones, usuarios. \\
+VPN & WireGuard &
+Túnel cifrado entre la nube y los 13 MikroTik para gestión remota segura. \\
+Integración de red & API RouterOS~7 &
+Alta, corte y reactivación automática de usuarios PPPoE en los MikroTik. \\
+Notificaciones & Node.js (WhatsApp) &
+Envío automático de mensajes a clientes (avisos, cobros, estados). \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Integraciones}
+
+La solución integra tres tipos de sistemas, lo que constituye su principal
+diferenciador técnico:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Integración con MikroTik (RouterOS API):} el backend crea, corta y
+  reactiva usuarios PPPoE y gestiona la lista de corte de morosos directamente en cada
+  router, eliminando la operación manual.
+  \item \textbf{Integración con WhatsApp (Node.js):} envío automatizado de
+  notificaciones a los clientes, reutilizando el canal ya conocido por la empresa.
+  \item \textbf{Integración interna (web $+$ móvil $+$ BD):} todos los clientes (web y
+  móvil) consumen la misma API y la misma base de datos, garantizando consistencia.
+\end{itemize}
+
+% ======================================================================
+\section{Ecosistema de Sistemas de Información}
+\label{sec:ecosistema}
+
+\subsection{Mapa de sistemas actuales}
+
+El ecosistema actual de WISP está compuesto por sistemas aislados que no se comunican
+entre sí, lo que genera la dispersión de datos identificada en el diagnóstico:
+
+\begin{center}
+\captionof{table}{Mapa de sistemas actuales y su destino en la solución.}
+\label{tab:mapa-sistemas}
+\begin{tabularx}{\textwidth}{L{3.6cm} X X}
+\toprule
+\textbf{Sistema actual} & \textbf{Rol} & \textbf{Destino en la solución} \\
+\midrule
+Sistema heredado (PHP) & Gestión de clientes & Reemplazado por el nuevo sistema web \\
+13$\times$ MikroTik RouterOS~7 & Control PPPoE y ancho de banda & Integrado vía API \\
+OLT VSOL ($\times$13) & Concentración de fibra (GPON) & Se mantiene (capa física) \\
+Bot WhatsApp (pagos) & Recepción de comprobantes & Coexiste (fuera del alcance actual) \\
+WhatsApp operativo & Coordinación informal & Reemplazado por app $+$ notificaciones \\
+Papel / registros manuales & Captación en campo & Reemplazado por app móvil \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Integración propuesta}
+
+La solución actúa como núcleo integrador del ecosistema: centraliza la información
+dispersa y se convierte en el punto único de gestión. El sistema heredado y los flujos
+de papel/WhatsApp se sustituyen; los MikroTik y OLT (infraestructura física) se
+conservan pero pasan a ser gestionados desde el sistema; y el canal WhatsApp se
+automatiza. De un ecosistema fragmentado se pasa a un ecosistema integrado alrededor de
+una fuente única de verdad.
+
+\begin{upeubox}{Principio de integración adoptado}
+Se aplica el principio de «fuente única de verdad» (\textit{single source of truth}):
+toda la información operativa reside en la base de datos PostgreSQL, y los distintos
+clientes (web, móvil) y sistemas (MikroTik, WhatsApp) se sincronizan con ella. Esto
+elimina la duplicidad y las inconsistencias que hoy existen entre el sistema heredado,
+los comentarios de los MikroTik y los chats.
+\end{upeubox}
+
+\subsection{Interoperabilidad}
+
+La interoperabilidad entre los componentes se garantiza mediante estándares abiertos y
+protocolos ampliamente soportados:
+
+\begin{center}
+\captionof{table}{Interoperabilidad entre componentes de la solución.}
+\label{tab:interoperabilidad}
+\begin{tabularx}{\textwidth}{L{3.8cm} X L{3cm}}
+\toprule
+\textbf{Interacción} & \textbf{Protocolo / Estándar} & \textbf{Formato} \\
+\midrule
+Web/Móvil $\leftrightarrow$ Backend & HTTP/HTTPS (REST) & JSON \\
+Backend $\leftrightarrow$ MikroTik & API REST RouterOS~7 sobre VPN & JSON / HTTPS \\
+Nube $\leftrightarrow$ Zonas & WireGuard (UDP cifrado) & Túnel VPN \\
+Backend $\leftrightarrow$ WhatsApp & API / librería Node.js & JSON \\
+Backend $\leftrightarrow$ Base de datos & SQL / ORM (Django) & Relacional \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% ======================================================================
+\section{Seguridad y Gobernanza}
+\label{sec:seguridad}
+
+La seguridad y la gobernanza de la solución se abordan en dos planos complementarios:
+los controles técnicos de seguridad de la información, y el marco de gobierno de TI que
+asegura que la tecnología esté alineada con los objetivos de WISP y sea gestionada con
+criterios reconocidos.
+
+\begin{upeubox}{Fundamento metodológico: gobierno de TI (COBIT 2019)}
+La gobernanza se alinea con COBIT~2019 (ISACA), marco de referencia para el gobierno y
+la gestión de la tecnología de la información empresarial. Se referencian objetivos de
+gobierno y gestión (\textit{governance/management objectives}) aplicables a la
+solución. Esto responde al lineamiento de «Gobierno de TI» que el propio programa de
+GTI establece para el área.
+\end{upeubox}
+
+\subsection{Gestión de accesos}
+
+El control de accesos se basa en el principio de mínimo privilegio y en la autenticación
+por roles (RBAC --- \textit{Role-Based Access Control}), de modo que cada usuario accede
+únicamente a las funciones que su rol requiere:
+
+\begin{center}
+\captionof{table}{Control de accesos por rol (RBAC).}
+\label{tab:accesos}
+\begin{tabularx}{\textwidth}{L{2.6cm} X L{3.6cm}}
+\toprule
+\textbf{Rol} & \textbf{Accesos permitidos} & \textbf{Restricciones} \\
+\midrule
+Administrador &
+Gestión completa: clientes, planes, zonas, órdenes, cortes, reportes. &
+Acceso total (supervisado) \\
+Vendedor &
+Registro de prospectos y consulta de cobertura desde la app. &
+No accede a datos de red ni cortes \\
+Técnico &
+Órdenes asignadas y registro de evidencias de instalación. &
+No accede a datos comerciales/financieros \\
+Cliente (futuro) &
+Consulta de su estado y cobertura (autoservicio). &
+Solo su propia información \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Protección de datos}
+
+La protección de los datos ---especialmente los datos personales de los clientes--- se
+garantiza mediante los siguientes controles técnicos:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Cifrado en tránsito:} todo el tráfico web usa HTTPS/TLS, y la
+  comunicación con los MikroTik viaja por el túnel cifrado WireGuard.
+  \item \textbf{Autenticación robusta:} credenciales protegidas (\textit{hashing}),
+  tokens de sesión y control por roles.
+  \item \textbf{Respaldos periódicos:} copias de seguridad automáticas de la base de
+  datos, con plan de recuperación.
+  \item \textbf{Registro de auditoría:} trazabilidad de las acciones críticas (altas,
+  cortes, cambios) para responsabilidad y control.
+  \item \textbf{Segmentación de red:} acceso a los MikroTik restringido a través de la
+  VPN, sin exposición directa a internet.
+\end{itemize}
+
+\subsection{Cumplimiento normativo}
+
+La solución se diseña considerando el marco legal peruano y las buenas prácticas del
+sector:
+
+\begin{center}
+\captionof{table}{Marco normativo aplicable a la solución.}
+\label{tab:normativo}
+\begin{tabularx}{\textwidth}{L{3cm} L{3.4cm} X}
+\toprule
+\textbf{Norma / Marco} & \textbf{Ámbito} & \textbf{Aplicación en la solución} \\
+\midrule
+Ley N° 29733 & Protección de Datos Personales (Perú) &
+Tratamiento seguro y consentido de los datos de clientes. \\
+OSIPTEL / MTC & Regulación de telecomunicaciones &
+Registro ordenado de clientes y servicios prestados. \\
+ISO/IEC 27001 (ref.) & Seguridad de la información &
+Buenas prácticas de controles de seguridad. \\
+COBIT 2019 & Gobierno y gestión de TI &
+Alineamiento estratégico y gestión de riesgos (ver abajo). \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Gobernanza de TI con COBIT 2019}
+
+Se referencian los objetivos de gobierno y gestión de COBIT~2019 que la solución ayuda
+a cumplir, evidenciando que el proyecto no solo construye tecnología, sino que la
+gobierna de forma alineada al negocio:
+
+\begin{center}
+\captionof{table}{Objetivos de COBIT~2019 cubiertos por la solución.}
+\label{tab:cobit}
+\begin{tabularx}{\textwidth}{L{3.4cm} L{3.6cm} X}
+\toprule
+\textbf{Objetivo COBIT 2019} & \textbf{Dominio} & \textbf{Contribución de la solución} \\
+\midrule
+EDM01 -- Gobierno de TI & Evaluar, Orientar y Supervisar &
+La solución alinea la TI con los objetivos estratégicos de WISP definidos en el
+diagnóstico. \\
+EDM03 -- Optimización del riesgo & Evaluar, Orientar y Supervisar &
+Reduce riesgos operativos (dependencia de una persona, pérdida de datos). \\
+APO12 -- Gestión del riesgo & Alinear, Planificar y Organizar &
+Se apoya en el plan de riesgos del proyecto (análisis P$\times$I y respuestas). \\
+APO13 -- Gestión de la seguridad & Alinear, Planificar y Organizar &
+Define políticas de seguridad, cifrado y control de accesos. \\
+BAI03 -- Gestión de soluciones & Construir, Adquirir e Implementar &
+Desarrollo estructurado del sistema (SRS, arquitectura, pruebas). \\
+DSS05 -- Servicios de seguridad & Entregar, Dar Servicio y Soporte &
+Gestión de accesos por roles, protección de \textit{endpoints} y VPN. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{upeubox}{Lectura de gobernanza}
+Al mapear la solución contra COBIT~2019, WISP no solo obtiene un sistema, sino un
+modelo de gobierno de su TI: la tecnología queda alineada con la estrategia (EDM01),
+los riesgos se gestionan (EDM03, APO12), la seguridad se formaliza (APO13, DSS05) y el
+desarrollo sigue buenas prácticas (BAI03). Esto eleva la madurez digital de la empresa
+desde el nivel «inicial» diagnosticado hacia un nivel «gestionado».
+\end{upeubox}
+
+% ======================================================================
+\section{Escalabilidad y Sostenibilidad}
+\label{sec:escalabilidad}
+
+\subsection{Capacidad de crecimiento}
+
+La arquitectura está diseñada para crecer sin rediseños estructurales, acompañando la
+expansión de WISP a nuevos distritos (objetivo estratégico OE-01):
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Escalabilidad horizontal de zonas:} agregar una nueva zona solo
+  requiere sumar su MikroTik a la VPN y registrarlo; el sistema ya está preparado para
+  $N$ zonas, no está limitado a 13.
+  \item \textbf{Escalabilidad de usuarios:} el backend Django y PostgreSQL soportan el
+  crecimiento de clientes; ante mayor carga, el VPS puede escalar verticalmente (más
+  recursos) u horizontalmente (más instancias).
+  \item \textbf{Homogeneidad de la infraestructura:} al ser todos los MikroTik del
+  mismo modelo y versión (RB4011, RouterOS~7), la integración escala sin casos
+  particulares.
+  \item \textbf{Arquitectura desacoplada:} la separación en capas y el uso de API
+  permiten evolucionar cada componente de forma independiente.
+\end{itemize}
+
+\subsection{Costos futuros}
+
+La sostenibilidad económica se sustenta en costos operativos bajos y predecibles, que
+crecen mucho más lento que los ingresos por nuevos clientes:
+
+\begin{center}
+\captionof{table}{Proyección de costos operativos según escenario de crecimiento.}
+\label{tab:costos-futuros}
+\begin{tabularx}{\textwidth}{L{4.2cm} L{3.4cm} X}
+\toprule
+\textbf{Escenario} & \textbf{Costo operativo anual} & \textbf{Observación} \\
+\midrule
+Actual ($\sim$455 clientes, 13 zonas) & $\sim$S/~3\,780 &
+VPS $+$ dominio $+$ mantenimiento $+$ backup \\
+Crecimiento ($+$50\% clientes) & $\sim$S/~4\,500--5\,500 &
+Solo escala el VPS; el resto se mantiene \\
+Nuevas zonas ($+$5 zonas) & Costo marginal bajo &
+Sin nuevo desarrollo; solo configuración \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{upeubox}{Sostenibilidad económica}
+El costo operativo por cliente disminuye a medida que WISP crece (economía de escala):
+la misma plataforma soporta más clientes y zonas con un incremento de costo marginal.
+Esto hace que la solución sea sostenible en el tiempo y refuerza el retorno demostrado
+en el Business Case.
+\end{upeubox}
+
+\subsection{Evolución tecnológica}
+
+La solución contempla una hoja de ruta de evolución que aprovecha su arquitectura
+desacoplada para incorporar mejoras futuras sin rehacer lo existente:
+
+\begin{center}
+\captionof{table}{Hoja de ruta de evolución tecnológica.}
+\label{tab:evolucion}
+\begin{tabularx}{\textwidth}{L{2.8cm} X L{2.4cm}}
+\toprule
+\textbf{Fase} & \textbf{Evolución propuesta} & \textbf{Horizonte} \\
+\midrule
+Corto plazo &
+Automatización del módulo de pagos (Yape/Plin) e integración con el bot de cobros. &
+6--12 meses \\
+Mediano plazo &
+Portal de autoservicio para clientes y provisión automática de ONUs en la OLT. &
+1--2 años \\
+Largo plazo &
+Analítica de datos e indicadores de negocio (BI); alertas predictivas de red. &
+2$+$ años \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% ======================================================================
+\section{Conclusión — Cierre de la Línea GTI}
+\label{sec:cierre-gti}
+
+La Solución TIC Integrada propuesta constituye una respuesta coherente, técnicamente
+sólida y estratégicamente alineada al problema de WISP. Su arquitectura multicapa en la
+nube, integrada de forma segura con los 13 MikroTik mediante WireGuard y la API de
+RouterOS, convierte un ecosistema hoy fragmentado en una plataforma única, trazable y
+escalable.
+
+Con este documento se cierra la línea de Gestión de Tecnologías de Información (GTI),
+que ha recorrido de forma completa el ciclo: el diagnóstico organizacional identificó el
+problema; el Business Case demostró su viabilidad económica; el Plan de Gestión
+estableció cómo ejecutarlo; el modelado de procesos AS-IS/TO-BE cuantificó la mejora
+operativa; y esta Solución TIC define el cómo técnico. En conjunto, GTI entrega el marco
+estratégico y de gobierno sobre el cual las líneas de Software e Infraestructura
+desarrollarán la implementación.
+
+\begin{upeubox}{Coherencia integral del proyecto}
+Los cinco componentes de GTI conforman una narrativa única y trazable: problema
+\textrightarrow{} viabilidad \textrightarrow{} plan \textrightarrow{} procesos
+\textrightarrow{} solución. Cada decisión técnica de esta Solución TIC responde a una
+necesidad identificada en el diagnóstico y validada en el Business Case, y se gobierna
+con criterios reconocidos (PMBOK, BPMN, COBIT~2019). El proyecto queda listo para su
+fase de construcción en las líneas de Software e Infraestructura.
+\end{upeubox}
