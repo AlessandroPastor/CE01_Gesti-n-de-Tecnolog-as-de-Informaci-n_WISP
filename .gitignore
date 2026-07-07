@@ -18,6 +18,9 @@
 # Compiled PDF (keep source only)
 *.pdf
 
+# opencode / Claude config
+.claude/
+
 # Temporary / auto-save files
 ~$*
 *~
