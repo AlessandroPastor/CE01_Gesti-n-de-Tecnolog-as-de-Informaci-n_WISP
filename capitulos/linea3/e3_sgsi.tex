@@ -1,0 +1,715 @@
+% ======================================================================
+% capitulos/linea3/e3_sgsi.tex
+% ----------------------------------------------------------------------
+% LÍNEA CE03 — INFRAESTRUCTURA TECNOLÓGICA
+% Semestre 2 · Entregable 1 de 3: PLANIFICACIÓN E IMPLEMENTACIÓN DEL SGSI
+% Códigos: CE0321, CE0322, CE0323, CE0324.
+% Estructura según la plantilla oficial S2_E1_Planificacion_e_Implementacion_del_SGSI.
+% ALCANCE: infraestructura REAL en operación (servidor dockerizado de la oficina,
+% publicación de wispfibra.com por Cloudflare Tunnel + DNS, VPS con el hub
+% WireGuard y 13 zonas).
+% Las tablas de activos, riesgos, tratamiento, SoA y trazabilidad se GENERAN con
+% sgsi/sgsi_datos.py (misma fuente que el Excel sgsi/WISP_SGSI_Matrices.xlsx).
+% Los documentos de soporte del equipo están en los Anexos A–F (anexos_sgsi.tex).
+% ======================================================================
+\chapter{Planificación e Implementación del SGSI}
+\label{chap:ce03-sgsi}
+
+\entregable{CE03 --- Infraestructura Tecnológica · competencia CE032 Gestión de la Seguridad de la Información}
+{Semestre 2 · Entregable 1: Planificación e Implementación del SGSI}
+{CE0321 Planificación de seguridad · CE0322 Implementación de controles · CE0323 Monitoreo y mejora · CE0324 Ética ACM}
+{Completo. Pendiente: firmas de la declaración ética y del acta de revisión por la dirección.}
+
+\begin{table}[htbp]
+\centering
+\caption{Productos obligatorios del entregable y dónde se encuentran.}
+\label{tab:ce03-sgsi-productos}
+\small
+\begin{tabularx}{\textwidth}{L{4.4cm}XL{2.2cm}}
+\toprule
+\textbf{Producto (rúbrica)} & \textbf{Ubicación} & \textbf{Formato} \\
+\midrule
+Informe del SGSI & Este capítulo & PDF \\
+Inventario de activos & \cref{tab:ce03-sgsi-activos}; hoja \emph{Inventario} de \texttt{sgsi/WISP\_SGSI\_Matrices.xlsx} & XLSX + PDF \\
+Matriz de evaluación y tratamiento de riesgos & \cref{tab:ce03-sgsi-riesgos,tab:ce03-sgsi-tratamiento}; hojas \emph{Riesgos} y \emph{Tratamiento} & XLSX + PDF \\
+Declaración de Aplicabilidad (SoA) & \cref{tab:ce03-sgsi-soa}; hoja \emph{SoA} & XLSX + PDF \\
+Políticas y procedimientos del SGSI & \cref{sec:ce03-sgsi-politicas} y Anexos A, C, D y E & PDF \\
+Declaración de ética de seguridad & \cref{sec:ce03-sgsi-etica} y Anexo F (código de ética) & PDF firmado \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Resumen ejecutivo del SGSI}
+
+\begin{itemize}
+  \item \textbf{Alcance:} la infraestructura que WISP opera hoy: un servidor dockerizado en
+  la oficina central que aloja el sistema de gestión y su base de datos, publicado hacia
+  internet mediante un túnel de salida y registros DNS de Cloudflare (sin puertos de
+  entrada en el router de la oficina); la VPS que
+  concentra la VPN WireGuard; y los 13 routers y OLT de las zonas, cuya segmentación real (VLAN 10 de transporte GPON/PPPoE)
+  se tomó de la configuración de SUCASCO. Protege los datos de
+  unos 455 clientes, los cobros, las credenciales y la configuración de red.
+  \item \textbf{Riesgos principales:} 20 riesgos sobre 26 activos (ISO/IEC~27005,
+  probabilidad $\times$ impacto). Siete son \textbf{altos}: routers de zona sin filtrado
+  (20, verificado en la configuración real de SUCASCO), phishing (16), incidentes no
+  detectados (16), fuga de datos personales (15), pérdida de datos por respaldos solo
+  locales (15), robo de secretos (15) y falla del servidor único (15).
+  \item \textbf{Controles:} la Declaración de Aplicabilidad tiene 37 entradas del Anexo~A de
+  ISO/IEC~27001:2022: 5 implementadas, 20 parciales, 10 planificadas y 2 exclusiones
+  justificadas.
+  \item \textbf{PHVA:} \emph{Planificar} (contexto, alcance, riesgos, SoA);
+  \emph{Hacer} (políticas, procedimiento de accesos, planes de incidentes, continuidad y
+  concientización, y controles de base de datos ya probados); \emph{Verificar}
+  (auditoría interna del 18/11/2026: 7 no conformidades, 2 observaciones y 5
+  conformidades); \emph{Actuar} (acciones correctivas y revisión por la dirección).
+  \item \textbf{Conclusión:} el sistema ya tiene buenos controles de aplicación ---acceso
+  por rol, secretos fuera del repositorio, servicios internos no expuestos y publicación
+  sin puertos abiertos---. La mayor exposición está fuera del software: routers de zona
+  sin filtrado, respaldos que no salen del servidor y un único equipo que concentra todo.
+\end{itemize}
+
+% ======================================================================
+\section{Contexto de la organización}
+
+WISP Ingeniería en Redes y Telecomunicaciones es una MYPE de Juliaca que brinda internet
+por fibra óptica (FTTH/GPON) y televisión digital en 13 zonas rurales de Puno (Cabana,
+Cabanilla, Cabanillas, Capachica, Choquehuanca, Domingo, Huata, Mañazo, Muñani, Ñuñoa,
+Pucará, Sucasco y Vilque), con unos 455 clientes y 11 colaboradores. La regulan OSIPTEL y
+el MTC y, como responsable de bancos de datos personales, la Ley N.\textsuperscript{o}~29733.
+El análisis estratégico completo está en el \cref{chap:diagnostico}.
+
+\paragraph{Qué protege el SGSI.} La confidencialidad de los datos personales y de cobro;
+la integridad del padrón, de los cobros y de la configuración de red, porque un dato
+erróneo corta a un cliente al día; y la disponibilidad de la gestión y del servicio de
+internet de las 13 zonas.
+
+\paragraph{Cuestiones internas.} Una sola persona concentra la administración; la
+madurez de seguridad es inicial; todo el sistema corre en un único equipo de escritorio.
+\paragraph{Cuestiones externas.} Dependencia de un único proveedor mayorista y de
+proveedores de nube (Cloudflare, VPS); cortes de energía y de fibra en zonas rurales;
+obligación de notificar incidentes de datos personales y de seguridad digital; ataques
+conocidos contra RouterOS expuesto a internet.
+
+\subsection{Infraestructura dentro del alcance}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,scale=0.92,every node/.style={transform shape}]
+  \node[cajaext,text width=2.6cm] (usr) at (-6,2.2) {Personal, clientes y visitantes (HTTPS)};
+  \node[cajaext,text width=2.6cm] (cf) at (-2.4,2.2) {Cloudflare: DNS de wispfibra.com + túnel};
+  \node[caja,text width=4.4cm,fill=upeublue!10] (srv) at (-2.4,-0.6) {\textbf{Servidor de oficina (Docker)}\\cloudflared · nginx · backend\\frontend · web · whatsapp\\postgres (127.0.0.1)};
+  \node[caja,text width=2.8cm] (vl) at (-6.6,-0.6) {Router de la oficina (sin puertos de entrada)};
+  \node[caja,text width=2.7cm] (vps) at (2.8,2.2) {VPS: hub WireGuard\\wg0 · UDP 51820};
+  \node[caja,text width=2.7cm] (zn) at (2.8,-0.6) {13 routers MikroTik + OLT; VLAN 10 GPON/PPPoE};
+  \node[cajaext,text width=2.6cm] (ext) at (2.8,-2.8) {WhatsApp, APIs Perú};
+  \draw[flecha] (usr) -- (cf);
+  \draw[flecha] (srv.north) -- node[font=\tiny,right,align=left]{conexión\\de salida} (cf.south);
+  \draw[upeublue,thick] (vl) -- (srv);
+  \draw[tunel] (srv.east) -- node[font=\tiny,above,sloped]{WireGuard} (vps.south west);
+  \draw[tunel] (vps) -- node[font=\tiny,right]{WireGuard / SSTP} (zn);
+  \draw[flecha] (srv.south east) -- (ext.west);
+\end{tikzpicture}
+\caption{Infraestructura real dentro del alcance del SGSI.}
+\label{fig:ce03-sgsi-infra}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Exposición a internet: qué se publica y qué queda cerrado.}
+\label{tab:ce03-sgsi-publicacion}
+\small
+\begin{tabularx}{\textwidth}{L{3.6cm}L{3.4cm}X}
+\toprule
+\textbf{Servicio} & \textbf{Cómo se expone} & \textbf{Control} \\
+\midrule
+Sitio, panel y API & \texttt{https://wispfibra.com} (y \texttt{www}): \texttt{/} sitio, \texttt{/app} panel, \texttt{/api} API (la usa la app móvil) $\rightarrow$ túnel $\rightarrow$ \texttt{nginx:80} & HTTPS lo termina Cloudflare; el router de la oficina no abre ningún puerto de entrada; Nginx agrega HSTS y cabeceras de seguridad. \\
+PostgreSQL, WhatsApp, panel interno & No se publican & Escuchan solo en 127.0.0.1 del servidor. \\
+API en el puerto 8000 & No se publica & El backend usa la red del host: el firewall del servidor debe cerrar el 8000 salvo desde la red de Docker (R-13). \\
+Hub VPN & IP pública de la VPS, UDP 51820 & Solo peers con llave registrada; administración de la VPS por SSH con llave. \\
+Routers de zona & WAN del ISP local & Hoy sin filtrado (R-01); objetivo: gestión solo por WireGuard. \\
+Gestión de la OLT & 192.168.100.0/24 en \texttt{ether9} & Alcanzable desde la LAN de clientes por falta de filtro forward (R-20). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent El diseño híbrido del semestre~1 (host VMware ESXi y VPC de AWS,
+\cref{chap:ce03-red,chap:ce03-dc}) es la evolución planificada de esta infraestructura; sus
+componentes se incorporarán al inventario y a la SoA cuando se implementen.
+
+\subsection{Partes interesadas y sus expectativas de seguridad}
+
+\begin{table}[H]
+\centering
+\caption{Partes interesadas del SGSI.}
+\label{tab:ce03-sgsi-interesados}
+\small
+\begin{tabularx}{\textwidth}{L{3.2cm}X}
+\toprule
+\textbf{Parte interesada} & \textbf{Expectativa de seguridad} \\
+\midrule
+Clientes (unos 455) & Sus datos (DNI, ubicación, fotos de vivienda, pagos) no se filtran; no los cortan por error; se les avisa si hay una brecha. \\
+Gerencia & Continuidad del negocio, cumplimiento legal y control de quién hace qué. \\
+Administrador de sistemas y red & Acceso seguro y trazable al servidor, a la VPS y a los 13 routers; procedimientos escritos. \\
+Técnicos, vendedores y atención & Herramientas que protejan su cuenta; reglas claras sobre qué datos pueden ver y guardar. \\
+Proveedor mayorista & Que la red de WISP no origine tráfico malicioso. \\
+Cloudflare, proveedor de la VPS, Meta & Uso conforme a sus términos; responsabilidad compartida sobre la configuración. \\
+ANPD (MINJUSDH) & Bancos de datos inscritos, medidas de seguridad y notificación de incidentes de datos personales. \\
+CNSD (PCM) y OSIPTEL & Reporte de incidentes críticos de seguridad digital y registro de interrupciones. \\
+Docente y universidad & Pruebas éticas y sin datos personales reales en los entregables. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Alcance del SGSI}
+
+\subsection{Declaración de alcance}
+El SGSI comprende la infraestructura tecnológica de WISP en operación: el servidor de la
+oficina central con sus siete contenedores Docker (\texttt{wisp\_backend},
+\texttt{wisp\_postgres}, \texttt{wisp\_frontend}, \texttt{wisp\_web},
+\texttt{wisp\_nginx}, \texttt{wisp\_whatsapp} y \texttt{wisp\_cloudflared}), sus volúmenes de
+datos, evidencias y respaldos; la publicación de \texttt{wispfibra.com} mediante el túnel y el DNS de Cloudflare; la VPS con el hub WireGuard; los 13 routers MikroTik con su VLAN 10 de transporte y la red de gestión de la OLT, y
+las 13 OLT; la app móvil; y los procesos de venta, instalación, cobranza, cortes, soporte y
+administración de la red que dependen de ellos.
+
+\subsection{Límites y exclusiones}
+\begin{itemize}
+  \item \textbf{Límites físicos:} oficina central de Juliaca (servidor, router, switch,
+  UPS, estaciones) y gabinetes de las 13 zonas.
+  \item \textbf{Límites tecnológicos:} los 26 activos del inventario
+  (\cref{tab:ce03-sgsi-activos}).
+  \item \textbf{Límites organizacionales:} todo el personal de WISP y los terceros con
+  acceso lógico.
+  \item \textbf{Exclusión --- red óptica pasiva (fibra, mufas, cajas NAP):} no procesa
+  información; su protección física la cubre la gestión de planta.
+  \item \textbf{Exclusión --- equipos del cliente (ONU, WiFi doméstico):} están bajo control
+  del cliente.
+  \item \textbf{Exclusión --- infraestructura de Cloudflare, del proveedor de la VPS y de
+  Meta:} la operan terceros; dentro del alcance queda la \emph{configuración} y las cuentas
+  de WISP en esos servicios.
+  \item \textbf{Exclusión --- host ESXi y recursos de AWS del diseño del semestre~1:} aún no
+  existen; entrarán al alcance cuando se implementen.
+\end{itemize}
+
+% ======================================================================
+\section{Liderazgo y objetivos de seguridad}
+
+\subsection{Política de seguridad de la información}
+\label{sec:ce03-sgsi-objetivos-pol}
+
+\begin{upeubox}{Política general del SGSI de WISP (PO-SGSI-01, versión 1)}
+La Gerencia de WISP se compromete a proteger la confidencialidad, integridad y
+disponibilidad de la información de sus clientes y de la operación de su red. Para ello:
+(1) el acceso a la información y a la red se concede por rol y con el mínimo privilegio;
+(2) ningún servicio interno se expone a internet: la publicación es solo por el túnel y la
+administración de la red solo por la VPN; (3) la información crítica se respalda fuera del
+servidor y su restauración se prueba; (4) los incidentes se reportan en un máximo de 30
+minutos y se notifican a las autoridades en los plazos de ley; (5) los datos personales se
+tratan conforme a la Ley N.\textsuperscript{o}~29733; y (6) el SGSI se revisa al menos una vez
+al año y después de cada incidente grave. Esta política es obligatoria para todo el
+personal y los terceros con acceso.
+\end{upeubox}
+
+\subsection{Roles y responsabilidades}
+
+Se separan el rol que administra los sistemas y el que los supervisa (segregación de
+funciones, A.5.3), tal como propuso el plan de incidentes del equipo:
+
+\begin{table}[htbp]
+\centering
+\caption{Roles del SGSI.}
+\label{tab:ce03-sgsi-roles}
+\small
+\begin{tabularx}{\textwidth}{L{3.6cm}L{3cm}X}
+\toprule
+\textbf{Rol} & \textbf{Asignado a} & \textbf{Responsabilidad} \\
+\midrule
+Alta dirección & Gerencia & Aprueba la política y la SoA, asigna recursos y preside el Comité de Seguridad y la revisión por la dirección. \\
+Oficial de seguridad de la información & Rol a tiempo parcial designado por la Gerencia & Coordina el SGSI, mantiene riesgos y SoA, lidera el CSIRT, audita accesos y notifica a reguladores. \\
+Responsable de infraestructura & Administrador de sistemas y red & Opera el servidor, la red de oficina, la VPS, el túnel y los routers. \\
+Responsable de sistemas & Equipo de desarrollo / administrador & Opera el sistema, la base de datos y sus respaldos. \\
+Suplente técnico & Técnico capacitado con cuenta de emergencia & Cubre al administrador ante ausencia (R-04). \\
+Usuarios & Técnicos, vendedores, atención & Cumplen la política de uso aceptable y reportan incidentes. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Objetivos de seguridad medibles}
+
+Se mantienen los objetivos OS-1 a OS-6 del SGSI de la Unidad~I y se agregan tres derivados
+de la infraestructura real:
+
+\begin{table}[htbp]
+\centering
+\caption{Objetivos de seguridad, indicador, meta y responsable.}
+\label{tab:ce03-sgsi-objetivos}
+\small
+\begin{tabularx}{\textwidth}{L{0.9cm}XL{3.3cm}L{1.9cm}L{2cm}}
+\toprule
+\textbf{ID} & \textbf{Objetivo} & \textbf{Indicador} & \textbf{Meta} & \textbf{Responsable} \\
+\midrule
+OS-1 & Controlar el acceso según el rol & Cuentas nominales con rol asignado & 100\,\% & Oficial \\
+OS-2 & Cifrar las comunicaciones & Zonas gestionadas por WireGuard (no SSTP) & 13 de 13 & Infraestructura \\
+OS-3 & Garantizar la recuperación & Restauraciones exitosas en las pruebas trimestrales & 100\,\%; RTO BD $\leq$ 2 h & Sistemas \\
+OS-4 & Trazabilidad de operaciones críticas & Altas, cortes y pagos con registro de autor & 100\,\% & Sistemas \\
+OS-5 & Reducir los riesgos altos & Riesgos altos con residual medio o bajo & 7 de 7 & Oficial \\
+OS-6 & Cultura de seguridad & Personal capacitado (Anexo E) & 11 de 11 & Oficial \\
+OS-7 & Proteger accesos administrativos & Cuentas con MFA: Cloudflare, dominio, VPS y panel admin & 100\,\% & Infraestructura \\
+OS-8 & Cero exposición no autorizada & Puertos de entrada abiertos fuera de la lista aprobada (\cref{tab:ce03-sgsi-publicacion}) & 0 & Infraestructura \\
+OS-9 & Respaldos fuera del servidor & Días con copia externa verificada / días del mes & 100\,\% & Sistemas \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Planificación}
+
+\subsection{Inventario de activos y clasificación de la información}
+\label{sec:ce03-sgsi-inventario}
+
+Escala C-I-D: A (alta), M (media), B (baja). El mismo inventario está en la hoja
+\emph{Inventario} del libro \texttt{sgsi/WISP\_SGSI\_Matrices.xlsx}.
+
+{\small
+\begin{longtable}{L{0.8cm}L{4.0cm}L{2.2cm}L{2.6cm}C{0.3cm}C{0.3cm}C{0.3cm}L{1.3cm}L{1.1cm}}
+\caption{Inventario de activos del SGSI.}\label{tab:ce03-sgsi-activos}\\
+\toprule
+\textbf{ID} & \textbf{Activo} & \textbf{Propietario} & \textbf{Ubicación} & \textbf{C} & \textbf{I} & \textbf{D} & \textbf{Clasif.} & \textbf{Critic.} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Activo} & \textbf{Propietario} & \textbf{Ubicación} & \textbf{C} & \textbf{I} & \textbf{D} & \textbf{Clasif.} & \textbf{Critic.} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\csname @@input\endcsname capitulos/linea3/tablas/activos.tex
+\end{longtable}
+}
+
+\subsection{Evaluación de riesgos (ISO/IEC 27005)}
+\label{sec:ce03-sgsi-riesgos}
+
+\paragraph{Metodología.} Igual que en el SGSI de la Unidad~I: probabilidad (P) e impacto
+(I) de 1 a 5; nivel = P $\times$ I; \textbf{bajo} 1--6, \textbf{medio} 8--12, \textbf{alto}
+15--25. Se aceptan riesgos residuales bajos o medios con aprobación de la Gerencia. Las
+vulnerabilidades marcadas con \textsuperscript{v} se \textbf{verificaron} en la
+configuración real (router de SUCASCO, \texttt{docker-compose.yml}, código del backend y
+repositorio). La línea base de la Unidad~I ---22 riesgos sobre los activos del sistema
+heredado--- está en el Anexo~B.
+
+{\small
+\begin{longtable}{L{0.9cm}L{1.1cm}L{3.2cm}L{4.6cm}C{0.4cm}C{0.4cm}C{0.6cm}L{1.0cm}}
+\caption{Evaluación de riesgos: activo, amenaza, vulnerabilidad, probabilidad, impacto y nivel.}\label{tab:ce03-sgsi-riesgos}\\
+\toprule
+\textbf{ID} & \textbf{Activo} & \textbf{Amenaza} & \textbf{Vulnerabilidad} & \textbf{P} & \textbf{I} & \textbf{P$\times$I} & \textbf{Nivel} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Activo} & \textbf{Amenaza} & \textbf{Vulnerabilidad} & \textbf{P} & \textbf{I} & \textbf{P$\times$I} & \textbf{Nivel} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\csname @@input\endcsname capitulos/linea3/tablas/riesgos.tex
+\end{longtable}
+}
+
+\noindent Resultado: 7 riesgos altos, 12 medios y 1 bajo.
+
+\subsection{Tratamiento de riesgos}
+\label{sec:ce03-sgsi-tratamiento}
+
+{\small
+\begin{longtable}{L{0.9cm}L{1.4cm}L{5.6cm}L{2.0cm}L{1.4cm}L{1.6cm}}
+\caption{Plan de tratamiento: estrategia, acciones, responsable, plazo y riesgo residual.}\label{tab:ce03-sgsi-tratamiento}\\
+\toprule
+\textbf{ID} & \textbf{Estrategia} & \textbf{Acciones} & \textbf{Responsable} & \textbf{Plazo} & \textbf{Residual} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Estrategia} & \textbf{Acciones} & \textbf{Responsable} & \textbf{Plazo} & \textbf{Residual} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\csname @@input\endcsname capitulos/linea3/tablas/tratamiento.tex
+\end{longtable}
+}
+
+\noindent Con el plan aplicado ningún riesgo residual queda alto. Se aceptan formalmente
+R-12 y R-14 (residual 9, medio) y R-17 (6, bajo).
+
+\subsection{Declaración de Aplicabilidad (SoA)}
+\label{sec:ce03-sgsi-soa}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \node[cajasec,text width=2.8cm] (r) at (0,0) {\textbf{R-01}\\Acceso no autorizado a routers de zona};
+  \node[caja,text width=2.6cm] (c) at (3.8,0) {\textbf{A.8.20 · A.8.22 · A.8.9}\\Redes, segregación, configuración};
+  \node[caja,text width=3.0cm] (i) at (7.7,0) {\textbf{Implementación}\\Plantilla endurecida: descarte por defecto, gestión por WireGuard};
+  \node[cajaext,text width=2.6cm] (e) at (11.5,0) {\textbf{Prueba / evidencia}\\PC-05, PC-06 · export del router};
+  \draw[flecha] (r) -- (c); \draw[flecha] (c) -- (i); \draw[flecha] (i) -- (e);
+\end{tikzpicture}
+\caption{Trazabilidad riesgo $\rightarrow$ control $\rightarrow$ implementación $\rightarrow$ evidencia (riesgo mayor).}
+\label{fig:ce03-sgsi-traza}
+\end{figure}
+
+Estados: \textbf{Impl.} funcionando hoy; \textbf{Parcial} existe pero no cubre todo el
+alcance; \textbf{Plan.} se implementa durante el semestre.
+
+{\small
+\begin{longtable}{L{1.4cm}L{3.5cm}L{1.7cm}L{1.2cm}L{6.2cm}}
+\caption{Declaración de Aplicabilidad (Anexo A de ISO/IEC 27001:2022).}\label{tab:ce03-sgsi-soa}\\
+\toprule
+\textbf{Control} & \textbf{Nombre} & \textbf{Riesgos} & \textbf{Estado} & \textbf{Justificación / evidencia} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Control} & \textbf{Nombre} & \textbf{Riesgos} & \textbf{Estado} & \textbf{Justificación / evidencia} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\csname @@input\endcsname capitulos/linea3/tablas/soa.tex
+\end{longtable}
+}
+
+\noindent Resumen: 35 entradas aplicables (5 implementadas, 20 parciales y 10
+planificadas) y 2 exclusiones justificadas.
+
+% ======================================================================
+\section{Soporte --- políticas y procedimientos del SGSI}
+\label{sec:ce03-sgsi-politicas}
+
+\begin{table}[H]
+\centering
+\caption{Políticas y procedimientos del SGSI, vinculados a componentes reales.}
+\label{tab:ce03-sgsi-politicas-tab}
+\small
+\begin{tabularx}{\textwidth}{L{3cm}X}
+\toprule
+\textbf{Documento} & \textbf{Reglas principales} \\
+\midrule
+PO-SGSI-01 Seguridad de la información & Política general (\cref{sec:ce03-sgsi-objetivos-pol}); revisión anual y tras incidentes graves. \\
+PO-SGSI-02 Control de accesos & Cuentas nominales; prohibidas las cuentas genéricas (\texttt{admin}); Cloudflare, dominio y VPS con MFA y correo de recuperación de la empresa; el servidor de oficina se administra solo desde la red interna y por SSH con llave; routers solo por WireGuard; revisión trimestral; baja inmediata al cese. Se ejecuta con el procedimiento \textbf{PR-SI-001} (Anexo~A). \\
+PR-SGSI-03 Gestión de incidentes & Reporte en $\leq$ 30 min, severidad, CSIRT, contención, erradicación, recuperación y lecciones aprendidas (\cref{sec:ce03-sgsi-incidentes} y Anexo~C). \\
+PO-SGSI-04 Proveedores y nube & Cloudflare, proveedor de la VPS, Meta, APIs Perú y mayorista con términos revisados; inventario de cuentas y de quién las administra; ningún dato personal en servicios no evaluados; revisión anual de cada proveedor. \\
+PO-SGSI-05 Respaldo y recuperación & 3-2-1: \texttt{pg\_dump} diario en el servidor, copia externa diaria cifrada y copia en disco externo; configuración de routers exportada cada noche; \texttt{.env} y \texttt{docker-compose.yml} respaldados cifrados; prueba de restauración trimestral (Anexo~D). \\
+PO-SGSI-06 Uso aceptable & El personal no guarda fotos ni datos de clientes en su celular ni los envía por WhatsApp personal; no comparte su cuenta; bloquea el teléfono de trabajo; reporta su pérdida de inmediato. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Operación --- implementación de controles de gestión}
+
+\subsection{Gestión de identidades y accesos (gobernanza)}
+
+\begin{table}[H]
+\centering
+\caption{Matriz de accesos por rol (mínimo privilegio).}
+\label{tab:ce03-sgsi-iam}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{L{2.7cm}*{6}{>{\raggedright\arraybackslash}X}}
+\toprule
+\textbf{Rol} & \textbf{Cloudflare / VPS / dominio} & \textbf{Servidor Docker} & \textbf{Routers de zona} & \textbf{Router de oficina} & \textbf{Sistema} & \textbf{Base de datos} \\
+\midrule
+Gerencia & Propietario (MFA, emergencia) & --- & --- & --- & Admin & Lectura (vistas) \\
+Administrador de sistemas y red & Admin (MFA) & Admin (sudo, SSH con llave) & Admin & Admin & Admin & Dueño (migraciones) \\
+Oficial de seguridad & Lectura / auditor & Lectura de logs & Lectura & Lectura & Lectura & Lectura (vistas) \\
+Suplente técnico & --- & Operador (cuenta de emergencia) & Admin (cuenta de emergencia) & --- & Técnico & --- \\
+Técnico & --- & --- & --- & --- & Técnico (sus zonas) & --- \\
+Vendedor de campo & --- & --- & --- & --- & Vendedor & --- \\
+Atención al cliente & --- & --- & --- & --- & Atención & --- \\
+Backend (servicio) & --- & Contenedor & SSH limitado (usuario \texttt{api}) & --- & --- & Rol de aplicación \\
+Respaldos (servicio) & Escritura en el destino externo & Lectura del volumen & --- & --- & --- & Rol de respaldo \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{itemize}
+  \item \textbf{MFA:} obligatoria en Cloudflare, en el registrador del dominio y en el
+  proveedor de la VPS, porque quien controla el DNS o el túnel puede suplantar el panel
+  (R-05). El panel de administración se protegerá con Cloudflare Access (código de un solo
+  uso) mientras el sistema no tenga MFA propio.
+  \item \textbf{Credenciales:} ningún secreto en el repositorio (el \texttt{.env.example} no
+  tiene valores reales y el backend se niega a arrancar en producción con claves de
+  ejemplo); \texttt{.env} con permisos 600; llaves WireGuard generadas en cada equipo y PSK
+  por peer; rotación anual de llaves, del token del túnel y de las contraseñas de servicio;
+  cuenta de emergencia sellada y rotada tras cada uso. El procedimiento completo está en el
+  Anexo~A.
+\end{itemize}
+
+\subsection{Gestión de incidentes, continuidad y recuperación (planificación)}
+\label{sec:ce03-sgsi-incidentes}
+
+El plan completo de gestión de incidentes está en el Anexo~C y el plan de continuidad del
+negocio con su análisis de impacto (BIA) en el Anexo~D. Sus elementos clave:
+
+\begin{itemize}
+  \item \textbf{Severidad:} crítico (datos personales comprometidos, 3 o más zonas o el
+  servidor central caídos, ransomware), alto, medio y bajo, con notificación interna en 15
+  min, 30 min, 2 h y 24 h, respectivamente.
+  \item \textbf{CSIRT:} Gerente (líder de crisis), Oficial (coordinador), Administrador
+  (analista técnico), técnicos (campo) y comercial (comunicación), cada uno con suplente.
+  \item \textbf{Contención en esta infraestructura:} bloquear la cuenta en el sistema, cortar
+  la publicación desactivando la ruta del túnel en Cloudflare, revocar el peer WireGuard
+  afectado, detener el contenedor comprometido o aislar el router de zona.
+  \item \textbf{Notificación externa:} ANPD (datos personales) y CNSD (incidentes críticos de
+  seguridad digital) en 48~h, OSIPTEL por interrupciones y DIVINDAT ante indicios de delito.
+\end{itemize}
+
+\begin{table}[htbp]
+\centering
+\caption{Servicios críticos: objetivos de recuperación actuales y meta.}
+\label{tab:ce03-sgsi-rto}
+\small
+\begin{tabularx}{\textwidth}{L{3.2cm}L{2.5cm}L{2.3cm}X}
+\toprule
+\textbf{Servicio} & \textbf{Hoy (RTO / RPO)} & \textbf{Meta (RTO / RPO)} & \textbf{Cómo se alcanza la meta} \\
+\midrule
+Base de datos & $\approx$ 4 h / hasta 7 días si se pierde el disco & 2 h / 1 h & Copia externa diaria y archivado WAL; restauración probada (en laboratorio: 650\,000 filas en 4 s, \cref{lst:ce02-respaldo}). \\
+Sistema (API, panel, app) & 4--8 h (reinstalar en otro equipo) & 2 h & Equipo de respaldo con Docker y el compose listos; procedimiento de migración documentado. \\
+Publicación (túnel) & 30 min & 30 min & Crear un token nuevo y apuntar el mismo nombre DNS. \\
+Hub VPN & Sin procedimiento & 1 h & Script de reconstrucción y copia cifrada de \texttt{wg0.conf}. \\
+Configuración de routers & Manual & 1 h & Exportación nocturna automática. \\
+Internet por zona & 4 h (lógica) / 24 h (física) & Igual & Revertir configuración; equipo de repuesto homogéneo. \\
+Atención al cliente & 2 h & 2 h & Línea telefónica directa. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Ética de la seguridad de la información}
+\label{sec:ce03-sgsi-etica}
+
+El informe ético-legal completo del equipo ---marco legal, 34 obligaciones verificadas, 12
+riesgos ético-legales, ocho políticas y el Código de Ética y Conducta de WISP--- está en el
+Anexo~F. Aquí se declara la ética del equipo como profesionales de seguridad.
+
+\begin{upeubox}{Declaración de ética del equipo del proyecto}
+\textbf{Código adoptado.} El Código de Ética y Conducta Profesional de la ACM (2018), en
+especial los principios 1.2 Evitar daños, 1.6 Respetar la privacidad, 1.7 Respetar la
+confidencialidad, 2.5 Evaluar los riesgos de forma exhaustiva y 2.9 Diseñar sistemas
+robustos y usablemente seguros; y los cuatro cánones de (ISC)\textsuperscript{2}: proteger a
+la sociedad, actuar con honestidad y legalidad, prestar un servicio diligente y desarrollar
+la profesión.
+
+\textbf{Alcance ético de las pruebas.} Solo se prueban sistemas de WISP o del laboratorio
+con autorización escrita de la Gerencia. No se ejecutan ataques de denegación de servicio ni
+pruebas contra Cloudflare, el proveedor de la VPS, el mayorista u otros terceros. No se
+prueba sobre una zona en producción fuera de una ventana de mantenimiento acordada.
+
+\textbf{Consentimiento y autorización.} Antes de cada prueba se firma una autorización con
+sistemas, fechas, técnicas y responsable; la firman la Gerencia de WISP y el docente.
+
+\textbf{Confidencialidad y protección de datos.} Los datos personales se tratan conforme a
+la Ley N.\textsuperscript{o}~29733 y su reglamento; en los entregables solo hay datos
+anonimizados.
+
+\textbf{Divulgación responsable.} Una vulnerabilidad en un producto de terceros (RouterOS,
+OLT, librerías) se reporta en privado al fabricante y a la Gerencia, no se publica antes de
+90 días o de su corrección y nunca se explota.
+
+\textbf{Conflictos de interés.} Cada integrante declara cualquier relación laboral,
+comercial o familiar con WISP o sus proveedores; quien audita un área no la administra.
+
+\medskip
+\begin{tabularx}{\linewidth}{XX}
+\rule{5.5cm}{0.4pt} & \rule{5.5cm}{0.4pt} \\
+Cabana Sulca, Cristian & Fernández Sánchez, Jherson Jean Piero \\[10pt]
+\rule{5.5cm}{0.4pt} & \rule{5.5cm}{0.4pt} \\
+Mamani Mamani, Alessandro Pastor & Montes Mamani, Andrés Lino \\
+\end{tabularx}
+\end{upeubox}
+
+\paragraph{Coherencia con el comportamiento del proyecto.}
+\begin{itemize}
+  \item La configuración real de SUCASCO contenía nombres, DNI y direcciones de clientes;
+  se analizó en privado y en el documento solo aparecen valores de red.
+  \item La base de datos se probó con datos ficticios, no con una copia de producción.
+  \item Las IP públicas, llaves y tokens se reemplazaron por marcadores como
+  \texttt{<EIP-HUB>}.
+  \item La exposición de fotos de clientes en el repositorio se reportó como no conformidad
+  en lugar de omitirse (NC-02).
+\end{itemize}
+
+% ======================================================================
+\section{Evaluación del desempeño --- monitoreo, medición y auditoría interna}
+
+\subsection{Métricas e indicadores del SGSI}
+
+\begin{table}[H]
+\centering
+\caption{Avance de los objetivos de seguridad (línea base al 18/11/2026).}
+\label{tab:ce03-sgsi-metricas}
+\small
+\begin{tabularx}{\textwidth}{L{0.9cm}XL{4.2cm}L{1.8cm}}
+\toprule
+\textbf{ID} & \textbf{Indicador} & \textbf{Línea base} & \textbf{Meta} \\
+\midrule
+OS-1 & Cuentas nominales con rol & Sistema: 100\,\% (4 roles); routers y servidor: sin medir & 100\,\% \\
+OS-2 & Zonas gestionadas por WireGuard & SUCASCO aún en SSTP; resto por relevar & 13 de 13 \\
+OS-3 & Restauraciones probadas & 1 en laboratorio (4 s, integridad verificada) & 1 por trimestre \\
+OS-4 & Operaciones críticas trazadas & Historial del cliente; auditoría de pagos en laboratorio & 100\,\% \\
+OS-5 & Riesgos altos con residual medio o bajo & 0 de 7 (plan definido) & 7 de 7 \\
+OS-6 & Personal capacitado & 0 de 11 & 11 de 11 \\
+OS-7 & Cuentas privilegiadas con MFA & Sin medir & 100\,\% \\
+OS-8 & Puertos de entrada no autorizados & 0 en la oficina (publicación por túnel); 13 routers expuestos & 0 \\
+OS-9 & Días con copia externa & 0 (copia semanal manual) & 100\,\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Auditoría interna}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \node[caja,text width=2.2cm] (a) at (0,0) {Criterios\\ISO/IEC 27001};
+  \node[caja,text width=2.2cm] (b) at (2.9,0) {Lista de verificación};
+  \node[caja,text width=2.2cm] (c) at (5.8,0) {Evidencia recolectada};
+  \node[caja,text width=2.2cm] (d) at (8.7,0) {Conforme / no conforme};
+  \node[cajasec,text width=2.2cm] (e) at (11.6,0) {Acción correctiva};
+  \draw[flecha] (a) -- (b); \draw[flecha] (b) -- (c); \draw[flecha] (c) -- (d); \draw[flecha] (d) -- (e);
+  \draw[flecha] (e.south) -- ++(0,-0.7) -| (a.south);
+\end{tikzpicture}
+\caption{Ciclo de auditoría interna del SGSI.}
+\label{fig:ce03-sgsi-auditoria}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Plan de la auditoría interna.}
+\label{tab:ce03-sgsi-plan-auditoria}
+\small
+\begin{tabularx}{\textwidth}{L{2.6cm}X}
+\toprule
+Fecha & 18/11/2026 \\
+Tipo & Documental y técnica (sin pruebas intrusivas) \\
+Criterios & Cláusulas 4 a 10 de ISO/IEC 27001:2022 y controles de la SoA \\
+Alcance & Repositorio del sistema (rama \texttt{main}), \texttt{docker-compose.yml} y configuración de Nginx del servidor de oficina, configuración exportada del router de SUCASCO y documentos del SGSI \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+{\small
+\begin{longtable}{L{1.0cm}L{1.0cm}L{6.1cm}L{2.0cm}L{3.1cm}}
+\caption{Hallazgos de la auditoría interna y acciones correctivas.}\label{tab:ce03-sgsi-hallazgos}\\
+\toprule
+\textbf{ID} & \textbf{Control} & \textbf{Hallazgo y evidencia} & \textbf{Tipo} & \textbf{Acción correctiva} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Control} & \textbf{Hallazgo y evidencia} & \textbf{Tipo} & \textbf{Acción correctiva} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+NC-01 & 8.20 & El router de SUCASCO no tiene reglas de filtrado y expone servicios de gestión (export del 27/08/2026). & NC mayor & R-01 (Infraestructura, 3 meses). \\
+NC-02 & 5.34 & Hay 8 fotos de evidencias de clientes versionadas en Git (\texttt{backend/media/evidencias}). & NC mayor & R-10 (Sistemas, 1 semana). \\
+NC-03 & 8.13 & El respaldo diario queda en el mismo disco del servidor; la copia externa es manual y semanal; no hay registro de restauraciones en producción. & NC menor & R-03 (Sistemas, 1 mes). \\
+NC-04 & 8.24 & Credenciales PPPoE y de routers guardadas en texto plano (\texttt{clientes.password\_pppoe}, \texttt{zonas.password\_mikrotik}). & NC menor & R-02 (Sistemas, 2 meses). \\
+NC-05 & 8.20 & El cliente SSH acepta cualquier llave de host (\texttt{paramiko.AutoAddPolicy}). & NC menor & R-08 (Sistemas, 1 mes). \\
+NC-06 & 8.22 & En SUCASCO la VLAN 10 está puenteada con \texttt{ether6} y \texttt{ether7} y no hay filtro forward: la LAN de clientes llega a la gestión de la OLT (192.168.100.0/24). & NC menor & R-20 (Infraestructura, 1 mes). \\
+NC-07 & 8.8 & La imagen \texttt{cloudflare/cloudflared:latest} no fija versión y el backend corre en la red del host con NET\_ADMIN. & NC menor & R-13 (Infraestructura, 1 mes). \\
+OB-01 & 5.34 & El README y \texttt{scripts/deploy.sh} publican la IP real de la VPS. & Observación & Reemplazar por marcadores. \\
+OB-02 & 8.2 & La terminal RouterOS usa lista negra de comandos. & Observación & R-16: lista blanca. \\
+C-01 & 5.15 & Cada endpoint exige JWT y rol (\texttt{require\_roles}). & Conforme & --- \\
+C-02 & 5.17 & No hay secretos en el repositorio; \texttt{.env.example} sin valores; el backend no arranca en producción con claves de ejemplo. & Conforme & --- \\
+C-03 & 8.5 & Freno a la fuerza bruta en el login (8 intentos en 5 min, bloqueo de 15 min). & Conforme & --- \\
+C-04 & 8.20 & PostgreSQL, WhatsApp y el panel escuchan solo en 127.0.0.1; la publicación es por túnel de salida, sin puertos de entrada en la oficina. & Conforme & --- \\
+C-05 & 8.32 & Cambios del esquema en 32 migraciones Alembic revisables. & Conforme & --- \\
+\end{longtable}
+}
+
+\subsection{Revisión por la dirección}
+
+\begin{table}[H]
+\centering
+\caption{Acta de revisión por la dirección (equipo actuando como dirección).}
+\label{tab:ce03-sgsi-revision}
+\small
+\begin{tabularx}{\textwidth}{L{3.2cm}X}
+\toprule
+Entradas revisadas & Auditoría interna (7 NC, 2 observaciones, 5 conformidades), objetivos OS-1 a OS-9, riesgos residuales, resultados de la prueba de restauración en laboratorio y cambios del contexto (infraestructura dockerizada en producción publicada en \texttt{wispfibra.com}). \\
+Conclusión & El SGSI es \textbf{adecuado en su diseño} pero \textbf{aún no eficaz} en la red de zonas y en los respaldos, donde están las dos NC de mayor impacto. \\
+Decisiones & (1) Resolver NC-02 en una semana y NC-01 empezando por SUCASCO; (2) activar MFA en Cloudflare, dominio y VPS de inmediato; (3) automatizar la copia externa diaria; (4) designar al Oficial de seguridad separado del administrador; (5) aceptar los residuales de R-12, R-14 y R-17; (6) presupuestar el servidor definitivo con disco espejo. \\
+Próximo ciclo & Primera restauración en producción, ejercicio de mesa del playbook de fuga de datos (Anexo~C), primera campaña de concientización (Anexo~E) y nueva auditoría tras migrar las zonas. \\
+Firmas & \rule{5cm}{0.4pt} (Gerencia) \qquad \rule{5cm}{0.4pt} (Oficial) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Mejora continua --- matriz maestra de trazabilidad}
+\label{sec:ce03-sgsi-matriz}
+
+Las pruebas PC-xx son las de la matriz de conectividad del diseño de red
+(\cref{tab:ce03-pruebas}); P6, P7 y B1--B4 son las pruebas de base de datos del entregable
+de plataforma de datos (\cref{chap:ce02-datos}).
+
+{\small
+\begin{longtable}{L{1.0cm}L{1.9cm}L{4.4cm}L{2.8cm}L{3.4cm}}
+\caption{Matriz maestra: riesgo $\rightarrow$ control $\rightarrow$ implementación $\rightarrow$ prueba $\rightarrow$ evidencia.}\label{tab:ce03-sgsi-maestra}\\
+\toprule
+\textbf{Riesgo} & \textbf{Control} & \textbf{Implementación} & \textbf{Prueba} & \textbf{Evidencia} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Riesgo} & \textbf{Control} & \textbf{Implementación} & \textbf{Prueba} & \textbf{Evidencia} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\csname @@input\endcsname capitulos/linea3/tablas/maestra.tex
+\end{longtable}
+}
+
+% ======================================================================
+\section{Resultados y conclusiones}
+
+\begin{itemize}
+  \item \textbf{Riesgos identificados y tratados:} 20 riesgos sobre 26 activos (7 altos, 12
+  medios y 1 bajo); los 20 tienen estrategia, responsable y plazo, y ninguno queda alto
+  después del tratamiento.
+  \item \textbf{Riesgos residuales aceptados:} R-12 (cortes de fibra y energía), R-14
+  (bloqueo de WhatsApp) y R-17 (robo de equipos en campo).
+  \item \textbf{Controles funcionando:} acceso por rol, secretos fuera del repositorio,
+  freno a la fuerza bruta, servicios internos no expuestos, publicación por túnel sin
+  puertos de entrada y cambios versionados (C-01 a C-05). Probados en laboratorio: roles de
+  base de datos, auditoría de pagos, triggers de integridad y respaldo con restauración.
+  \item \textbf{Controles pendientes:} filtrado de los routers de zona, MFA, copia externa
+  automática, centralización de logs, segregación de funciones y servidor con redundancia.
+  \item \textbf{Auditoría interna:} 2 NC mayores, 5 NC menores, 2 observaciones y 5
+  conformidades, con acción correctiva, responsable y plazo.
+  \item \textbf{Limitaciones:} toda la operación depende hoy de un solo equipo de escritorio;
+  la línea base de 12 de las 13 zonas requiere relevar su configuración.
+  \item \textbf{Mejoras para el siguiente ciclo:} MFA propio en el panel, alerta automática
+  por exportaciones masivas, inscripción de los bancos de datos ante la ANPD, migración al
+  diseño híbrido del semestre~1 y evaluación del alineamiento formal con ISO/IEC~27001.
+\end{itemize}
+
+% ======================================================================
+\section*{Referencias}
+\addcontentsline{toc}{section}{Referencias}
+{\small
+\begin{enumerate}[label={[\arabic*]},leftmargin=2em]
+  \item ISO/IEC 27001:2022, \emph{Information security management systems --- Requirements}. Ginebra: ISO, 2022.
+  \item ISO/IEC 27002:2022, \emph{Information security controls}. Ginebra: ISO, 2022.
+  \item ISO/IEC 27005:2022, \emph{Guidance on managing information security risks}. Ginebra: ISO, 2022.
+  \item ISO/IEC 27035-1:2023, \emph{Information security incident management --- Principles and process}. Ginebra: ISO, 2023.
+  \item ISO 22301:2019, \emph{Business continuity management systems --- Requirements}. Ginebra: ISO, 2019.
+  \item P. Cichonski \emph{et al.}, ``Computer Security Incident Handling Guide'', NIST SP 800-61 Rev. 2, 2012.
+  \item NIST, ``Building an Information Technology Security Awareness and Training Program'', NIST SP 800-50, 2003.
+  \item INCIBE, ``Plan de Contingencia y Continuidad de Negocio'', guía para empresas.
+  \item Congreso de la República del Perú, Ley N.\textsuperscript{o} 29733, Ley de Protección de Datos Personales, y su Reglamento, D.S. N.\textsuperscript{o} 016-2024-JUS.
+  \item Congreso de la República del Perú, Ley N.\textsuperscript{o} 30096, Ley de Delitos Informáticos.
+  \item ACM, ``ACM Code of Ethics and Professional Conduct'', 2018.
+  \item (ISC)\textsuperscript{2}, ``(ISC)\textsuperscript{2} Code of Ethics''.
+\end{enumerate}
+}

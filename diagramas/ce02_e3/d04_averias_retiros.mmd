@@ -1,0 +1,23 @@
+%% Flujos implementados de soporte: averías y órdenes de retiro
+flowchart TB
+    subgraph AV["Avería"]
+        direction LR
+        a1(["Cliente reporta<br/>la falla"]) --> a2["Atención o técnico<br/>POST /averias<br/>motivo, caja, borne"]
+        a2 --> a3["Admin asigna técnico<br/>POST .../asignar"]
+        a3 --> a4["Técnico inicia<br/>POST .../iniciar"]
+        a4 --> a5{"¿Cambia<br/>la ONU?"}
+        a5 -- "sí" --> a6["ONU retirada: dañada<br/>ONU nueva: instalada"]
+        a5 -- "no" --> a7["Diagnóstico y<br/>potencia óptica"]
+        a6 --> a8["POST .../resolver<br/>+ fotos"]
+        a7 --> a8
+        a8 --> a9(["Resuelta"])
+    end
+    subgraph RT["Retiro de equipo (baja del cliente)"]
+        direction LR
+        r1(["Cliente da<br/>de baja"]) --> r2["Atención crea la orden<br/>POST /ordenes-retiro"]
+        r2 --> r3["Asigna técnico<br/>POST .../asignar"]
+        r3 --> r4["Técnico recoge ONU,<br/>roseta y patchcord<br/>POST .../completar + fotos"]
+        r4 --> r5["ONU vuelve al almacén<br/>borne queda libre"]
+        r5 --> r6(["Completada"])
+    end
+    AV ~~~ RT

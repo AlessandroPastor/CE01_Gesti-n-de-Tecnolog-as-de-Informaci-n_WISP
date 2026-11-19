@@ -1,0 +1,26 @@
+%% Navegación de la app móvil (Expo Router) por rol
+flowchart TB
+    O["onboarding<br/>presentación por rol"] --> L["login<br/>personal: usuario y contraseña · cliente: DNI y PIN"]
+    L -- "técnico" --> T
+    L -- "vendedor de campo" --> V
+    L -- "cliente" --> C
+
+    subgraph T["Técnico · barra inferior: Averías · Retiros · ÓRDENES (central) · Inventario · Registrar"]
+        direction LR
+        T1["Órdenes<br/>de su zona"] --> T2["instalar/[id]<br/>caja, borne,<br/>ONU, fotos"]
+        T3["Averías<br/>lista · nueva<br/>· detalle"]
+        T4["Retiros<br/>lista ·<br/>completar"]
+        T5["Inventario<br/>ONU asignadas"] --> T6["escanear-equipo<br/>cámara"]
+        T7["mapa ·<br/>nuevo-cliente<br/>· cuenta"]
+        T2 ~~~ T3 ~~~ T4 ~~~ T5
+        T6 ~~~ T7
+    end
+    subgraph V["Vendedor de campo · barra inferior: Jornada · REGISTRAR (central) · Mis clientes"]
+        direction LR
+        V1["jornada<br/>inicio, recorrido GPS,<br/>fin, pasaje"] ~~~ V2["nuevo-cliente<br/>DNI autocompletado,<br/>GPS, fotos"] ~~~ V3["mis clientes<br/>y su estado"] ~~~ V4["mapa · cuenta"]
+    end
+    subgraph C["Cliente · barra inferior: Inicio · Pagos · Perfil"]
+        direction LR
+        C1["Inicio<br/>plan, estado,<br/>vencimiento"] ~~~ C2["Pagos<br/>historial"] ~~~ C3["Perfil<br/>cambiar PIN"]
+    end
+    T ~~~ V ~~~ C

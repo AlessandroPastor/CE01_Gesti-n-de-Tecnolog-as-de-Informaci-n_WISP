@@ -1,0 +1,21 @@
+%% Modelo de permisos: tipo de cuenta + rol + módulos (rama main)
+flowchart LR
+    U["Usuario<br/>tipo de cuenta (RolUsuario):<br/>admin · tecnico ·<br/>vendedor_campo · atencion_cliente"]
+    R["Rol<br/>(tabla roles)<br/>clave · nombre ·<br/>perfil_base · es_superadmin"]
+    RM["Rol-Módulo<br/>(rol_modulo)<br/>orden · es_central"]
+    M["Módulo<br/>(modulos)<br/>panel: 18 · móvil: 10<br/>ruta · icono · audiencia"]
+    MP["Módulo padre<br/>(modulos_padre)<br/>Principal · Clientes · Red ·<br/>Operaciones · Finanzas ·<br/>Administración · Trabajo de campo ·<br/>Ventas · App del cliente"]
+    U -- "rol_id" --> R
+    R -- "1..*" --> RM
+    RM -- "*..1" --> M
+    M -- "cuelga de" --> MP
+
+    subgraph API["Control en cada endpoint"]
+        direction TB
+        E1["1. JWT válido<br/>(get_current_user)"]
+        E2["2. Tipo de cuenta permitido<br/>(require_roles)"]
+        E3["3. Módulo asignado al rol<br/>(acceso.py · REGLAS)"]
+        E1 --> E2 --> E3
+    end
+    R -. "módulos del rol" .-> E3
+    M -. "GET /permisos/mis-modulos<br/>arma el menú y la barra" .-> UI["Menú del panel /<br/>barra inferior de la app"]

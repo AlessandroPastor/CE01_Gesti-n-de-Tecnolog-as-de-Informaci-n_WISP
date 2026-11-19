@@ -1,0 +1,592 @@
+% ======================================================================
+% capitulos/linea3/capitulo12.tex
+% ----------------------------------------------------------------------
+% LÍNEA CE03 — INFRAESTRUCTURA TECNOLÓGICA
+% Semestre 1 · Entregable 2 de 2: ANÁLISIS Y DISEÑO DE CENTRO DE DATOS HÍBRIDO
+% Estructura según la plantilla oficial
+% S1_E2_Analisis_y_Diseno_de_Centro_de_Datos_Hibrido.docx
+% ======================================================================
+\chapter{Análisis y Diseño de Centro de Datos Híbrido}
+\label{chap:ce03-dc}
+
+\entregable{CE03 --- Infraestructura Tecnológica · competencia CE033 Implementación de Centro de Datos}{Semestre 1 · Entregable 2: Análisis y Diseño de Centro de Datos Híbrido}{CE0331 Diseño de centro de datos}{Completo (diseño, sin implementación).}
+
+
+Este capítulo es el segundo entregable del semestre~1 de la línea CE03. Diseña dónde
+y cómo se alojan los servicios de WISP: un centro de datos local virtualizado con
+\textbf{VMware ESXi} en la oficina central y un entorno en \textbf{AWS} para el
+concentrador VPN, la contingencia y los respaldos. Se apoya en el diseño de red del
+\cref{chap:ce03-red}, con las mismas redes y extremos.
+
+% ======================================================================
+\section{Resumen ejecutivo del diseño del centro de datos híbrido}
+
+\begin{itemize}
+  \item \textbf{Proyecto:} centro de datos híbrido del Sistema de Gestión Integral de
+  WISP (Juliaca, Puno).
+  \item \textbf{Problema:} hoy todo el sistema corre en una sola PC de oficina (AMD
+  A8-7600, 4~GB de RAM, disco único) sin redundancia, sin virtualización y con la
+  base de datos, la publicación y la mensajería en el mismo sistema operativo. La VPN
+  depende de una VPS de terceros y los respaldos quedan en el mismo equipo.
+  \item \textbf{On-premise (VMware ESXi):} un servidor de rack (8 núcleos, 64~GB, SSD en
+  RAID~1) con ESXi~8, siete máquinas virtuales separadas por función y zona de
+  seguridad. Se elige ESXi por ser el hipervisor que exige la rúbrica, su madurez en
+  aislamiento de cargas y su disponibilidad en edición gratuita o académica.
+  \item \textbf{Cloud (AWS):} una VPC en São Paulo con el hub WireGuard (necesita la IP
+  pública fija que la oficina no tiene), una réplica de contingencia y respaldos en S3
+  fuera de la oficina.
+  \item \textbf{Dimensionamiento:} 19 vCPU, 35~GB de RAM y unos 630~GB asignados,
+  frente a 16 hilos, 64~GB y 1,9~TB del host: un 39\,\% de margen en RAM y un 65\,\% en
+  disco. En AWS, dos instancias \texttt{t4g.medium}.
+  \item \textbf{Siguiente paso (semestre~2):} instalar el host, migrar los contenedores
+  a las VM, desplegar la VPC y ejecutar al menos una prueba completa de recuperación.
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \node[caja,text width=4.6cm,minimum height=24mm] (onp) at (-3.6,0) {\textbf{On-premise (oficina central)}\\[2pt]Rack 18U · FW01 · SW-CORE\\ESXI-01: 7 VM (app, BD, DMZ,\\monitoreo, SIEM, IDS, señuelo)\\NAS-01 respaldos · UPS};
+  \node[caja,text width=4.2cm,minimum height=24mm] (aws) at (3.8,0) {\textbf{AWS sa-east-1}\\[2pt]VPC 10.50.0.0/16\\EC2-WGHUB (hub VPN)\\EC2-DR (réplica)\\S3 (respaldos)};
+  \draw[tunel] (onp) -- node[font=\tiny,above]{WireGuard} node[font=\tiny,below]{réplica · respaldos} (aws);
+  \node[cajaext] (z) at (3.8,-2.6) {13 zonas (WireGuard)};
+  \draw[tunel] (z) -- (aws);
+\end{tikzpicture}
+\caption{Topología ejecutiva simplificada del centro de datos híbrido.}
+\label{fig:ce03-dc-ejecutiva}
+\end{figure}
+
+% ======================================================================
+\section{Descripción de la organización y necesidades de infraestructura}
+
+WISP es un ISP de fibra óptica con unos 455 clientes en 13 zonas. Su operación diaria
+depende de un sistema de gestión propio (línea CE02) que registra clientes, pagos,
+planta externa e inventario, y que gestiona los routers de las zonas.
+
+\begin{table}[htbp]
+\centering
+\caption{Servicios que requieren cómputo o almacenamiento y entorno asignado.}
+\label{tab:ce03-servicios-dc}
+\small
+\begin{tabularx}{\textwidth}{L{3.6cm}L{2.2cm}XL{1.6cm}}
+\toprule
+\textbf{Servicio} & \textbf{Entorno} & \textbf{Criterio de reparto} & \textbf{Info.} \\
+\midrule
+API, panel web, sitio, WhatsApp & On-premise & Uso diario desde la oficina; costo fijo; ya opera en local. & Interna \\
+Base de datos PostgreSQL & On-premise & Contiene datos personales: queda bajo control directo de la empresa. & Confidencial \\
+Publicación (Nginx, cloudflared) & On-premise (DMZ) & Publica sin IP pública mediante un túnel de salida. & Pública \\
+Monitoreo, SIEM, IDS, señuelo & On-premise & Necesitan ver el tráfico de la oficina (espejo del troncal). & Interna \\
+Concentrador VPN & AWS & Requiere IP pública fija y alta disponibilidad, que la oficina no tiene. & Interna \\
+Réplica de contingencia & AWS & Debe estar fuera de la oficina para sobrevivir a un incidente local. & Confidencial \\
+Respaldos fuera de sitio & AWS (S3) & Tercera copia de la regla 3-2-1, durable y económica. & Confidencial \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Situación actual (AS-IS) y crecimiento estimado.}
+\label{tab:ce03-asis-dc}
+\small
+\begin{tabularx}{\textwidth}{L{3.4cm}X}
+\toprule
+Servidor actual & PC AMD A8-7600 (4 núcleos), 4~GB de RAM, disco de 450~GB, Ubuntu Server 24.04, Docker Compose con 6 contenedores; consume 1,3 a 1,8~GB de RAM en reposo. \\
+Publicación & Cloudflare Tunnel (sin puertos abiertos). \\
+VPN & VPS de terceros con el hub WireGuard; algunas zonas aún usan SSTP. \\
+Respaldos & \texttt{pg\_dump} diario en el mismo equipo, retención de 30 días, copia manual semanal a una laptop. \\
+Crecimiento a 3 años & Del orden de 910 clientes y hasta 25 zonas; evidencias fotográficas de unos 30~MB por cliente (unos 27~GB). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Alcance del diseño de centro de datos híbrido}
+
+\subsection{Declaración de alcance}
+El diseño comprende la infraestructura virtualizada VMware ESXi del centro de datos
+local de la oficina central (rack, host, almacenamiento, red virtual y máquinas
+virtuales) y los recursos en AWS (VPC, subredes, instancias EC2, Security Groups, NACL,
+IAM y S3), incluidos su dimensionamiento, su integración y los mecanismos de
+disponibilidad y respaldo.
+
+\subsection{Límites}
+\begin{itemize}
+  \item \textbf{Físicos:} rack de 18U en la oficina central con FW01, SW-CORE, ESXI-01,
+  NAS-01, UPS y PDU.
+  \item \textbf{Tecnológicos:} ESXi~8, vSwitches, \emph{port groups}, VM; AWS VPC, EC2,
+  EBS, S3, Security Groups, NACL, IAM y CloudWatch.
+  \item \textbf{Organizacionales:} el \emph{responsable de infraestructura} administra
+  el rack, ESXi y AWS; el \emph{responsable de sistemas}, las VM APP-01 y DB-01 y los
+  respaldos de datos; la gerencia aprueba los accesos a la cuenta de AWS.
+\end{itemize}
+
+\subsection{Exclusiones}
+\begin{itemize}
+  \item \textbf{Equipamiento de las zonas (routers, OLT, gabinetes):} se trata en el
+  diseño de red; no aloja servicios del centro de datos.
+  \item \textbf{Estaciones de trabajo del personal:} no alojan servicios.
+  \item \textbf{Alta disponibilidad con dos hosts y vCenter:} se descarta por costo; se
+  compensa con la réplica en AWS.
+  \item \textbf{Cloudflare:} servicio gestionado por el proveedor; solo se diseña su uso.
+\end{itemize}
+
+% ======================================================================
+\section{Objetivos del diseño de centro de datos}
+
+\begin{table}[H]
+\centering
+\caption{Objetivos medibles del diseño de centro de datos.}
+\label{tab:ce03-objetivos-dc}
+\small
+\begin{tabularx}{\textwidth}{XL{3.6cm}L{2.2cm}L{2.2cm}}
+\toprule
+\textbf{Objetivo} & \textbf{Indicador} & \textbf{Meta} & \textbf{Responsable} \\
+\midrule
+Dimensionar el host ESXi & Recursos asignados frente a requeridos & 100\,\% cubierto con $\geq 30$\,\% de margen & Infraestructura \\
+Separar cargas por función y zona de seguridad & Servicios en VM dedicadas & 7 VM, 100\,\% & Infraestructura \\
+Definir una arquitectura AWS costo-eficiente & Servicios seleccionados y justificados & 100\,\% documentado & Cloud \\
+Planificar la disponibilidad mínima & RTO/RPO por servicio definidos & RTO $\leq 2$~h en servicios críticos & Infraestructura \\
+Respaldos fuera del sitio & Copias en S3 & 3-2-1 para BD y evidencias & Sistemas \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Arquitectura on-premise --- diseño (VMware ESXi)}
+
+\subsection{Topología física propuesta}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \tikzset{u/.style={draw=upeublue,fill=upeublue!6,text width=5.45cm,align=center,font=\scriptsize,anchor=north west,inner sep=1.5pt}}
+  \draw[upeublue,very thick] (-0.15,0.15) rectangle (5.75,-9.15);
+  \node[u,minimum height=5mm] at (0,0) {U18 · Patch panel 24 puertos (Cat6)};
+  \node[u,minimum height=5mm] at (0,-0.5) {U17 · Organizador de cables};
+  \node[u,minimum height=5mm,fill=red!6,draw=red!60!black] at (0,-1.0) {U16 · FW01 RB5009 (bandeja)};
+  \node[u,minimum height=5mm] at (0,-1.5) {U15 · SW-CORE CRS326};
+  \node[u,minimum height=5mm] at (0,-2.0) {U14 · Organizador de cables};
+  \node[u,minimum height=10mm] at (0,-2.5) {U12--13 · Libre (segundo host)};
+  \node[u,minimum height=5mm,fill=upeublue!18] at (0,-3.5) {U11 · ESXI-01 Dell PowerEdge R250};
+  \node[u,minimum height=10mm] at (0,-4.0) {U9--10 · NAS-01 DS224+ (bandeja)};
+  \node[u,minimum height=15mm] at (0,-5.0) {U6--8 · Ventilación};
+  \node[u,minimum height=5mm] at (0,-6.5) {U5 · PDU con protección};
+  \node[u,minimum height=10mm,fill=upeugray!15] at (0,-7.0) {U3--4 · UPS APC 1500 VA (2U)};
+  \node[u,minimum height=10mm] at (0,-8.0) {U1--2 · Reserva (baterías)};
+  \node[cajaext,text width=4.4cm,align=left] at (9.0,-2.0) {\textbf{Enlaces}\\FW01 SFP+ $\leftrightarrow$ SW-CORE (troncal)\\ESXI-01: 2 NIC gestión + 2 NIC datos\\NAS-01: 1 NIC en VLAN 20\\Puerto espejo $\rightarrow$ ESXI-01 (IDS)};
+  \node[cajaext,text width=4.4cm,align=left] at (9.0,-6.4) {\textbf{Energía}\\UPS $\rightarrow$ PDU $\rightarrow$ todos los equipos\\BIOS: encendido tras corte\\Apagado ordenado por USB/red};
+\end{tikzpicture}
+\caption{Topología física propuesta: disposición del rack de la oficina central.}
+\label{fig:ce03-rack}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Equipamiento físico propuesto (verificar compatibilidad con la guía de Broadcom/VMware antes de la compra).}
+\label{tab:ce03-hardware}
+\small
+\begin{tabularx}{\textwidth}{L{2.4cm}L{4.4cm}X}
+\toprule
+\textbf{Equipo} & \textbf{Modelo propuesto} & \textbf{Especificación clave} \\
+\midrule
+ESXI-01 & Dell PowerEdge R250 (1U) & Xeon E-2378 (8 núcleos / 16 hilos), 64~GB DDR4 ECC (ampliable a 128~GB), 2 SSD SATA 1,92~TB en RAID~1 (PERC H355), 2 puertos 1~GbE + tarjeta Intel I350-T4, iDRAC. \\
+FW01 & MikroTik RB5009UG+S+IN & 7 puertos 1~GbE, 1 de 2,5~GbE, 1 SFP+; RouterOS~7. \\
+SW-CORE & MikroTik CRS326-24G-2S+RM & 24 puertos 1~GbE, 2 SFP+, VLAN 802.1Q, puerto espejo. \\
+NAS-01 & Synology DS224+ & 2 discos de 4~TB en RAID~1 para respaldos locales. \\
+UPS-01 & APC Smart-UPS 1500 VA rack 2U & Unos 1000~W; carga estimada de 240~W (unos 30 min de autonomía según la curva del fabricante). \\
+Rack & Gabinete de 18U ventilado & Con PDU y organizadores. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent El equipo actual (A8-7600 con 4~GB) no cumple los requisitos mínimos de ESXi~8
+(8~GB de RAM y CPU compatible), por lo que se reutiliza como estación de pruebas.
+
+\subsection{Diseño del hipervisor}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,scale=0.92,every node/.style={transform shape}]
+  \node[cajaext,minimum width=1.4cm] (n0) at (-6,-5) {vmnic0};
+  \node[cajaext,minimum width=1.4cm] (n1) at (-4.4,-5) {vmnic1};
+  \node[cajaext,minimum width=1.4cm] (n2) at (0,-5) {vmnic2};
+  \node[cajaext,minimum width=1.4cm] (n3) at (1.6,-5) {vmnic3};
+  \node[cajaext,minimum width=1.4cm] (n4) at (6.0,-5) {vmnic4};
+  \node[caja,minimum width=3.6cm,fill=upeublue!14] (vs0) at (-5.2,-3.4) {\textbf{vSwitch0} (gestión)\\activo/en espera};
+  \node[caja,minimum width=3.6cm,fill=upeublue!14] (vs1) at (0.8,-3.4) {\textbf{vSwitch1} (datos)\\balanceo por puerto virtual};
+  \node[caja,minimum width=2.4cm,fill=upeublue!14] (vs2) at (6.0,-3.4) {\textbf{vSwitch2}\\(espejo)};
+  \draw[thick,upeublue] (n0) -- (vs0); \draw[thick,upeublue] (n1) -- (vs0);
+  \draw[thick,upeublue] (n2) -- (vs1); \draw[thick,upeublue] (n3) -- (vs1); \draw[thick,upeublue] (n4) -- (vs2);
+  \node[caja,font=\tiny] (pgm) at (-5.2,-1.9) {PG-GESTION (VLAN 10)\\VMkernel ESXi};
+  \node[caja,font=\tiny] (pgs) at (-1.6,-1.9) {PG-SERVIDORES\\(VLAN 20)};
+  \node[caja,font=\tiny] (pgd) at (0.8,-1.9) {PG-DMZ\\(VLAN 40)};
+  \node[caja,font=\tiny] (pgsec) at (3.1,-1.9) {PG-SEGURIDAD\\(VLAN 50)};
+  \node[cajasec,font=\tiny] (pgspan) at (6.0,-1.9) {PG-SPAN\\(VLAN 4095, promiscuo)};
+  \draw[upeublue] (vs0) -- (pgm);
+  \foreach \p in {pgs,pgd,pgsec} \draw[upeublue] (vs1.north) -- (\p.south);
+  \draw[upeublue] (vs2) -- (pgspan);
+  \node[caja,font=\tiny,text width=1.6cm] (app) at (-2.6,-0.2) {APP-01\\4 vCPU · 8 GB};
+  \node[caja,font=\tiny,text width=1.6cm] (db) at (-0.7,-0.2) {DB-01\\4 vCPU · 8 GB};
+  \node[caja,font=\tiny,text width=1.6cm] (px) at (1.2,-0.2) {PROXY-01\\2 vCPU · 2 GB};
+  \node[caja,font=\tiny,text width=1.6cm] (hp) at (1.2,1.2) {HONEY-01\\1 vCPU · 1 GB};
+  \node[caja,font=\tiny,text width=1.6cm] (mon) at (3.1,-0.2) {MON-01\\2 vCPU · 4 GB};
+  \node[caja,font=\tiny,text width=1.6cm] (siem) at (3.1,1.2) {SIEM-01\\4 vCPU · 8 GB};
+  \node[cajasec,font=\tiny,text width=1.6cm] (ids) at (6.0,-0.2) {IDS-01\\2 vCPU · 4 GB};
+  \draw[upeublue] (pgs) -- (app); \draw[upeublue] (pgs) -- (db);
+  \draw[upeublue] (pgd) -- (px); \draw[upeublue] (px) -- (hp);
+  \draw[upeublue] (pgsec) -- (mon); \draw[upeublue] (mon) -- (siem);
+  \draw[upeublue] (pgspan) -- (ids); \draw[upeublue,dashed] (ids.west) -- (mon.east);
+  \begin{scope}[on background layer]
+    \node[zona,fit=(vs0)(vs2)(app)(siem)(ids)(pgm),label={[zonatit]above:ESXI-01 — VMware ESXi 8}] {};
+  \end{scope}
+  \node[font=\tiny,text=upeugray] at (0.8,-5.7) {uplinks troncales 802.1Q hacia SW-CORE · vmnic4 al puerto espejo};
+\end{tikzpicture}
+\caption{Diseño interno del hipervisor: vSwitches, \emph{port groups}, NIC físicas y VM.}
+\label{fig:ce03-esxi}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Máquinas virtuales planeadas.}
+\label{tab:ce03-vms}
+\small
+\begin{tabularx}{\textwidth}{L{1.9cm}C{0.9cm}C{1cm}L{2.1cm}L{2.4cm}X}
+\toprule
+\textbf{VM} & \textbf{vCPU} & \textbf{RAM} & \textbf{Disco} & \textbf{SO} & \textbf{Función} \\
+\midrule
+APP-01 & 4 & 8 GB & 60 + 150 GB & Ubuntu 24.04 + Docker & Backend FastAPI, panel, sitio, WhatsApp; disco de datos para evidencias \\
+DB-01 & 4 & 8 GB & 120 GB & Ubuntu 24.04 & PostgreSQL 15, archivado WAL \\
+PROXY-01 & 2 & 2 GB & 30 GB & Ubuntu 24.04 & Nginx + cloudflared (DMZ) \\
+HONEY-01 & 1 & 1 GB & 20 GB & Ubuntu 24.04 & OpenCanary (señuelo DMZ) \\
+MON-01 & 2 & 4 GB & 60 GB & Ubuntu 24.04 & Zabbix 7.0 LTS (SNMP a routers y OLT) \\
+SIEM-01 & 4 & 8 GB & 150 GB & Ubuntu 24.04 & Wazuh (manager, indexer, dashboard) \\
+IDS-01 & 2 & 4 GB & 40 GB & Ubuntu 24.04 & Suricata sobre el espejo del troncal \\
+\midrule
+\textbf{Total} & \textbf{19} & \textbf{35 GB} & \textbf{630 GB} & & \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Red virtual del host.}
+\label{tab:ce03-vswitch}
+\small
+\begin{tabularx}{\textwidth}{L{2.2cm}L{2.6cm}X}
+\toprule
+vSwitch0 & vmnic0 + vmnic1 & Gestión de ESXi (VMkernel, VLAN 10); NIC en activo/en espera para tolerar la falla de un puerto o cable. \\
+vSwitch1 & vmnic2 + vmnic3 & Datos de las VM; troncal con VLAN 20, 40 y 50; balanceo por puerto virtual de origen. \\
+vSwitch2 & vmnic4 & Recibe el puerto espejo del switch; \emph{port group} en VLAN 4095 con modo promiscuo solo para IDS-01. \\
+Seguridad & --- & Modo promiscuo, cambios de MAC y transmisiones falsificadas en \emph{Rechazar} en todos los \emph{port groups} salvo PG-SPAN. \\
+Licencia & --- & ESXi~8 en edición gratuita (disponible de nuevo desde 8.0 Update 3e) o licencia académica de Broadcom. La edición gratuita no expone la API de respaldo: se usan respaldos por script (ghettoVCB) y respaldos de aplicación. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Arquitectura AWS --- diseño}
+
+\subsection{Selección de región y justificación}
+
+Se elige \textbf{América del Sur (São Paulo), \texttt{sa-east-1}}:
+\begin{itemize}
+  \item \textbf{Latencia:} es la región de AWS más cercana con servicios completos; la
+  terminal SSH y el estado PPPoE en tiempo real del sistema pasan por el hub, así que
+  la latencia se nota en la operación diaria. La zona local de Lima se evaluó, pero
+  ofrece un catálogo reducido de servicios.
+  \item \textbf{Normativa:} cualquier región implica flujo transfronterizo de datos
+  personales; se documenta conforme a la Ley N.\textsuperscript{o}~29733 y su
+  reglamento. En AWS solo residen una réplica y respaldos \textbf{cifrados}; la copia
+  principal queda en la oficina.
+  \item \textbf{Servicios:} EC2 Graviton (\texttt{t4g}), S3, Systems Manager,
+  CloudWatch y VPC Flow Logs están disponibles en la región.
+  \item \textbf{Costo:} es más cara que \texttt{us-east-1}; la diferencia es pequeña
+  con dos instancias pequeñas y se acepta por la latencia. El costo se estimará con
+  AWS Pricing Calculator antes de la implementación.
+\end{itemize}
+
+\subsection{Diseño de VPC}
+
+\begin{table}[H]
+\centering
+\caption{Subredes de la VPC 10.50.0.0/16 (zona de disponibilidad \texttt{sa-east-1a}).}
+\label{tab:ce03-subredes}
+\small
+\begin{tabularx}{\textwidth}{L{2.6cm}L{2.2cm}L{1.6cm}X}
+\toprule
+\textbf{Subred} & \textbf{CIDR} & \textbf{Tipo} & \textbf{Propósito} \\
+\midrule
+sn-publica & 10.50.1.0/24 & Pública & EC2-WGHUB con IP elástica (hub VPN, NAT para las privadas, honeypot) \\
+sn-privada-app & 10.50.2.0/24 & Privada & EC2-DR (réplica y contingencia) \\
+sn-privada-datos & 10.50.3.0/24 & Privada & Reservada para una base gestionada (RDS) futura \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Tablas de rutas.}
+\label{tab:ce03-rutas}
+\small
+\begin{tabularx}{\textwidth}{L{2.4cm}L{4.4cm}X}
+\toprule
+\textbf{Tabla} & \textbf{Destino} & \textbf{Destino de salto} \\
+\midrule
+rt-publica & 10.50.0.0/16 & local \\
+ & 0.0.0.0/0 & Internet Gateway \\
+rt-privada & 10.50.0.0/16 & local \\
+ & 10.20.0.0/16, 10.10.0.0/24, 172.16.0.0/16 & ENI de EC2-WGHUB (vía VPN) \\
+ & 0.0.0.0/0 & ENI de EC2-WGHUB (instancia NAT) \\
+ & Lista de prefijos de S3 & Endpoint de puerta de enlace de S3 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent Se usa la propia EC2-WGHUB como \textbf{instancia NAT} (comprobación de
+origen/destino deshabilitada) en lugar de un NAT Gateway, cuyo cargo fijo mensual no
+se justifica para el tráfico de actualizaciones de una sola instancia privada. Los
+respaldos a S3 no pasan por el NAT: usan el endpoint de puerta de enlace, que no tiene
+costo.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \node[cajaext] (igw) at (-2.4,3.4) {Internet Gateway};
+  \node[caja,text width=3.4cm] (hub) at (-2.4,1.2) {\textbf{EC2-WGHUB} t4g.medium\\10.50.1.10 + EIP\\WireGuard · NAT\\Suricata · Cowrie};
+  \node[caja,text width=3.2cm] (dr) at (3.0,1.2) {\textbf{EC2-DR} t4g.medium\\10.50.2.10\\réplica PostgreSQL\\+ contenedores};
+  \node[caja,text width=3.2cm,fill=upeugray!8] (dat) at (3.0,-1.3) {sn-privada-datos\\10.50.3.0/24 (reserva RDS)};
+  \node[cajaext,text width=3.2cm] (s3) at (-2.4,-1.3) {Endpoint de S3\\$\rightarrow$ bucket de respaldos};
+  \draw[flecha] (igw) -- node[font=\tiny,right]{rt-publica} (hub);
+  \draw[flecha] (dr) -- node[font=\tiny,above,align=center]{rt-privada\\(VPN y NAT)} (hub);
+  \draw[flecha,dashed] (dr.south west) -- (s3.north east);
+  \begin{scope}[on background layer]
+    \node[zona,fit=(hub),inner sep=6pt,label={[zonatit,font=\tiny\bfseries]below:sn-publica 10.50.1.0/24}] {};
+    \node[zona,fit=(dr),inner sep=6pt,label={[zonatit,font=\tiny\bfseries]below:sn-privada-app 10.50.2.0/24}] {};
+  \end{scope}
+  \node[cajaext] (onp) at (-6.6,1.2) {Oficina\\y 13 zonas};
+  \draw[tunel] (onp) -- node[font=\tiny,above]{WireGuard} (hub);
+  \node[draw=upeublue,very thick,rounded corners,fit=(hub)(dr)(dat)(s3),inner sep=16pt,label={[zonatit]below:VPC 10.50.0.0/16 · sa-east-1}] {};
+\end{tikzpicture}
+\caption{Diseño de la arquitectura AWS (VPC).}
+\label{fig:ce03-vpc}
+\end{figure}
+
+\subsection{Servicios EC2 planeados}
+
+\begin{table}[H]
+\centering
+\caption{Instancias EC2 planeadas.}
+\label{tab:ce03-ec2}
+\small
+\begin{tabularx}{\textwidth}{L{2.2cm}L{2.1cm}L{2.3cm}XL{1.8cm}}
+\toprule
+\textbf{Instancia} & \textbf{Tipo} & \textbf{Disco} & \textbf{Función} & \textbf{Subred} \\
+\midrule
+EC2-WGHUB & t4g.medium (2 vCPU, 4 GiB) & EBS gp3 20 GB cifrado & Hub WireGuard, nftables, instancia NAT, Suricata en línea y honeypot Cowrie & sn-publica \\
+EC2-DR & t4g.medium (2 vCPU, 4 GiB) & EBS gp3 100 GB cifrado & Réplica en flujo de PostgreSQL y contenedores del sistema listos para activarse; se amplía a t4g.large al activar la contingencia & sn-privada-app \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Security Groups y NACL planeados}
+
+\begin{table}[H]
+\centering
+\caption{Security Groups, NACL y roles de IAM.}
+\label{tab:ce03-sg}
+\small
+\begin{tabularx}{\textwidth}{L{2.4cm}L{1.6cm}X}
+\toprule
+\textbf{Nombre} & \textbf{Alcance} & \textbf{Regla principal} \\
+\midrule
+sg-wghub & Instancia & Entrada: UDP 51820 desde 0.0.0.0/0 (zonas detrás de CGNAT); TCP 22 desde 0.0.0.0/0 \textbf{hacia Cowrie} (la administración real va por Systems Manager); todo desde sg-dr (NAT). \\
+sg-dr & Instancia & Entrada: TCP 5432 solo desde 10.20.20.11/32 (DB-01 por VPN); TCP 8000 desde 10.20.10.0/24 (verificación en contingencia). Sin entrada desde internet. \\
+NACL-publica & Subred & Permite UDP 51820, TCP 22 y puertos efímeros de retorno; deniega el resto. \\
+NACL-privada & Subred & Permite tráfico desde 10.50.0.0/16, 10.20.0.0/16 y 10.10.0.0/24 y el retorno de puertos efímeros; deniega la entrada directa desde internet. \\
+rol-ec2-hub & IAM & Systems Manager (sesión sin SSH) y agente de CloudWatch. \\
+rol-ec2-dr & IAM & Systems Manager y escritura/lectura solo en el prefijo de respaldos del bucket. \\
+svc-respaldo-oficina & IAM & Solo \texttt{PutObject} en el prefijo de respaldos (sin borrar). Cuenta raíz con MFA y sin uso diario; administradores con MFA. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent El bucket de respaldos tiene bloqueo de acceso público, versionado, cifrado
+del lado del servidor y una regla de ciclo de vida: 30 días en S3 Standard, luego S3
+Glacier y eliminación al año. Las VPC Flow Logs se envían a CloudWatch para auditar
+intentos de acceso (prueba PC-08 del diseño de red).
+
+% ======================================================================
+\section{Mecanismo de integración híbrida}
+
+La integración es el túnel WireGuard diseñado en el \cref{chap:ce03-red}. Ambos
+documentos usan las mismas redes y extremos:
+
+\begin{table}[htbp]
+\centering
+\caption{Coherencia entre el diseño de red y el de centro de datos.}
+\label{tab:ce03-coherencia}
+\small
+\begin{tabularx}{\textwidth}{L{3.6cm}L{4.6cm}X}
+\toprule
+\textbf{Elemento} & \textbf{Diseño de red} & \textbf{Diseño de centro de datos} \\
+\midrule
+Hub VPN & EC2-WGHUB, 10.10.0.1, \texttt{<EIP-HUB>}:51820 & EC2-WGHUB en sn-publica, 10.50.1.10 \\
+Peer on-premise & FW01, 10.10.0.2; anuncia 10.20.\{10,20,50\}.0/24 & VM en VLAN 20 y 50 de ESXI-01 \\
+Red anunciada por AWS & 10.50.0.0/16 & VPC 10.50.0.0/16 \\
+Réplica de base de datos & Flujo DB-01 $\rightarrow$ EC2-DR, TCP 5432 & sg-dr permite 5432 solo desde 10.20.20.11 \\
+Peers de zona & 10.10.0.(100+\textit{id}), anuncian 172.16.\textit{id}.0/28 & rt-privada enruta 172.16.0.0/16 al hub \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Matriz de componentes del centro de datos}
+
+{\small
+\begin{longtable}{L{2.6cm}L{2cm}L{2.2cm}L{4.4cm}L{1.6cm}}
+\caption{Matriz consolidada on-premise + AWS (con recursos asignados).}\label{tab:ce03-componentes-dc}\\
+\toprule
+\textbf{Componente} & \textbf{Entorno} & \textbf{Tipo} & \textbf{Función y recursos} & \textbf{Criticidad} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Componente} & \textbf{Entorno} & \textbf{Tipo} & \textbf{Función y recursos} & \textbf{Criticidad} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+ESXI-01 & On-premise & Hipervisor & Virtualización; 8C/16T, 64 GB, 1,92 TB RAID 1 & Alta \\
+Datastore SSD & On-premise & Almacenamiento & Discos de las VM (RAID 1) & Alta \\
+NAS-01 & On-premise & Almacenamiento & Respaldos locales; 4 TB RAID 1 & Media \\
+FW01 & On-premise & Red & Firewall y peer VPN & Alta \\
+SW-CORE & On-premise & Red & Troncal y espejo & Alta \\
+UPS-01 & On-premise & Energía & 1500 VA, unos 30 min & Alta \\
+APP-01 & On-premise & VM & Sistema; 4 vCPU, 8 GB, 210 GB & Alta \\
+DB-01 & On-premise & VM & PostgreSQL; 4 vCPU, 8 GB, 120 GB & Alta \\
+PROXY-01 & On-premise & VM & Publicación; 2 vCPU, 2 GB, 30 GB & Alta \\
+HONEY-01 & On-premise & VM & Señuelo; 1 vCPU, 1 GB, 20 GB & Media \\
+MON-01 & On-premise & VM & Monitoreo; 2 vCPU, 4 GB, 60 GB & Media \\
+SIEM-01 & On-premise & VM & SIEM; 4 vCPU, 8 GB, 150 GB & Media \\
+IDS-01 & On-premise & VM & IDS; 2 vCPU, 4 GB, 40 GB & Media \\
+VPC principal & AWS & Red virtual & Aislamiento de recursos cloud & Alta \\
+Internet Gateway & AWS & Red & Salida de sn-publica & Alta \\
+Endpoint S3 & AWS & Red & Acceso privado a S3 & Media \\
+EC2-WGHUB & AWS & Cómputo & Hub VPN; t4g.medium, 20 GB & Alta \\
+EC2-DR & AWS & Cómputo & Contingencia; t4g.medium, 100 GB & Media \\
+Bucket S3 de respaldos & AWS & Almacenamiento & Respaldos cifrados y versionados & Alta \\
+CloudWatch / Flow Logs & AWS & Monitoreo & Métricas, alarmas y auditoría de red & Media \\
+\end{longtable}
+}
+
+% ======================================================================
+\section{Dimensionamiento y capacidad}
+
+\begin{table}[H]
+\centering
+\caption{Recursos requeridos frente a la capacidad del host ESXI-01.}
+\label{tab:ce03-capacidad}
+\small
+\begin{tabularx}{\textwidth}{L{2.4cm}L{2.6cm}L{2.6cm}X}
+\toprule
+\textbf{Recurso} & \textbf{Asignado (VM)} & \textbf{Capacidad} & \textbf{Uso y margen} \\
+\midrule
+CPU & 19 vCPU & 8 núcleos / 16 hilos & Relación 1,2:1 sobre hilos (2,4:1 sobre núcleos), por debajo del 3:1 habitual en cargas ligeras. \\
+RAM & 35 GB + unos 4 GB del hipervisor & 64 GB & 61\,\% de uso, \textbf{39\,\% de margen}; ampliable a 128 GB. \\
+Disco & 630 GB + unos 40 GB de \emph{swap} de VM & 1,92 TB útiles & 35\,\% de uso; queda espacio para instantáneas y para duplicar la base y las evidencias. \\
+Red & Menos de 50 Mbps sostenidos & 4 $\times$ 1 GbE de datos/gestión & Holgado; la VPN de gestión usa menos de 2 Mbps. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Justificación de las cargas.} El sistema completo consume hoy entre 1,3 y
+1,8~GB de RAM en reposo; los 8~GB de APP-01 cubren la compilación del frontend (1,5 a
+2~GB puntuales), el techo de 512~MB del servicio de WhatsApp y el crecimiento. La base
+de datos tiene 21 tablas con volúmenes pequeños (cientos de clientes, unas decenas de
+miles de pagos e historial en 3 años, menos de 2~GB), por lo que 8~GB de RAM permiten
+mantenerla en memoria; los 120~GB incluyen el archivado de WAL. Las evidencias crecen
+unos 30~MB por cliente: unos 27~GB a 3 años, frente a 150~GB asignados. Wazuh y
+Zabbix se dimensionan según los mínimos de sus fabricantes para menos de 50 agentes o
+equipos.
+
+\paragraph{AWS.} El hub solo transporta gestión (menos de 2~Mbps); \texttt{t4g.medium}
+se elige por la RAM que necesitan Suricata con reglas ET Open (1 a 1,5~GB) y Cowrie, no
+por la CPU. EC2-DR replica una base pequeña con 4~GiB y se amplía a \texttt{t4g.large}
+solo cuando se activa la contingencia. Las imágenes del sistema (Python, Node,
+PostgreSQL) son multiarquitectura, por lo que corren en Graviton (ARM).
+
+\paragraph{Energía.} ESXI-01 (unos 150~W), FW01 y SW-CORE (unos 40~W) y NAS-01 (unos
+25~W) suman unos 240~W con margen, dentro de la capacidad del UPS de 1500~VA.
+
+% ======================================================================
+\section{Consideraciones de disponibilidad y continuidad en el diseño}
+
+\begin{itemize}
+  \item \textbf{Redundancia local:} RAID~1 en el datastore y en el NAS, NIC en
+  activo/en espera para la gestión y balanceo para los datos, UPS con apagado ordenado
+  y encendido automático tras un corte (configuración de BIOS que ya se aplica hoy).
+  El R250 tiene una sola fuente de poder: es un punto único de falla aceptado y
+  compensado con la réplica en AWS.
+  \item \textbf{Respaldos 3-2-1:} (1) datos en producción en ESXI-01; (2) copia local
+  en NAS-01 (respaldos de VM con ghettoVCB y \texttt{pg\_dump} diario); (3) copia fuera
+  de sitio en S3 (\texttt{pg\_dump} cifrado, archivado WAL cada 15 minutos y
+  sincronización nocturna de evidencias).
+  \item \textbf{Contingencia:} réplica en flujo de PostgreSQL hacia EC2-DR; ante la
+  pérdida de la oficina se promueve la réplica, se levantan los contenedores en
+  EC2-DR y se apunta el túnel de Cloudflare a esa instancia.
+  \item \textbf{Configuración como código:} el \texttt{docker-compose.yml}, la plantilla
+  de router y la configuración del hub se guardan en un repositorio privado (sin
+  secretos) para reconstruir en minutos.
+\end{itemize}
+
+\begin{table}[htbp]
+\centering
+\caption{RTO/RPO objetivo preliminar por servicio (se validará en el semestre 2).}
+\label{tab:ce03-rto}
+\small
+\begin{tabularx}{\textwidth}{L{2.8cm}C{1.6cm}C{1.3cm}C{1.2cm}X}
+\toprule
+\textbf{Servicio} & \textbf{Criticidad} & \textbf{RPO} & \textbf{RTO} & \textbf{Estrategia} \\
+\midrule
+Base de datos & Alta & 5 min & 1 h & Promover la réplica de EC2-DR; alternativamente, restaurar el respaldo con WAL (recuperación a un punto en el tiempo). \\
+API, panel y app & Alta & 15 min & 2 h & Restaurar APP-01 desde NAS-01 o activar los contenedores en EC2-DR y redirigir el túnel. \\
+Hub VPN & Alta & 24 h & 30 min & Relanzar desde la AMI y la plantilla de lanzamiento y reasignar la IP elástica; las zonas se reconectan solas. \\
+Configuración de routers & Alta & 24 h & 1 h & Exportación nocturna (\texttt{/export}) al repositorio privado y restauración del \texttt{.rsc}. \\
+Evidencias (fotos) & Media & 24 h & 4 h & Sincronización nocturna a S3 y NAS-01. \\
+WhatsApp & Media & --- & 4 h & Recrear el contenedor y volver a vincular el número. \\
+Monitoreo y SIEM & Media & 24 h & 8 h & Respaldo semanal de las VM. \\
+Internet de clientes & Alta & --- & --- & No depende del centro de datos: cada zona sale por su ISP local. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Conclusiones y hoja de ruta hacia la implementación}
+
+El diseño pasa de un único equipo sin redundancia a un centro de datos híbrido con
+cargas aisladas en VM, una copia de contingencia en AWS y respaldos 3-2-1, con un
+costo acotado para una MYPE. Queda pendiente para el entregable
+\emph{Implementación, gestión y control de centro de datos} del semestre~2:
+
+\begin{enumerate}
+  \item Adquirir e instalar ESXI-01, crear vSwitches, \emph{port groups} y las 7 VM.
+  \item Migrar los contenedores actuales a APP-01, DB-01 y PROXY-01 sin pérdida de datos.
+  \item Desplegar la VPC, EC2-WGHUB, EC2-DR, el bucket S3 y los roles de IAM con MFA.
+  \item Configurar la réplica de PostgreSQL y los respaldos 3-2-1.
+  \item Configurar el monitoreo (métricas del host ESXi y CloudWatch) con alertas de capacidad.
+  \item Ejecutar y documentar al menos un ejercicio de recuperación completo, comparando
+  el RTO/RPO obtenido con el objetivo de la \cref{tab:ce03-rto}.
+\end{enumerate}
+
+% ======================================================================
+\section*{Referencias}
+\addcontentsline{toc}{section}{Referencias}
+{\small
+\begin{enumerate}[label={[\arabic*]},leftmargin=2em]
+  \item Broadcom / VMware, ``vSphere 8 Documentation: ESXi Installation and Setup, vSphere Networking''. [En línea]. Disponible: https://techdocs.broadcom.com
+  \item Broadcom, ``Broadcom Compatibility Guide (servidores para ESXi)''. [En línea]. Disponible: https://compatibilityguide.broadcom.com
+  \item Amazon Web Services, ``Amazon VPC User Guide'', ``Amazon EC2 User Guide'', ``IAM User Guide'' y ``Amazon S3 User Guide''. [En línea]. Disponible: https://docs.aws.amazon.com
+  \item Amazon Web Services, ``AWS Well-Architected Framework'', 2024.
+  \item ISO/IEC 27001:2022 e ISO/IEC 27002:2022 (controles 8.13 Respaldo de la información, 8.14 Redundancia, 5.23 Seguridad en servicios en la nube). Ginebra: ISO, 2022.
+  \item PostgreSQL Global Development Group, ``PostgreSQL 15 Documentation: High Availability, Load Balancing, and Replication''.
+  \item Congreso de la República del Perú, Ley N.\textsuperscript{o}~29733, Ley de Protección de Datos Personales.
+\end{enumerate}
+}

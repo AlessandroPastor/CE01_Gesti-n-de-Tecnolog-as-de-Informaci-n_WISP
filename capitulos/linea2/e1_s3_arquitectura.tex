@@ -1,0 +1,309 @@
+% ======================================================================
+% capitulos/linea2/capitulo8.tex
+% ----------------------------------------------------------------------
+% LÍNEA CE02 — Evidencia CE0213: Diseño arquitectónico del sistema
+% Fuente: código real (rama main) — docker-compose.yml, backend/app, mobile/,
+%         frontend/, whatsapp/, docs/DESPLIEGUE-OFICINA.md
+% ======================================================================
+\section{Sección 3: Diseño Arquitectónico}
+\label{chap:ce02-arquitectura}
+
+Esta sección corresponde a la evidencia \textbf{CE0213 — Diseño arquitectónico del
+sistema}. Describe la estructura principal del sistema, sus componentes y
+responsabilidades, su despliegue y las decisiones técnicas que lo justifican,
+siguiendo el modelo C4 (contexto, contenedores y componentes) y el formato de registro
+de decisiones arquitectónicas (ADR) de Michael Nygard.
+
+% ======================================================================
+\subsection{Documento de arquitectura}
+\label{sec:ce02-doc-arq}
+
+El sistema es un \textbf{monolito modular con arquitectura cliente-servidor}. Un
+único backend (FastAPI), organizado internamente por dominios de negocio, expone una
+API REST que consumen tres clientes: el panel web interno (React), la app móvil
+(Expo/React Native) y el sitio público. El backend persiste en una base de datos
+PostgreSQL, envía mensajes a través de un servicio de WhatsApp propio y gestiona los
+routers MikroTik de las 13 zonas por SSH a través de una VPN WireGuard.
+
+\begin{table}[htbp]
+\centering
+\caption{Atributos de calidad que guían la arquitectura.}
+\label{tab:ce02-atributos}
+\small
+\begin{tabularx}{\textwidth}{L{2.6cm}XL{2.6cm}}
+\toprule
+\textbf{Atributo} & \textbf{Táctica arquitectónica aplicada} & \textbf{RNF} \\
+\midrule
+Seguridad & JWT + RBAC por endpoint; servicios internos atados a \texttt{127.0.0.1}; token compartido entre backend y servicio de WhatsApp; gestión de red solo por VPN. & RNF-01, 02, 03 \\
+Disponibilidad & Contenedores con \texttt{restart: unless-stopped}; tareas programadas dentro del backend; límites de CPU/RAM al servicio más inestable (WhatsApp). & RNF-04 \\
+Rendimiento & Caché de 120~s del estado WireGuard; pings a routers en paralelo. & RNF-06 \\
+Mantenibilidad & 19 routers por dominio; esquema versionado con Alembic; configuración por variables de entorno. & RNF-11 \\
+Portabilidad & Todo en Docker Compose; el mismo despliegue sirve en VPS o en la oficina cambiando una variable. & RNF-12 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ----------------------------------------------------------------------
+\subsection{Vista de contexto (C4 nivel 1)}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=9mm and 12mm]
+  \node[caja,minimum width=4.2cm,minimum height=13mm,fill=upeublue!15,font=\small\bfseries] (sis) {Sistema de Gestión\\Integral WISP};
+  \node[cajaext,above left=of sis] (adm) {Administrador /\\Atención al cliente};
+  \node[cajaext,above right=of sis] (campo) {Técnico /\\Vendedor de campo};
+  \node[cajaext,left=of sis] (cli) {Cliente final};
+  \node[cajaext,right=of sis] (vis) {Visitante\\(público)};
+  \node[cajaext,below left=of sis] (wa) {WhatsApp};
+  \node[cajaext,below=of sis] (mk) {13 routers MikroTik\\(RouterOS 7)};
+  \node[cajaext,below right=of sis] (api) {APIs Perú\\(DNI/RUC)};
+  \draw[flecha] (adm) -- node[font=\tiny,sloped,above]{panel web} (sis);
+  \draw[flecha] (campo) -- node[font=\tiny,sloped,above]{app móvil} (sis);
+  \draw[flecha] (cli) -- node[font=\tiny,above]{app (PIN)} (sis);
+  \draw[flecha] (vis) -- node[font=\tiny,above]{sitio web} (sis);
+  \draw[flecha] (sis) -- node[font=\tiny,sloped,above]{avisos} (wa);
+  \draw[flecha] (sis) -- node[font=\tiny,right]{SSH por WireGuard} (mk);
+  \draw[flecha] (sis) -- node[font=\tiny,sloped,above]{consulta} (api);
+\end{tikzpicture}
+\caption{Vista de contexto: actores y sistemas externos.}
+\label{fig:ce02-contexto}
+\end{figure}
+
+% ======================================================================
+\subsection{Vista de contenedores (C4 nivel 2)}
+\label{sec:ce02-componentes}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,scale=0.93,every node/.style={transform shape}]
+  % Clientes
+  \node[cajaext,minimum width=2.5cm] (nav) at (0,1.7) {Navegador\\(admin / atención)};
+  \node[cajaext,minimum width=2.5cm] (app) at (0,0) {App móvil Expo\\(técnico, vendedor,\\cliente)};
+  \node[cajaext,minimum width=2.5cm] (pub) at (0,-1.7) {Navegador\\(visitante)};
+  % Borde
+  \node[cajaext,minimum height=30mm,minimum width=1.7cm] (cf) at (2.9,0) {Cloudflare\\(HTTPS,\\túnel)};
+  \node[caja,minimum height=30mm,minimum width=1.8cm] (ngx) at (5.0,0) {Nginx\\proxy\\inverso\\+ cabeceras\\de seguridad};
+  % Contenedores del servidor
+  \node[caja,minimum width=3.1cm] (front) at (8.2,2.3) {Panel web\\React 19 + Vite (SPA)};
+  \node[caja,minimum width=3.1cm,fill=upeublue!15] (back) at (8.2,-0.3) {\textbf{API REST FastAPI}\\19 routers por dominio\\+ APScheduler};
+  \node[caja,minimum width=3.1cm] (web) at (8.2,1.15) {Sitio público\\HTML/CSS/JS};
+  \node[caja] (media) at (5.0,-2.8) {Volumen\\media / backups};
+  \node[bd] (pg) at (7.4,-2.8) {PostgreSQL 15};
+  \node[caja] (wa) at (10.0,-2.8) {Servicio WhatsApp\\Node 20 + Baileys};
+  % Externos
+  \node[cajaext,minimum width=2.1cm] (apis) at (13.2,2.0) {APIs Perú\\(DNI/RUC)};
+  \node[cajaext,minimum width=2.1cm] (vps) at (13.2,0.4) {VPS hub\\WireGuard};
+  \node[cajaext,minimum width=2.1cm] (mk) at (13.2,-1.1) {MikroTik\\de zona (13)};
+  \node[cajaext,minimum width=2.1cm] (waext) at (13.2,-2.8) {Servidores\\WhatsApp};
+  % Flujos
+  \draw[flecha] (nav) -- (cf); \draw[flecha] (app) -- (cf); \draw[flecha] (pub) -- (cf);
+  \draw[flecha] (cf) -- (ngx);
+  \draw[flecha] (ngx) -- (front.west); \draw[flecha] (ngx) -- node[font=\tiny,above]{/api} (back.west); \draw[flecha] (ngx) -- (web.west);
+  \draw[flecha] (back.south) ++(-0.5,0) -- node[font=\tiny,left]{SQL} (pg.north);
+  \draw[flecha] (back.south) ++(0.6,0) -- node[font=\tiny,right]{HTTP + token} (wa.north);
+  \draw[flecha] (back.south west) -- (media.north east);
+  \draw[flecha] (wa) -- (waext);
+  \draw[flecha] (back.east) -- node[font=\tiny,above]{SSH} (vps.west);
+  \draw[flecha] (back.east) -- node[font=\tiny,below,sloped]{SSH por túnel} (mk.west);
+  \draw[flecha] (back.north east) -- node[font=\tiny,above,sloped]{HTTPS} (apis.west);
+  \begin{scope}[on background layer]
+    \node[zona,fit=(ngx)(front)(back)(web)(pg)(wa)(media),inner sep=7pt,label={[zonatit]above:Servidor de la oficina — Docker Compose}] {};
+  \end{scope}
+\end{tikzpicture}
+\caption{Diagrama de contenedores del sistema WISP (estado real, rama \texttt{main}).}
+\label{fig:ce02-componentes}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Componentes del backend por dominio de negocio.}
+\label{tab:ce02-modulos}
+\small
+\begin{tabularx}{\textwidth}{L{3.2cm}L{3.2cm}X}
+\toprule
+\textbf{Dominio} & \textbf{Módulo(s)} & \textbf{Responsabilidad} \\
+\midrule
+Identidad y acceso & \texttt{auth}, \texttt{admin} & Login JWT, freno a fuerza bruta, usuarios y roles. \\
+Clientes y ventas & \texttt{clientes}, \texttt{consultas} & Alta, aprobación, instalación, corte/reactivación, estado PPPoE, consulta DNI/RUC. \\
+Planta externa & \texttt{mufas}, \texttt{cajas\_nap} & Mufas, corridas, cajas NAP y bornes sobre el mapa. \\
+Red y zonas & \texttt{zonas}, \texttt{planes} & Zonas, peers WireGuard, terminal RouterOS, sincronización de perfiles PPPoE. \\
+Equipos & \texttt{onus} & Inventario de ONU por serie, asignación y estados. \\
+Operación de campo & \texttt{averias}, \texttt{ordenes\_retiro}, \texttt{evidencias}, \texttt{jornadas} & Averías, retiros, fotos y recorridos de vendedores. \\
+Cobranza & \texttt{pagos}, \texttt{gastos}, \texttt{dashboard}, \texttt{recibos}, \texttt{facturacion} & Pagos, adelantos, recibos PDF, gastos e indicadores. \\
+Comunicación & \texttt{whatsapp}, \texttt{scheduler} & Avisos individuales y masivos, recordatorios (08:00) y cortes automáticos (09:00). \\
+Autoservicio & \texttt{cliente\_app} & Cuenta y pagos del cliente con PIN. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\subsection{Vista de componentes (C4 nivel 3): API REST}
+\label{sec:ce02-c3}
+
+La \cref{fig:ce02-c3} abre el contenedor \emph{API REST FastAPI} y muestra sus
+componentes internos: la capa de entrada (routers por dominio), la seguridad
+transversal, la lógica de dominio, los adaptadores hacia sistemas externos y la capa
+de persistencia. Las dependencias van siempre hacia abajo: los routers no hablan
+directamente con los MikroTik ni con WhatsApp, sino a través de un adaptador.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,scale=0.92,every node/.style={transform shape}]
+  % Capa de entrada
+  \node[caja,text width=13.4cm,fill=upeublue!12] (rt) at (0,3.2) {\textbf{Routers FastAPI (19)} --- auth · admin · clientes · consultas · zonas · planes · mufas · cajas\_nap · onus · averias · ordenes\_retiro · evidencias · jornadas · pagos · gastos · dashboard · whatsapp · cliente\_app};
+  % Seguridad transversal
+  \node[cajasec,text width=3.4cm] (sec) at (-5.0,1.6) {\textbf{Seguridad}\\JWT · \texttt{require\_roles} (RBAC)\\freno a fuerza bruta};
+  \node[caja,text width=3.4cm] (val) at (-1.3,1.6) {\textbf{Validación}\\esquemas Pydantic v2\\(\texttt{schemas.py})};
+  \node[caja,text width=3.0cm] (dom) at (2.2,1.6) {\textbf{Lógica de dominio}\\facturación · ciclo de 30 días · recibos PDF};
+  \node[caja,text width=2.6cm] (sch) at (5.4,1.6) {\textbf{Planificador}\\APScheduler: 08:00 recordatorio, 09:00 corte};
+  % Adaptadores
+  \node[cajaext,text width=2.6cm] (amk) at (-5.0,-0.2) {\textbf{Adaptador RouterOS}\\SSH (paramiko) por la IP de túnel};
+  \node[cajaext,text width=2.6cm] (awg) at (-2.0,-0.2) {\textbf{Adaptador WireGuard}\\\texttt{wg show / wg set} en la VPS (SSH)};
+  \node[cajaext,text width=2.6cm] (awa) at (1.0,-0.2) {\textbf{Cliente WhatsApp}\\HTTP + token al servicio Baileys};
+  \node[cajaext,text width=2.6cm] (adn) at (4.0,-0.2) {\textbf{Cliente APIs Perú}\\consulta DNI/RUC con cuota mensual};
+  % Persistencia
+  \node[caja,text width=6.0cm,fill=upeublue!12] (orm) at (-2.0,-2.0) {\textbf{Persistencia}: SQLAlchemy 2 (\texttt{models.py}) + migraciones Alembic};
+  \node[caja,text width=3.2cm] (fs) at (3.6,-2.0) {\textbf{Archivos}\\evidencias y comprobantes (\texttt{/media})};
+  \node[bd] (pg) at (-2.0,-3.6) {PostgreSQL 15};
+  % Relaciones
+  \foreach \n in {sec,val,dom,sch} \draw[flecha] (rt.south -| \n) -- (\n.north);
+  % bus de servicios: dominio y planificador hacia los adaptadores
+  \draw[thick,upeublue!80] (-5.0,0.66) -- (5.4,0.66);
+  \draw[thick,upeublue!80] (dom.south) -- (dom.south |- 0,0.66);
+  \draw[thick,upeublue!80] (sch.south) -- (sch.south |- 0,0.66);
+  \foreach \n in {amk,awg,awa,adn} \draw[flecha] (\n.north |- 0,0.66) -- (\n.north);
+  % persistencia: baja por el hueco entre adaptadores
+  \draw[thick,upeublue!80] (2.5,0.66) -- (2.5,-1.3);
+  \draw[flecha] (2.5,-1.3) -| (orm.north);
+  \draw[flecha] (2.5,-1.3) -| (fs.north);
+  \draw[flecha] (orm) -- (pg);
+\end{tikzpicture}
+\caption{Vista de componentes (C4 nivel 3) del contenedor API REST.}
+\label{fig:ce02-c3}
+\end{figure}
+
+% ======================================================================
+\subsection{Diagrama de despliegue}
+\label{sec:ce02-despliegue}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=5mm and 7mm]
+  \node[caja,minimum width=3.0cm] (ngx) {wisp\_nginx :80};
+  \node[caja,below=of ngx,minimum width=3.0cm] (fe) {wisp\_frontend :3000};
+  \node[caja,below=of fe,minimum width=3.0cm] (we) {wisp\_web :3002};
+  \node[caja,right=of ngx,minimum width=3.0cm,fill=upeublue!15] (be) {wisp\_backend :8000\\(red del host, wg0)};
+  \node[bd,below=of be] (pg) {wisp\_postgres\\127.0.0.1:5432};
+  \node[caja,below=of pg,minimum width=3.0cm] (wa) {wisp\_whatsapp\\127.0.0.1:3001};
+  \node[caja,left=of ngx,minimum width=2.4cm] (cfd) {wisp\_cloudflared};
+  \begin{scope}[on background layer]
+    \node[zona,fit=(cfd)(ngx)(fe)(we)(be)(pg)(wa),label={[zonatit]above:Oficina central — PC servidor Ubuntu 24.04 (Docker Compose)}] (ofi) {};
+  \end{scope}
+  \node[cajaext,above=16mm of cfd] (cf) {Cloudflare Edge\\(HTTPS público)};
+  \node[cajaext,right=26mm of be,yshift=6mm] (vps) {VPS en la nube\\\texttt{wg0} 10.10.0.1/24\\UDP 51820};
+  \node[cajaext,below=12mm of vps] (z1) {MikroTik zona 1\\10.10.0.101};
+  \node[cajaext,below=4mm of z1] (zn) {MikroTik zona $n$\\10.10.0.(100+$n$)};
+  \node[cajaext,above=10mm of vps] (wae) {Servidores\\WhatsApp};
+  \draw[flecha] (cfd) -- node[font=\tiny,right]{túnel de salida} (cf);
+  \draw[flecha] (cfd) -- (ngx);
+  \draw[flecha] (ngx) -- (fe); \draw[flecha] (ngx) -- (be);
+  \draw[flecha] (be) -- (pg); \draw[flecha] (be.east) .. controls +(1,-1.2) .. (wa.east);
+  \draw[tunel] (be.east) -- node[font=\tiny,above,sloped]{túnel WireGuard} (vps.west);
+  \draw[tunel] (vps) -- (z1); \draw[tunel] (vps.east) to[out=-60,in=20] (zn.east);
+  \draw[flecha] (wa.east) to[out=0,in=200] (wae.west);
+\end{tikzpicture}
+\caption{Despliegue real: servidor on-premise con contenedores, publicación por
+Cloudflare Tunnel y gestión de las zonas a través del hub WireGuard en la VPS.}
+\label{fig:ce02-despliegue}
+\end{figure}
+
+El servidor de la oficina no tiene IP pública. El contenedor \texttt{cloudflared}
+abre una conexión \emph{de salida} hacia Cloudflare, que publica el sitio con HTTPS sin
+abrir puertos en el router. La VPS en la nube actúa únicamente como concentrador
+(\emph{hub}) WireGuard: cada MikroTik de zona y el servidor de la oficina son
+\emph{peers}, y el backend alcanza cada router por su IP de túnel. El detalle de red de
+este despliegue se desarrolla en la línea CE03 (\cref{chap:ce03-red}).
+
+% ======================================================================
+\subsection{Registro de decisiones arquitectónicas (ADR)}
+\label{sec:ce02-adr}
+
+\newcommand{\adr}[6]{%
+\begin{tcolorbox}[enhanced,breakable,colback=white,colframe=upeublue!60,boxrule=0.5pt,arc=1pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt,title={\small\textbf{#1} --- #2},coltitle=upeublue,colbacktitle=upeublue!8]
+\small\textbf{Estado:} #3\par
+\textbf{Contexto:} #4\par
+\textbf{Decisión:} #5\par
+\textbf{Consecuencias:} #6
+\end{tcolorbox}}
+
+\adr{ADR-01}{Monolito modular con API REST}{Aceptada}
+{Varios roles y módulos (ventas, red, inventario, cobranza, comunicación) para una MYPE con un equipo de desarrollo reducido.}
+{Un único backend dividido en módulos por dominio que expone una API REST consumida por todos los clientes. Se descartan microservicios y serverless.}
+{Un solo despliegue y una sola base de datos transaccional: menor costo y complejidad. El acoplamiento se controla con la separación por routers; el servicio de WhatsApp ya está aislado y otros podrían extraerse si el crecimiento lo justifica.}
+
+\adr{ADR-02}{PostgreSQL con migraciones Alembic}{Aceptada}
+{Dominio con relaciones fuertes (clientes, bornes, ONU, pagos) e integridad transaccional (no duplicar pagos ni bornes).}
+{PostgreSQL~15 como base principal; el esquema se versiona con Alembic y se aplica en cada arranque (\texttt{alembic upgrade head}).}
+{Integridad referencial y transacciones ACID. Cada cambio de esquema queda en una migración revisable (32 a la fecha). Ver \cref{chap:ce02-datos}.}
+
+\adr{ADR-03}{FastAPI y React en lugar de Django y Angular}{Aceptada --- reemplaza la propuesta de la línea CE01}
+{La solución TIC de CE01 (\cref{chap:soluciontic}) proponía Django + Angular. Al iniciar la construcción, el equipo priorizó la validación con Pydantic, la documentación OpenAPI automática y la productividad en el frontend.}
+{Backend en FastAPI (Python) con SQLAlchemy~2 y Pydantic~v2; panel web en React~19 con Vite y TypeScript.}
+{La arquitectura lógica de CE01 (capas, API REST, PostgreSQL, WireGuard) se mantiene; cambia solo la tecnología de implementación. Los documentos de CE01 se interpretan con esta equivalencia.}
+
+\adr{ADR-04}{Tareas programadas con APScheduler dentro del backend}{Aceptada}
+{Recordatorios y cortes deben ejecutarse una vez al día de forma confiable.}
+{APScheduler en el proceso del backend (zona horaria America/Lima): recordatorio a las 08:00 y corte a las 09:00. Se descarta Redis + Celery.}
+{Sin infraestructura adicional. Riesgo aceptado: si el backend está caído a esa hora, el trabajo no corre hasta el día siguiente; el corte es idempotente y se puede lanzar a mano.}
+
+\adr{ADR-05}{Panel web para oficina y app móvil Expo para campo}{Aceptada --- reemplaza la idea de una sola SPA responsive}
+{El técnico necesita cámara, GPS y escaneo de códigos; el cliente necesita autoservicio. Una web responsive no cubría bien el acceso a la cámara ni el uso en campo.}
+{Panel web React para administración y atención; una sola app Expo (React Native) con tres espacios por rol: técnico, vendedor y cliente.}
+{Mejor experiencia en campo. Se mantienen dos clientes, que comparten la misma API.}
+
+\adr{ADR-06}{Validación de comprobantes con IA pospuesta}{Diferida al semestre 2}
+{El bot de WhatsApp con OCR/visión (RF-39 a RF-43) requiere un proveedor de IA, un umbral de confianza y control de fraude.}
+{En esta versión el pago se registra en mostrador o por el personal, con control de duplicados en la base de datos (\texttt{UNIQUE numero\_operacion}). La consulta de cuenta se cubre con la App del cliente.}
+{Se entrega valor sin depender de la IA. Cuando se implemente, todo caso con baja confianza irá a revisión humana (RNF-07).}
+
+\adr{ADR-07}{WhatsApp mediante sesión vinculada (Baileys)}{Aceptada con riesgo --- revisable}
+{La WhatsApp Business Cloud API oficial exige plantillas aprobadas y cobra por conversación. El volumen de WISP (avisos de cobro y corte a unos cientos de clientes) es bajo.}
+{Servicio propio en Node.js con la librería Baileys sobre un número vinculado, expuesto solo en \texttt{127.0.0.1:3001} y protegido con un token compartido. Envíos masivos con pausas aleatorias.}
+{Costo cero y sin plantillas. Riesgos: bloqueo del número y cambios no anunciados en el protocolo. Mitigación: límites de CPU/RAM, pausas, registro por destinatario y plan de migración a la Cloud API si el volumen crece o se produce un bloqueo.}
+
+\adr{ADR-08}{Gestión de MikroTik por SSH sobre WireGuard}{Aceptada}
+{El sistema debe crear secretos PPPoE, sincronizar perfiles, cortar y reactivar en 13 routers heterogéneos.}
+{SSH con llave pública (paramiko) desde el backend hacia la IP WireGuard de cada router, con un usuario limitado; comandos RouterOS acotados y una terminal web solo para el administrador.}
+{Funciona con la configuración existente de cada zona. Mejoras previstas: verificar la huella del host (hoy se acepta cualquier llave) y pasar la terminal de lista negra a lista blanca de comandos.}
+
+\adr{ADR-09}{Servidor on-premise con Cloudflare Tunnel y VPS como hub VPN}{Aceptada}
+{La oficina no tiene IP pública y el presupuesto no justifica alojar todo en la nube.}
+{Todo el sistema corre en un servidor de la oficina; Cloudflare Tunnel lo publica sin abrir puertos; la VPS solo concentra el WireGuard de las zonas.}
+{Bajo costo y datos bajo control de la empresa. Riesgos: dependencia del suministro eléctrico y del hardware local, que se tratan en el diseño de centro de datos (\cref{chap:ce03-dc}).}
+
+% ======================================================================
+\subsection{Tecnologías y versiones}
+\label{sec:ce02-stack}
+
+\begin{table}[H]
+\centering
+\caption{Pila tecnológica real del sistema.}
+\label{tab:ce02-stack}
+\small
+\begin{tabularx}{\textwidth}{L{2.8cm}L{4.6cm}X}
+\toprule
+\textbf{Capa} & \textbf{Tecnología (versión)} & \textbf{Uso} \\
+\midrule
+Backend & Python, FastAPI 0.111, SQLAlchemy 2.0.30, Pydantic 2.7 & API REST y lógica de negocio \\
+Datos & PostgreSQL 15, Alembic 1.13 & Persistencia y migraciones \\
+Tareas & APScheduler 3.10 & Recordatorios y cortes diarios \\
+Documentos & ReportLab 4.2, openpyxl 3.1 & Recibos PDF y exportaciones \\
+Red & paramiko 3.4, WireGuard, RouterOS 7 & Gestión de routers por SSH sobre VPN \\
+Panel web & React 19, Vite 7, TypeScript 5.6, Tailwind CSS & Interfaz de administración \\
+App móvil & Expo SDK 54, React Native 0.81 & Técnico, vendedor y cliente \\
+Mensajería & Node.js 20, Baileys 6.7 & Avisos por WhatsApp \\
+Infraestructura & Docker Compose, Nginx, Cloudflare Tunnel & Despliegue y publicación \\
+\bottomrule
+\end{tabularx}
+\end{table}

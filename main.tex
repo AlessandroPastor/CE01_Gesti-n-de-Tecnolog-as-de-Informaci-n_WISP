@@ -48,6 +48,8 @@
 \usepackage{tabularx}
 \usepackage{longtable}
 \usepackage{caption}
+\usepackage{float}
+\usepackage{pdfpages}               % [H]: fija una tabla/figura justo después de su título
 \captionsetup{
   labelfont={bf,color=upeublue},
   font=small,
@@ -128,7 +130,9 @@
 \renewcommand{\footrulewidth}{0pt}
 
 % La marca de encabezado muestra únicamente "Capítulo N" (sin título ni secciones)
-\renewcommand{\chaptermark}[1]{\markboth{\chaptername\ \thechapter}{}}
+\makeatletter
+\renewcommand{\chaptermark}[1]{\markboth{\@chapapp\ \thechapter}{}} % "Capítulo N" o "Anexo X"
+\makeatother
 
 % Izquierda: logo WISP en pequeño · Derecha: "Capítulo N"
 \fancyhead[L]{\raisebox{-0.35\height}{\includegraphics[height=7mm]{imagenes/Wisp.png}}}
@@ -142,6 +146,56 @@
 }
 
 % ----------------------------------------------------------------------
+% 8a. FICHA DE ENTREGABLE: \entregable{línea}{semestre·entregable}{códigos}{estado}
+%     Se coloca al inicio de cada capítulo para identificar qué se evalúa.
+% ----------------------------------------------------------------------
+\newcommand{\entregable}[4]{%
+\begin{tcolorbox}[enhanced,colback=upeublue!4,colframe=upeublue,boxrule=0.6pt,arc=1.5pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt,before skip=4pt,after skip=12pt]
+\small
+\begin{tabularx}{\linewidth}{@{}L{2.3cm}X@{}}
+\textbf{Línea} & #1 \\
+\textbf{Entregable} & #2 \\
+\textbf{Códigos} & #3 \\
+\textbf{Estado} & #4 \\
+\end{tabularx}
+\end{tcolorbox}}
+
+% ----------------------------------------------------------------------
+% 8b. DIAGRAMAS (TikZ) Y CÓDIGO (listings) — usados en las líneas CE02 y CE03
+% ----------------------------------------------------------------------
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,shapes.multipart,fit,backgrounds,calc}
+\tikzset{
+  caja/.style={draw=upeublue,fill=upeublue!6,rounded corners=2pt,align=center,
+               font=\scriptsize,minimum height=7mm,inner sep=3pt},
+  cajaext/.style={caja,draw=upeugray,fill=upeugray!10},
+  cajasec/.style={caja,draw=red!60!black,fill=red!6},
+  zona/.style={draw=upeublue!70,dashed,rounded corners=4pt,inner sep=6pt},
+  zonatit/.style={font=\scriptsize\bfseries,text=upeublue},
+  flecha/.style={-{Stealth[length=2mm]},thick,draw=upeublue!80},
+  tunel/.style={very thick,draw=green!50!black,dash pattern=on 4pt off 2pt},
+  bd/.style={cylinder,shape border rotate=90,aspect=0.25,draw=upeublue,
+             fill=upeublue!6,font=\scriptsize,align=center,minimum height=10mm}
+}
+
+\usepackage{listings}
+\lstdefinestyle{sqlwisp}{
+  language=SQL, basicstyle=\ttfamily\scriptsize, keywordstyle=\color{upeublue}\bfseries,
+  commentstyle=\color{upeugray}\itshape, stringstyle=\color{green!40!black},
+  breaklines=true, frame=single, rulecolor=\color{upeublue!40},
+  backgroundcolor=\color{upeublue!3}, numbers=left, numberstyle=\tiny\color{upeugray},
+  showstringspaces=false, columns=fullflexible, keepspaces=true,
+  morekeywords={TYPE,ENUM,SERIAL,REFERENCES,FILTER,COALESCE,USING,generate_series},
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+           {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {ü}{{\"u}}1 {→}{{$\rightarrow$}}1 {—}{{---}}1
+}
+\lstdefinestyle{plano}{style=sqlwisp, language={}, numbers=none}
+\lstdefinestyle{routeros}{style=sqlwisp, language={}, numbers=none,
+  morecomment=[l]{\#}}
+
+% ----------------------------------------------------------------------
 % 9. HIPERVÍNCULOS (se carga al final del preámbulo, según buenas prácticas)
 % ----------------------------------------------------------------------
 \usepackage{hyperref}
@@ -153,12 +207,16 @@
   filecolor    = upeublue,
   pdftitle     = {Sistema de Gestión Integral para ISP de Fibra Óptica Multi-Zona},
   pdfauthor    = {Universidad Peruana Unión - Escuela Profesional de Ingeniería de Sistemas},
-  pdfsubject   = {Proyecto de Evaluación de Fin de Carrera - Línea GTI},
+  pdfsubject   = {Proyecto de Evaluación de Fin de Carrera - Líneas GTI, Software e Infraestructura},
   pdfkeywords  = {UPeU, GTI, WISP, Fibra Óptica, ISP, Ingeniería de Sistemas},
   bookmarksnumbered = true,
   bookmarksopen     = true
 }
 \usepackage[capitalise,spanish]{cleveref} % \Cref{} / \cref{} para referencias cruzadas
+% Los apéndices se llaman "Anexo" (documentos de soporte del SGSI)
+\addto\captionsspanish{\renewcommand{\appendixname}{Anexo}}
+\crefname{appendix}{Anexo}{Anexos}
+\Crefname{appendix}{Anexo}{Anexos}
 
 % ======================================================================
 % DOCUMENTO
@@ -182,21 +240,37 @@
 % egreso. Cada línea es una \part{}; sus entregables son los capítulos internos.
 % La numeración de capítulos es continua a lo largo de todo el documento.
 
+% Mapa de entregables: qué se evalúa, con qué códigos y en qué capítulo está.
+\input{capitulos/mapa_entregables}
+
 % ====================== LÍNEA CE01 · GESTIÓN DE TI (GTI) ======================
 \part{Línea CE01 — Gestión de Tecnologías de Información}
-\input{capitulos/linea1/capitulo1} % Entregable 1: Diagnóstico Organizacional y Alineamiento Estratégico
-\input{capitulos/linea1/capitulo2} % Entregable 2: Business Case — Caso de Negocio del Proyecto
-\input{capitulos/linea1/capitulo3} % Entregable 3: Plan de Gestión del Proyecto (PMBOK + Scrum)
-\input{capitulos/linea1/capitulo4} % Entregable 4: Modelado de Procesos AS-IS / TO-BE
-\input{capitulos/linea1/capitulo5} % Entregable 5: Solución TIC Integrada al Ecosistema de Sistemas de Información
+\input{capitulos/linea1/capitulo1} % S1-E1 · CE0111-CE0115: Diagnóstico Organizacional y Alineamiento Estratégico
+\input{capitulos/linea1/capitulo2} % S1-E2 · CE0113: Business Case del Proyecto
+\input{capitulos/linea1/capitulo3} % S1-E3 · CE0121-CE0125: Plan de Gestión del Proyecto
+\input{capitulos/linea1/capitulo4} % S1-E4 · CE0131-CE0135: Modelado de Procesos AS-IS / TO-BE
+\input{capitulos/linea1/capitulo5} % S2-E5 · CE0141-CE0145: Propuesta de Solución TIC Integrada
 
 % ====================== LÍNEA CE02 · INGENIERÍA DE SOFTWARE ======================
 \part{Línea CE02 — Ingeniería de Software}
-\input{capitulos/linea2/ce02_ingenieria_software} % (en desarrollo) SRS, prototipos, arquitectura/UML, base de datos, construcción
+\input{capitulos/linea2/e1_requerimientos_diseno} % S1-E1 · CE021: Requerimientos y Diseño del Sistema
+\input{capitulos/linea2/e2_plataforma_datos}      % S2-E2 · CE022: Plataforma de Datos del Sistema
+\input{capitulos/linea2/e3_sistema_funcional}    % S2-E3 · CE023: Sistema de Software Funcional Integrado
+\input{capitulos/linea2/e4_calidad}             % S2-E4 · CE024: Gestión del Proyecto y Calidad de Software
 
 % ====================== LÍNEA CE03 · INFRAESTRUCTURA TECNOLÓGICA ======================
 \part{Línea CE03 — Infraestructura Tecnológica}
-\input{capitulos/linea3/ce03_infraestructura} % (en desarrollo) diseño de red, direccionamiento, equipamiento, VPN, seguridad, monitoreo
+\input{capitulos/linea3/e1_diseno_red}           % S1-E1 · CE0311: Análisis y Diseño de Red
+\input{capitulos/linea3/e2_diseno_centro_datos}  % S1-E2 · CE0331: Análisis y Diseño de Centro de Datos Híbrido
+\input{capitulos/linea3/e3_sgsi}                 % S2-E1 · CE0321-CE0324: Planificación e Implementación del SGSI
+% S2-E2 · CE0312-CE0313: Implementación, Testing y Monitoreo de Red          (pendiente)
+% S2-E3 · CE0332-CE0333: Implementación, Gestión y Control de Centro de Datos (pendiente)
+
+% ====================== ANEXOS DEL SGSI (CE03 · S2-E1) ======================
+% Documentos del equipo (carpeta ProyectoEPE/sgsi) que soportan el SGSI.
+\appendix
+\part{Anexos del SGSI — CE03 · S2-E1}
+\input{capitulos/linea3/anexos_sgsi}
 
 \end{document}
   

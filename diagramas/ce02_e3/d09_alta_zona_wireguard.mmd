@@ -1,0 +1,23 @@
+%% Flujo implementado: alta de una zona y de su túnel WireGuard desde el panel
+sequenceDiagram
+    autonumber
+    actor A as Administrador (panel)
+    participant API as API FastAPI
+    participant DB as PostgreSQL
+    participant VPS as VPS (hub wg0)
+    participant MK as MikroTik nuevo
+
+    A->>API: POST /zonas (nombre, ubicación, pool PPPoE, lista de corte)
+    API->>DB: zona creada (sin túnel todavía)
+    Note over A,MK: en el router: se genera su par de llaves WireGuard
+    A->>API: POST /zonas/{id}/wireguard/peer (llave pública del router)
+    API->>VPS: SSH: agrega [Peer] a wg0.conf y aplica "wg set"
+    VPS-->>API: peer activo
+    API-->>A: llave pública del hub, endpoint y AllowedIPs
+    A->>MK: configura el peer con esos datos
+    MK->>VPS: handshake WireGuard
+    A->>API: GET /zonas/{id}/wireguard-status
+    API->>VPS: "wg show wg0 dump" (caché de 120 s)
+    API->>MK: ping y puerto SSH por la IP del túnel
+    API-->>A: en línea · último handshake · tráfico
+    A->>API: GET /planes/verificacion (perfiles PPPoE del router vs. planes)

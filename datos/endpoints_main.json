@@ -1,0 +1,1346 @@
+[
+ {
+  "modulo": "admin",
+  "metodo": "POST",
+  "ruta": "/api/admin/backup",
+  "funcion": "crear_backup",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "admin",
+  "metodo": "GET",
+  "ruta": "/api/admin/backups",
+  "funcion": "listar_backups",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "admin",
+  "metodo": "GET",
+  "ruta": "/api/admin/backups/download/{filename}",
+  "funcion": "descargar_backup",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "auth",
+  "metodo": "POST",
+  "ruta": "/api/auth/cliente/login",
+  "funcion": "cliente_login",
+  "acceso": "público",
+  "doc": "Login para clientes en la app móvil. Usuario y contraseña son su DNI por defecto; si el cliente cambió su contraseña desde la app, se valida contra ese valor en"
+ },
+ {
+  "modulo": "auth",
+  "metodo": "POST",
+  "ruta": "/api/auth/login",
+  "funcion": "login",
+  "acceso": "público",
+  "doc": ""
+ },
+ {
+  "modulo": "auth",
+  "metodo": "GET",
+  "ruta": "/api/auth/me",
+  "funcion": "get_me",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "auth",
+  "metodo": "PUT",
+  "ruta": "/api/auth/me",
+  "funcion": "update_me",
+  "acceso": "autenticado",
+  "doc": "Autoservicio: cualquier usuario autenticado puede actualizar su propio teléfono/dirección — son datos de contacto, la persona misma es quien sabe que cambiaron."
+ },
+ {
+  "modulo": "auth",
+  "metodo": "PUT",
+  "ruta": "/api/auth/password",
+  "funcion": "change_password",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "auth",
+  "metodo": "GET",
+  "ruta": "/api/auth/usuarios",
+  "funcion": "list_usuarios",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "auth",
+  "metodo": "POST",
+  "ruta": "/api/auth/usuarios",
+  "funcion": "create_usuario",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "auth",
+  "metodo": "DELETE",
+  "ruta": "/api/auth/usuarios/{usuario_id}",
+  "funcion": "delete_usuario",
+  "acceso": "admin",
+  "doc": "Solo se puede borrar un usuario que de verdad nunca hizo nada — si tiene clientes, pagos, averías, etc. a su nombre, ese historial vale demasiado para perderlo "
+ },
+ {
+  "modulo": "auth",
+  "metodo": "PUT",
+  "ruta": "/api/auth/usuarios/{usuario_id}",
+  "funcion": "update_usuario",
+  "acceso": "admin",
+  "doc": "Editar nombre/rol o activar/desactivar un usuario (técnico, vendedor, etc.). Desactivar corta el acceso al instante — get_current_user revisa `activo` contra la"
+ },
+ {
+  "modulo": "auth",
+  "metodo": "PUT",
+  "ruta": "/api/auth/usuarios/{usuario_id}/password",
+  "funcion": "restablecer_password",
+  "acceso": "admin",
+  "doc": "Le pone una contraseña nueva a otro usuario."
+ },
+ {
+  "modulo": "averias",
+  "metodo": "GET",
+  "ruta": "/api/averias",
+  "funcion": "list_averias",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "averias",
+  "metodo": "POST",
+  "ruta": "/api/averias",
+  "funcion": "create_averia",
+  "acceso": "admin, atencion_cliente, tecnico",
+  "doc": ""
+ },
+ {
+  "modulo": "averias",
+  "metodo": "DELETE",
+  "ruta": "/api/averias/{averia_id}",
+  "funcion": "eliminar_averia",
+  "acceso": "admin",
+  "doc": "Borra una avería creada por error (cliente equivocado, duplicada, etc.) junto con sus evidencias — tanto el registro como el archivo en disco."
+ },
+ {
+  "modulo": "averias",
+  "metodo": "GET",
+  "ruta": "/api/averias/{averia_id}",
+  "funcion": "get_averia",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "averias",
+  "metodo": "PUT",
+  "ruta": "/api/averias/{averia_id}",
+  "funcion": "editar_averia",
+  "acceso": "admin",
+  "doc": "Corrige el motivo reportado — ej. un error de tipeo al registrarla. Una vez resuelta ya no se edita: el diagnóstico queda aparte y es lo que manda sobre qué pas"
+ },
+ {
+  "modulo": "averias",
+  "metodo": "POST",
+  "ruta": "/api/averias/{averia_id}/asignar",
+  "funcion": "asignar_averia",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "averias",
+  "metodo": "POST",
+  "ruta": "/api/averias/{averia_id}/iniciar",
+  "funcion": "iniciar_averia",
+  "acceso": "admin, tecnico",
+  "doc": "El técnico marca que ya está en atención (en camino / trabajando)."
+ },
+ {
+  "modulo": "averias",
+  "metodo": "POST",
+  "ruta": "/api/averias/{averia_id}/resolver",
+  "funcion": "resolver_averia",
+  "acceso": "admin, tecnico",
+  "doc": "Cierra la avería. `diagnostico_solucion` es lo que REALMENTE se hizo — puede ser distinto de `motivo_reportado` — y queda registrado aparte para no perder esa d"
+ },
+ {
+  "modulo": "cajas_nap",
+  "metodo": "GET",
+  "ruta": "/api/cajas-nap",
+  "funcion": "list_cajas_nap",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "cajas_nap",
+  "metodo": "POST",
+  "ruta": "/api/cajas-nap",
+  "funcion": "create_caja_nap",
+  "acceso": "admin",
+  "doc": "Registro previo de la caja NAP por el admin (catálogo de infraestructura) — el técnico solo elige entre las ya registradas al instalar."
+ },
+ {
+  "modulo": "cajas_nap",
+  "metodo": "POST",
+  "ruta": "/api/cajas-nap/bornes/{borne_id}/marcar",
+  "funcion": "marcar_borne",
+  "acceso": "admin, tecnico",
+  "doc": "Un técnico reporta un borne dañado (o el admin lo vuelve a marcar libre una vez reparado). Si el borne tiene un cliente conectado no se puede marcar dañado sin "
+ },
+ {
+  "modulo": "cajas_nap",
+  "metodo": "PUT",
+  "ruta": "/api/cajas-nap/bornes/{borne_id}/precinto",
+  "funcion": "actualizar_precinto",
+  "acceso": "admin, tecnico",
+  "doc": "Registra o corrige el código del precinto físico amarrado al cable drop de un borne ocupado — sirve para verificar en campo que el cable no fue cambiado. Solo a"
+ },
+ {
+  "modulo": "cajas_nap",
+  "metodo": "DELETE",
+  "ruta": "/api/cajas-nap/{caja_id}",
+  "funcion": "delete_caja_nap",
+  "acceso": "admin",
+  "doc": "Borra una caja registrada por error — bloqueado si algún borne ya tiene un cliente conectado (hay que retirarlo primero, nunca se pierde ese rastro)."
+ },
+ {
+  "modulo": "cajas_nap",
+  "metodo": "GET",
+  "ruta": "/api/cajas-nap/{caja_id}",
+  "funcion": "get_caja_nap",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "cajas_nap",
+  "metodo": "PUT",
+  "ruta": "/api/cajas-nap/{caja_id}",
+  "funcion": "update_caja_nap",
+  "acceso": "admin",
+  "doc": "Corrige datos de una caja mal ingresada (código, descripción, ubicación) — no permite reasignar mufa/zona, eso implica retirar y volver a instalar."
+ },
+ {
+  "modulo": "cajas_nap",
+  "metodo": "POST",
+  "ruta": "/api/cajas-nap/{caja_id}/ampliar",
+  "funcion": "ampliar_caja_nap",
+  "acceso": "admin",
+  "doc": "Agranda la caja (ej. de 8 a 16 bornes) cuando se llenó — agrega los bornes faltantes como libres, nunca reduce ni toca los existentes."
+ },
+ {
+  "modulo": "cajas_nap",
+  "metodo": "GET",
+  "ruta": "/api/cajas-nap/{caja_id}/estado-pppoe",
+  "funcion": "estado_pppoe_caja",
+  "acceso": "admin, tecnico",
+  "doc": "Consulta en una sola sesión SSH si cada abonado ocupando un borne de esta caja está conectado ahora mismo al MikroTik de su zona — mucho más liviano que una con"
+ },
+ {
+  "modulo": "cliente_app",
+  "metodo": "POST",
+  "ruta": "/api/cliente/cambiar-pin",
+  "funcion": "cambiar_pin",
+  "acceso": "cliente (PIN)",
+  "doc": "Cambia la contraseña del cliente en la app móvil."
+ },
+ {
+  "modulo": "cliente_app",
+  "metodo": "GET",
+  "ruta": "/api/cliente/me",
+  "funcion": "mi_cuenta",
+  "acceso": "cliente (PIN)",
+  "doc": ""
+ },
+ {
+  "modulo": "cliente_app",
+  "metodo": "GET",
+  "ruta": "/api/cliente/mis-pagos",
+  "funcion": "mis_pagos",
+  "acceso": "cliente (PIN)",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "GET",
+  "ruta": "/api/clientes",
+  "funcion": "list_clientes",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "POST",
+  "ruta": "/api/clientes",
+  "funcion": "create_cliente",
+  "acceso": "admin, atencion_cliente, tecnico, vendedor_campo",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "GET",
+  "ruta": "/api/clientes/notificaciones",
+  "funcion": "get_notificaciones",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "GET",
+  "ruta": "/api/clientes/resumen-estados",
+  "funcion": "resumen_estados",
+  "acceso": "autenticado",
+  "doc": "Cuantos clientes hay en cada estado, en UNA consulta."
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "DELETE",
+  "ruta": "/api/clientes/{cliente_id}",
+  "funcion": "delete_cliente",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "GET",
+  "ruta": "/api/clientes/{cliente_id}",
+  "funcion": "get_cliente",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "PUT",
+  "ruta": "/api/clientes/{cliente_id}",
+  "funcion": "update_cliente",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "POST",
+  "ruta": "/api/clientes/{cliente_id}/activar-satelital",
+  "funcion": "activar_satelital",
+  "acceso": "admin",
+  "doc": "Activa un cliente satelital ya aprobado — no hay fibra que tender, así que no pasa por /instalar (caja NAP/borne/ONU): acá se registra el equipo Starlink entreg"
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "POST",
+  "ruta": "/api/clientes/{cliente_id}/aprobar",
+  "funcion": "aprobar_cliente",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "GET",
+  "ruta": "/api/clientes/{cliente_id}/calendario-pagos",
+  "funcion": "get_calendario_pagos",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "POST",
+  "ruta": "/api/clientes/{cliente_id}/compromiso-pago",
+  "funcion": "dar_compromiso_pago",
+  "acceso": "admin, atencion_cliente",
+  "doc": "El cliente pidió plazo ('espérame hasta el 25'). Mientras el compromiso esté vigente, el job de corte automático lo saltea. Si ya estaba cortado, se reactiva de"
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "POST",
+  "ruta": "/api/clientes/{cliente_id}/cortar",
+  "funcion": "cortar_servicio",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "PUT",
+  "ruta": "/api/clientes/{cliente_id}/datos-de-instalacion",
+  "funcion": "completar_datos_de_instalacion",
+  "acceso": "admin, tecnico",
+  "doc": "Registrar la caja, el borne y el equipo de un cliente ya instalado."
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "GET",
+  "ruta": "/api/clientes/{cliente_id}/historial",
+  "funcion": "get_historial",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "POST",
+  "ruta": "/api/clientes/{cliente_id}/instalar",
+  "funcion": "instalar_cliente",
+  "acceso": "admin, tecnico",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "GET",
+  "ruta": "/api/clientes/{cliente_id}/ips-disponibles",
+  "funcion": "ips_disponibles",
+  "acceso": "admin",
+  "doc": "Las IP del pool que estan libres en el router de la zona del cliente."
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "POST",
+  "ruta": "/api/clientes/{cliente_id}/no-instalar",
+  "funcion": "no_instalar_cliente",
+  "acceso": "admin, tecnico",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "POST",
+  "ruta": "/api/clientes/{cliente_id}/pausar",
+  "funcion": "pausar_servicio",
+  "acceso": "admin, atencion_cliente",
+  "doc": "Pausa temporal pedida por el propio cliente (ej. viaje) — distinta de un corte por falta de pago: no es morosidad, así que no debe aparecer en las listas de cor"
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "GET",
+  "ruta": "/api/clientes/{cliente_id}/pppoe-status",
+  "funcion": "get_pppoe_status",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "POST",
+  "ruta": "/api/clientes/{cliente_id}/reactivar",
+  "funcion": "reactivar_servicio",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "clientes",
+  "metodo": "POST",
+  "ruta": "/api/clientes/{cliente_id}/rechazar",
+  "funcion": "rechazar_cliente",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "consultas",
+  "metodo": "GET",
+  "ruta": "/api/consultas/documento",
+  "funcion": "consultar_documento",
+  "acceso": "autenticado",
+  "doc": "Devuelve el nombre asociado a un DNI o la razón social de un RUC."
+ },
+ {
+  "modulo": "consultas",
+  "metodo": "GET",
+  "ruta": "/api/consultas/uso",
+  "funcion": "uso_del_mes",
+  "acceso": "autenticado",
+  "doc": "Cuántas consultas van este mes, para mostrarlo en el panel."
+ },
+ {
+  "modulo": "dashboard",
+  "metodo": "GET",
+  "ruta": "/api/dashboard/ingresos-mensual",
+  "funcion": "ingresos_mensual",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "dashboard",
+  "metodo": "GET",
+  "ruta": "/api/dashboard/stats",
+  "funcion": "get_stats",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "dashboard",
+  "metodo": "GET",
+  "ruta": "/api/dashboard/ultimas-activaciones",
+  "funcion": "ultimas_activaciones",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "evidencias",
+  "metodo": "GET",
+  "ruta": "/api/evidencias",
+  "funcion": "list_evidencias",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "evidencias",
+  "metodo": "POST",
+  "ruta": "/api/evidencias",
+  "funcion": "upload_evidencia",
+  "acceso": "admin, atencion_cliente, tecnico, vendedor_campo",
+  "doc": ""
+ },
+ {
+  "modulo": "evidencias",
+  "metodo": "DELETE",
+  "ruta": "/api/evidencias/{evidencia_id}",
+  "funcion": "eliminar_evidencia",
+  "acceso": "admin",
+  "doc": "Borra una foto subida por error — el registro y el archivo en disco."
+ },
+ {
+  "modulo": "evidencias",
+  "metodo": "GET",
+  "ruta": "/api/evidencias/{evidencia_id}/archivo",
+  "funcion": "descargar_evidencia",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "gastos",
+  "metodo": "GET",
+  "ruta": "/api/gastos",
+  "funcion": "list_gastos",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "gastos",
+  "metodo": "POST",
+  "ruta": "/api/gastos",
+  "funcion": "create_gasto",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "gastos",
+  "metodo": "GET",
+  "ruta": "/api/gastos/categorias",
+  "funcion": "get_categorias",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "gastos",
+  "metodo": "GET",
+  "ruta": "/api/gastos/resumen-por-zona",
+  "funcion": "resumen_por_zona",
+  "acceso": "admin",
+  "doc": "Para la grilla de zonas: gastos fijos/variables y margen (ingresos - gastos) de cada zona en el mes, más un balde \"general\" (zona_id null) para gastos que no so"
+ },
+ {
+  "modulo": "gastos",
+  "metodo": "DELETE",
+  "ruta": "/api/gastos/{gasto_id}",
+  "funcion": "delete_gasto",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "gastos",
+  "metodo": "PUT",
+  "ruta": "/api/gastos/{gasto_id}",
+  "funcion": "update_gasto",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "jornadas",
+  "metodo": "GET",
+  "ruta": "/api/jornadas",
+  "funcion": "listar_jornadas",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "jornadas",
+  "metodo": "GET",
+  "ruta": "/api/jornadas/activas",
+  "funcion": "listar_jornadas_activas",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "jornadas",
+  "metodo": "POST",
+  "ruta": "/api/jornadas/finalizar",
+  "funcion": "finalizar_jornada",
+  "acceso": "vendedor_campo",
+  "doc": ""
+ },
+ {
+  "modulo": "jornadas",
+  "metodo": "POST",
+  "ruta": "/api/jornadas/iniciar",
+  "funcion": "iniciar_jornada",
+  "acceso": "vendedor_campo",
+  "doc": ""
+ },
+ {
+  "modulo": "jornadas",
+  "metodo": "GET",
+  "ruta": "/api/jornadas/mi-jornada-activa",
+  "funcion": "mi_jornada_activa",
+  "acceso": "vendedor_campo",
+  "doc": ""
+ },
+ {
+  "modulo": "jornadas",
+  "metodo": "POST",
+  "ruta": "/api/jornadas/ping",
+  "funcion": "ping_ubicacion",
+  "acceso": "vendedor_campo",
+  "doc": ""
+ },
+ {
+  "modulo": "jornadas",
+  "metodo": "GET",
+  "ruta": "/api/jornadas/resumen-pasajes",
+  "funcion": "resumen_pasajes",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "jornadas",
+  "metodo": "PUT",
+  "ruta": "/api/jornadas/{jornada_id}/pasaje",
+  "funcion": "actualizar_pasaje",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "jornadas",
+  "metodo": "PUT",
+  "ruta": "/api/jornadas/{jornada_id}/reclamo-pasaje",
+  "funcion": "reportar_reclamo_pasaje",
+  "acceso": "vendedor_campo",
+  "doc": "El vendedor reporta que la tienda no le dio pasaje y pagó de su bolsillo — queda pendiente hasta que el admin lo reintegre."
+ },
+ {
+  "modulo": "jornadas",
+  "metodo": "PUT",
+  "ruta": "/api/jornadas/{jornada_id}/reclamo-pasaje/reintegrar",
+  "funcion": "reintegrar_reclamo_pasaje",
+  "acceso": "admin",
+  "doc": "El admin confirma que ya le pagó al vendedor lo que reclamó — ese monto pasa a ser el pasaje oficial del día, así el resumen mensual no necesita sumar dos campo"
+ },
+ {
+  "modulo": "jornadas",
+  "metodo": "GET",
+  "ruta": "/api/jornadas/{jornada_id}/recorrido",
+  "funcion": "recorrido_jornada",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "mufas",
+  "metodo": "GET",
+  "ruta": "/api/mufas",
+  "funcion": "list_mufas",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "mufas",
+  "metodo": "POST",
+  "ruta": "/api/mufas",
+  "funcion": "create_mufa",
+  "acceso": "admin",
+  "doc": "El encargado registra una mufa nueva al mapear la zona — no toca MikroTik/WireGuard, es solo infraestructura física de fibra."
+ },
+ {
+  "modulo": "mufas",
+  "metodo": "DELETE",
+  "ruta": "/api/mufas/{mufa_id}",
+  "funcion": "delete_mufa",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "mufas",
+  "metodo": "GET",
+  "ruta": "/api/mufas/{mufa_id}",
+  "funcion": "get_mufa",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "mufas",
+  "metodo": "PUT",
+  "ruta": "/api/mufas/{mufa_id}",
+  "funcion": "update_mufa",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "mufas",
+  "metodo": "GET",
+  "ruta": "/api/mufas/{mufa_id}/cajas-nap",
+  "funcion": "list_cajas_de_mufa",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "mufas",
+  "metodo": "POST",
+  "ruta": "/api/mufas/{mufa_id}/corridas",
+  "funcion": "crear_corrida",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "mufas",
+  "metodo": "DELETE",
+  "ruta": "/api/mufas/{mufa_id}/corridas/{corrida_id}",
+  "funcion": "borrar_corrida",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "mufas",
+  "metodo": "PUT",
+  "ruta": "/api/mufas/{mufa_id}/corridas/{corrida_id}",
+  "funcion": "actualizar_corrida",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "onus",
+  "metodo": "GET",
+  "ruta": "/api/onus",
+  "funcion": "list_onus",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "onus",
+  "metodo": "POST",
+  "ruta": "/api/onus",
+  "funcion": "create_onu",
+  "acceso": "admin",
+  "doc": "Ingresa una ONU al almacén (lo que capturó la lectora: serie/MAC/marca)."
+ },
+ {
+  "modulo": "onus",
+  "metodo": "POST",
+  "ruta": "/api/onus/registrar-propio",
+  "funcion": "registrar_onu_propio",
+  "acceso": "tecnico",
+  "doc": "El técnico registra un equipo que el almacén le entregó sin pasar antes por el sistema (escaneando MAC/serie en campo) — queda asignado a él directamente, sin p"
+ },
+ {
+  "modulo": "onus",
+  "metodo": "DELETE",
+  "ruta": "/api/onus/{onu_id}",
+  "funcion": "delete_onu",
+  "acceso": "admin",
+  "doc": "Borra una ONU del inventario (equipo registrado por error, duplicado, etc). Bloqueado si está instalada en un cliente — hay que retirarla primero para no perder"
+ },
+ {
+  "modulo": "onus",
+  "metodo": "GET",
+  "ruta": "/api/onus/{onu_id}",
+  "funcion": "get_onu",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "onus",
+  "metodo": "POST",
+  "ruta": "/api/onus/{onu_id}/asignar",
+  "funcion": "asignar_onu",
+  "acceso": "admin",
+  "doc": "El admin le entrega una ONU a un técnico (sale del stock general)."
+ },
+ {
+  "modulo": "onus",
+  "metodo": "POST",
+  "ruta": "/api/onus/{onu_id}/marcar",
+  "funcion": "marcar_onu",
+  "acceso": "admin, tecnico",
+  "doc": "Marca una ONU dañada/perdida, o la regresa al almacén (devolución)."
+ },
+ {
+  "modulo": "ordenes_retiro",
+  "metodo": "GET",
+  "ruta": "/api/ordenes-retiro",
+  "funcion": "list_ordenes_retiro",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "ordenes_retiro",
+  "metodo": "POST",
+  "ruta": "/api/ordenes-retiro",
+  "funcion": "create_orden_retiro",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "ordenes_retiro",
+  "metodo": "GET",
+  "ruta": "/api/ordenes-retiro/{orden_id}",
+  "funcion": "get_orden_retiro",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "ordenes_retiro",
+  "metodo": "POST",
+  "ruta": "/api/ordenes-retiro/{orden_id}/asignar",
+  "funcion": "asignar_orden_retiro",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "ordenes_retiro",
+  "metodo": "POST",
+  "ruta": "/api/ordenes-retiro/{orden_id}/completar",
+  "funcion": "completar_orden_retiro",
+  "acceso": "admin, tecnico",
+  "doc": "El técnico confirma que recogió el equipo. La ONU vuelve al almacén (disponible para reasignar), el borne se libera y el cliente pasa a anulado — no se borra na"
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos",
+  "funcion": "list_pagos",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "POST",
+  "ruta": "/api/pagos",
+  "funcion": "create_pago",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos/clientes-cortados",
+  "funcion": "clientes_cortados",
+  "acceso": "admin, atencion_cliente",
+  "doc": "Clientes con el servicio cortado (suspendido), más recientes primero — para encontrar rápido a quien quiere pagar y reactivar. No tiene límite de tiempo: los co"
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos/clientes-sin-pago",
+  "funcion": "clientes_sin_pago",
+  "acceso": "admin, atencion_cliente",
+  "doc": "Clientes activos cuyo propio ciclo de pago (fecha_vencimiento) ya llegó o ya pasó — no usa el mes calendario: un cliente que vence el 29 no debe aparecer aquí e"
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos/exportar",
+  "funcion": "exportar_pagos",
+  "acceso": "admin, atencion_cliente",
+  "doc": "La lista de pagos con los mismos filtros de la pantalla, pero completa (sin paginar) y lista para descargar en Excel o PDF."
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos/pausas-por-vencer",
+  "funcion": "pausas_por_vencer",
+  "acceso": "admin, atencion_cliente",
+  "doc": "Clientes en pausa temporal (a su propia solicitud) cuyo plazo ya venció o está por vencer en los próximos 7 días — para saber a quién reactivar. Distinto de 'Cl"
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos/reporte-caja",
+  "funcion": "reporte_caja",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos/reporte-caja/exportar",
+  "funcion": "exportar_reporte_caja",
+  "acceso": "admin",
+  "doc": "El corte de caja del día, para imprimirlo o archivarlo al cerrar turno."
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos/reporte-mensual-zonas",
+  "funcion": "reporte_mensual_zonas",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos/reporte-mensual-zonas/exportar",
+  "funcion": "exportar_reporte_zonas",
+  "acceso": "admin",
+  "doc": "Lo recaudado en el mes, zona por zona."
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos/resumen-mensual",
+  "funcion": "resumen_mensual",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "DELETE",
+  "ruta": "/api/pagos/{pago_id}",
+  "funcion": "delete_pago",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos/{pago_id}",
+  "funcion": "get_pago",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos/{pago_id}/comprobante",
+  "funcion": "descargar_comprobante_pago",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "POST",
+  "ruta": "/api/pagos/{pago_id}/comprobante",
+  "funcion": "subir_comprobante_pago",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "GET",
+  "ruta": "/api/pagos/{pago_id}/recibo-pdf",
+  "funcion": "recibo_pdf",
+  "acceso": "admin, atencion_cliente",
+  "doc": "El recibo del pago en PDF, con el formato de ticket de la empresa. Si el pago es parte de un cobro adelantado, sale un solo recibo con todos los meses."
+ },
+ {
+  "modulo": "pagos",
+  "metodo": "POST",
+  "ruta": "/api/pagos/{pago_id}/reenviar-whatsapp",
+  "funcion": "reenviar_confirmacion_whatsapp",
+  "acceso": "admin, atencion_cliente",
+  "doc": "Reenvía manualmente la confirmación de pago por WhatsApp — a pedido, a diferencia del envío automático al registrar el pago (ej. si el bot estaba desconectado e"
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "GET",
+  "ruta": "/api/permisos/mis-modulos",
+  "funcion": "mis_modulos",
+  "acceso": "público",
+  "doc": "Los módulos que le tocan a quien pregunta, en el orden en que se muestran."
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "GET",
+  "ruta": "/api/permisos/modulos",
+  "funcion": "listar_modulos",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "GET",
+  "ruta": "/api/permisos/modulos-padre",
+  "funcion": "listar_modulos_padre",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "POST",
+  "ruta": "/api/permisos/modulos-padre",
+  "funcion": "crear_modulo_padre",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "PUT",
+  "ruta": "/api/permisos/modulos-padre/orden",
+  "funcion": "ordenar_modulos_padre",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "DELETE",
+  "ruta": "/api/permisos/modulos-padre/{padre_id}",
+  "funcion": "eliminar_modulo_padre",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "PUT",
+  "ruta": "/api/permisos/modulos-padre/{padre_id}",
+  "funcion": "editar_modulo_padre",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "PUT",
+  "ruta": "/api/permisos/modulos/{modulo_id}/padre",
+  "funcion": "mover_modulo",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "GET",
+  "ruta": "/api/permisos/roles",
+  "funcion": "listar_roles",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "POST",
+  "ruta": "/api/permisos/roles",
+  "funcion": "crear_rol",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "DELETE",
+  "ruta": "/api/permisos/roles/{rol_id}",
+  "funcion": "eliminar_rol",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "PUT",
+  "ruta": "/api/permisos/roles/{rol_id}",
+  "funcion": "editar_rol",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "PUT",
+  "ruta": "/api/permisos/roles/{rol_id}/modulos/{modulo_id}",
+  "funcion": "cambiar_modulo",
+  "acceso": "admin",
+  "doc": "Da o quita un solo módulo. Uno por uno, y no la lista entera, para que dos personas con la pantalla abierta no se pisen los cambios."
+ },
+ {
+  "modulo": "permisos",
+  "metodo": "PUT",
+  "ruta": "/api/permisos/roles/{rol_id}/orden",
+  "funcion": "ordenar_modulos",
+  "acceso": "admin",
+  "doc": "Guarda el orden en que este rol ve sus módulos. La lista debe traer todos los que tiene: si no coincide, otra persona los cambió mientras tanto y hay que volver"
+ },
+ {
+  "modulo": "planes",
+  "metodo": "GET",
+  "ruta": "/api/planes",
+  "funcion": "list_planes",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "planes",
+  "metodo": "POST",
+  "ruta": "/api/planes",
+  "funcion": "create_plan",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "planes",
+  "metodo": "GET",
+  "ruta": "/api/planes/perfiles-de-zona/{zona_id}",
+  "funcion": "perfiles_de_zona",
+  "acceso": "admin",
+  "doc": "Los perfiles PPPoE que tiene ese router, tal cual."
+ },
+ {
+  "modulo": "planes",
+  "metodo": "GET",
+  "ruta": "/api/planes/verificacion",
+  "funcion": "verificar_planes",
+  "acceso": "admin",
+  "doc": "Compara los planes del panel con los perfiles reales de cada router."
+ },
+ {
+  "modulo": "planes",
+  "metodo": "DELETE",
+  "ruta": "/api/planes/{plan_id}",
+  "funcion": "delete_plan",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "planes",
+  "metodo": "PUT",
+  "ruta": "/api/planes/{plan_id}",
+  "funcion": "update_plan",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "whatsapp",
+  "metodo": "POST",
+  "ruta": "/api/whatsapp/aviso-cobro/{cliente_id}",
+  "funcion": "aviso_cobro",
+  "acceso": "admin, atencion_cliente",
+  "doc": ""
+ },
+ {
+  "modulo": "whatsapp",
+  "metodo": "POST",
+  "ruta": "/api/whatsapp/aviso-corte/{cliente_id}",
+  "funcion": "aviso_corte",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "whatsapp",
+  "metodo": "POST",
+  "ruta": "/api/whatsapp/broadcast-cobros",
+  "funcion": "broadcast_cobros",
+  "acceso": "admin",
+  "doc": "Recordatorio de pago a todos los activos que no pagaron el mes indicado. Antes mandaba todo de golpe en un loop dentro del request — eso arriesgaba que WhatsApp"
+ },
+ {
+  "modulo": "whatsapp",
+  "metodo": "GET",
+  "ruta": "/api/whatsapp/masivos",
+  "funcion": "listar_mensajes_masivos",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "whatsapp",
+  "metodo": "POST",
+  "ruta": "/api/whatsapp/masivos",
+  "funcion": "crear_mensaje_masivo",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "whatsapp",
+  "metodo": "GET",
+  "ruta": "/api/whatsapp/masivos/destinatarios-count",
+  "funcion": "contar_destinatarios_masivo",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "whatsapp",
+  "metodo": "GET",
+  "ruta": "/api/whatsapp/masivos/{mensaje_id}",
+  "funcion": "obtener_mensaje_masivo",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "whatsapp",
+  "metodo": "POST",
+  "ruta": "/api/whatsapp/masivos/{mensaje_id}/cancelar",
+  "funcion": "cancelar_mensaje_masivo",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "whatsapp",
+  "metodo": "GET",
+  "ruta": "/api/whatsapp/qr",
+  "funcion": "get_qr",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "whatsapp",
+  "metodo": "POST",
+  "ruta": "/api/whatsapp/recordatorio-preventivo/ejecutar",
+  "funcion": "ejecutar_recordatorio_preventivo",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "whatsapp",
+  "metodo": "POST",
+  "ruta": "/api/whatsapp/send",
+  "funcion": "send_message",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "whatsapp",
+  "metodo": "GET",
+  "ruta": "/api/whatsapp/status",
+  "funcion": "get_status",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "GET",
+  "ruta": "/api/zonas",
+  "funcion": "list_zonas",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "POST",
+  "ruta": "/api/zonas",
+  "funcion": "create_zona",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "GET",
+  "ruta": "/api/zonas/estado-red",
+  "funcion": "estado_red_zonas",
+  "acceso": "admin",
+  "doc": "Si el router de cada zona contesta, en una sola llamada."
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "GET",
+  "ruta": "/api/zonas/publicas",
+  "funcion": "list_zonas_publicas",
+  "acceso": "público",
+  "doc": "Lista pública de zonas con cobertura activa — sin autenticación, para el comprobador de cobertura de la página pública. Solo expone id y nombre."
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "GET",
+  "ruta": "/api/zonas/publicas/resumen",
+  "funcion": "resumen_publico",
+  "acceso": "público",
+  "doc": "Cifras reales (no estimadas) para la página pública: cuántas zonas activas y cuántos clientes activos hay hoy. Sin autenticación."
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "DELETE",
+  "ruta": "/api/zonas/{zona_id}",
+  "funcion": "delete_zona",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "GET",
+  "ruta": "/api/zonas/{zona_id}",
+  "funcion": "get_zona",
+  "acceso": "autenticado",
+  "doc": ""
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "PUT",
+  "ruta": "/api/zonas/{zona_id}",
+  "funcion": "update_zona",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "PUT",
+  "ruta": "/api/zonas/{zona_id}/datos",
+  "funcion": "update_zona_datos",
+  "acceso": "admin",
+  "doc": "Corrige nombre/descripción/tiendas de pago, ubicación del servidor y las credenciales del MikroTik (usuario, clave, IP LAN, router)."
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "GET",
+  "ruta": "/api/zonas/{zona_id}/datos-del-router",
+  "funcion": "datos_del_router",
+  "acceso": "admin",
+  "doc": "Lo que el MikroTik puede decir de si mismo, para no escribirlo a mano."
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "POST",
+  "ruta": "/api/zonas/{zona_id}/exec",
+  "funcion": "exec_terminal",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "GET",
+  "ruta": "/api/zonas/{zona_id}/tecnicos",
+  "funcion": "list_tecnicos_zona",
+  "acceso": "admin",
+  "doc": "Quién atiende la zona. Solo administración: la ficha de un técnico lleva su teléfono, DNI y dirección, que es dato personal del trabajador."
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "DELETE",
+  "ruta": "/api/zonas/{zona_id}/tecnicos/{tecnico_id}",
+  "funcion": "quitar_tecnico_zona",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "POST",
+  "ruta": "/api/zonas/{zona_id}/tecnicos/{tecnico_id}",
+  "funcion": "asignar_tecnico_zona",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "GET",
+  "ruta": "/api/zonas/{zona_id}/wireguard-status",
+  "funcion": "wireguard_status",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "DELETE",
+  "ruta": "/api/zonas/{zona_id}/wireguard/peer",
+  "funcion": "remove_wg_peer",
+  "acceso": "admin",
+  "doc": ""
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "POST",
+  "ruta": "/api/zonas/{zona_id}/wireguard/peer",
+  "funcion": "add_wg_peer",
+  "acceso": "admin",
+  "doc": "Agrega el peer WireGuard de la zona. allowed_ips = {ip_wireguard}/32[, {lan_network}] Retorna la pubkey del VPS para configurar en el MikroTik."
+ },
+ {
+  "modulo": "zonas",
+  "metodo": "GET",
+  "ruta": "/api/zonas/{zona_id}/wireguard/peers-activos",
+  "funcion": "wg_peers_activos",
+  "acceso": "admin",
+  "doc": "Lista todos los peers activos en wg0 con su estado."
+ }
+]

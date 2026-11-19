@@ -1,0 +1,24 @@
+%% Flujo implementado: jornada del vendedor de campo y control de pasajes
+sequenceDiagram
+    autonumber
+    actor V as Vendedor de campo (app)
+    participant API as API FastAPI
+    participant DB as PostgreSQL
+    actor A as Administrador (panel)
+
+    V->>API: POST /jornadas/iniciar (lat, lng, zona)
+    API->>DB: jornada = activa
+    loop durante la salida (cada cierto tiempo)
+        V->>API: POST /jornadas/ping (lat, lng)
+        API->>DB: ubicación del recorrido
+    end
+    V->>API: POST /clientes (ventas del día)
+    V->>API: POST /jornadas/finalizar (lat, lng)
+    API->>DB: jornada = finalizada
+    opt la tienda no le dio pasaje
+        V->>API: PUT /jornadas/{id}/reclamo-pasaje (monto, nota)
+    end
+    A->>API: GET /jornadas/activas · GET /jornadas/{id}/recorrido
+    A->>API: PUT /jornadas/{id}/pasaje
+    A->>API: PUT /jornadas/{id}/reclamo-pasaje/reintegrar
+    A->>API: GET /jornadas/resumen-pasajes

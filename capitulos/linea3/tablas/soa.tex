@@ -1,0 +1,38 @@
+5.1 & Políticas de seguridad & Todos & Parcial & Política PO-SGSI-01 y 6 políticas específicas; falta aprobación firmada. \\
+5.2 & Roles y responsabilidades & R-04 & Parcial & Roles definidos; Oficial de seguridad por designar. \\
+5.3 & Segregación de funciones & R-04 & Plan. & Oficial distinto del administrador. \\
+5.9 & Inventario de activos & Todos & Impl. & Inventario de 26 activos con propietario. \\
+5.12 & Clasificación de la información & R-02 & Impl. & Clasificación C-I-D del inventario. \\
+5.15 & Control de acceso & R-02, R-16 & Impl. & JWT y require\_roles por endpoint en el backend. \\
+5.16 & Gestión de identidades & R-09 & Parcial & Cuentas nominales en el sistema; faltan en routers y servidor. \\
+5.17 & Información de autenticación & R-05, R-07 & Parcial & bcrypt y secretos fuera del repositorio; falta rotación. \\
+5.18 & Derechos de acceso & R-02 & Parcial & Matriz de accesos por rol; revisión trimestral pendiente. \\
+5.19-5.23 & Proveedores y servicios en la nube & R-05, R-06, R-12 & Parcial & Política de proveedores; SLA del mayorista y MFA de cuentas pendientes. \\
+5.24-5.28 & Gestión de incidentes & R-18 & Parcial & Plan de incidentes (Anexo C); faltan simulacros. \\
+5.29-5.30 & Continuidad TIC & R-03, R-06, R-19 & Parcial & Plan de continuidad con BIA (Anexo D); respaldo diario local ya existe. \\
+5.31 & Requisitos legales & R-02, R-10 & Parcial & Ley 29733; inscripción de bancos de datos pendiente (Anexo F). \\
+5.34 & Privacidad y datos personales & R-02, R-10 & Parcial & Datos de prueba anonimizados; fotos aún en el repositorio. \\
+6.3 & Concienciación y capacitación & R-09 & Plan. & Plan de concientización (Anexo E). \\
+6.8 & Reporte de eventos & R-18 & Plan. & Reporte en 30 min o menos por el canal oficial. \\
+7.1-7.4 & Seguridad física de la oficina & R-17, R-19 & Plan. & Servidor y red en gabinete con cerradura. \\
+7.9 & Activos fuera de las instalaciones & R-17 & Plan. & Gabinetes de zona con cerradura. \\
+7.11 & Servicios de suministro & R-12, R-19 & Parcial & UPS y encendido automático tras corte en el servidor. \\
+8.2 & Accesos privilegiados & R-05, R-07, R-16 & Parcial & Solo el administrador ve la red; falta sudo limitado y lista blanca. \\
+8.3 & Restricción de acceso a la información & R-02 & Parcial & Roles de base de datos y vistas probados en laboratorio. \\
+8.5 & Autenticación segura & R-05, R-09 & Parcial & Freno a la fuerza bruta en el login; MFA pendiente. \\
+8.7 & Protección contra malware & R-15 & Plan. & IDS con firmas y actualizaciones. \\
+8.8 & Vulnerabilidades técnicas & R-01, R-13, R-15 & Plan. & Parches mensuales de Ubuntu, Docker, RouterOS y dependencias. \\
+8.9 & Gestión de la configuración & R-01, R-11, R-13 & Parcial & docker-compose y migraciones versionadas; routers sin control. \\
+8.12 & Prevención de fuga de datos & R-02, R-10 & Plan. & Alerta por exportaciones masivas. \\
+8.13 & Respaldo de la información & R-03 & Parcial & pg\_dump diario con retención de 30 días; falta copia externa automática. \\
+8.14 & Redundancia & R-06, R-12, R-19 & Plan. & Disco espejo, WAN secundaria, hub reconstruible. \\
+8.15 & Registro de eventos & R-18 & Parcial & Historial del cliente; falta centralizar logs. \\
+8.16 & Monitoreo de actividades & R-18 & Plan. & Colector de logs, monitoreo y alertas. \\
+8.20 & Seguridad de redes & R-01, R-08, R-13, R-20 & Parcial & Servicios internos en 127.0.0.1 y publicación por túnel sin puertos de entrada; routers sin filtrado. \\
+8.22 & Segregación de redes & R-01, R-13, R-20 & Parcial & En las zonas existe la VLAN 10 de transporte GPON/PPPoE, pero puenteada con los puertos LAN y sin aislar la gestión de la OLT; VLAN 99 de gestión pendiente. \\
+8.24 & Uso de criptografía & R-02, R-07 & Parcial & HTTPS por Cloudflare y WireGuard; algunas zonas aún con SSTP. \\
+8.28 & Codificación segura & R-15 & Impl. & Validación con Pydantic; ORM sin SQL concatenado. \\
+8.32 & Gestión de cambios & R-11 & Impl. & Cambios del sistema por Git y migraciones revisables. \\
+\midrule
+5.6 & Contacto con grupos de interés especial & — & Excluido & La MYPE no participa en grupos sectoriales; se evaluará en el siguiente ciclo. \\
+8.30 & Desarrollo externalizado & — & Excluido & El software se desarrolla internamente. \\

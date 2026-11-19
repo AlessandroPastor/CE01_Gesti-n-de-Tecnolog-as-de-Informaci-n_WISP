@@ -1,0 +1,44 @@
+--- M1: tamaño de la base de datos
+ tamano_bd 
+-----------
+ 122 MB
+(1 row)
+
+--- M2: tablas más grandes
+   tabla   | tamano | filas  
+-----------+--------+--------
+ pagos     | 99 MB  | 600005
+ clientes  | 13 MB  |  50004
+ onus      | 104 kB |      3
+ bornes    | 104 kB |     16
+ cajas_nap | 96 kB  |      2
+(5 rows)
+
+--- M3: tasa de aciertos de caché (objetivo > 99 %)
+ cache_hit_pct 
+---------------
+         99.86
+(1 row)
+
+--- M4: conexiones por usuario y estado
+ usename  | state  | count 
+----------+--------+-------
+ postgres | active |     1
+(1 row)
+
+--- M5: tablas con más lecturas secuenciales (candidatas a índice)
+  relname  | seq_scan | idx_scan 
+-----------+----------+----------
+ clientes  |       10 |   600018
+ pagos     |        9 |        2
+ onus      |        6 |        0
+ cajas_nap |        6 |       16
+ bornes    |        6 |        6
+(5 rows)
+
+--- M6: eventos de auditoría registrados
+ operacion | count 
+-----------+-------
+ I         |     1
+(1 row)
+

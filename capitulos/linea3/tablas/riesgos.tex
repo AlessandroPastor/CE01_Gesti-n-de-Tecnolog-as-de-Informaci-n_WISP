@@ -1,0 +1,20 @@
+R-01 & A20 & Acceso no autorizado o botnet sobre RouterOS & Router sin reglas de filtrado; telnet, ftp, www, api y winbox abiertos; DNS recursivo abierto (export de SUCASCO)\textsuperscript{v} & 4 & 5 & 20 & Alto \\
+R-02 & A01, A03 & Fuga de datos personales & Un único usuario de base de datos dueño de todo; credenciales PPPoE y de routers en texto plano\textsuperscript{v} & 3 & 5 & 15 & Alto \\
+R-03 & A01, A06 & Pérdida de datos & Respaldo diario en el mismo servidor; copia externa manual y semanal; sin prueba de restauración en producción\textsuperscript{v} & 3 & 5 & 15 & Alto \\
+R-04 & A24 & Ausencia o error del administrador único & Sin suplente formal ni procedimientos escritos & 3 & 4 & 12 & Medio \\
+R-05 & A17, A19 & Toma de cuentas de Cloudflare, dominio o VPS & Cuentas sin MFA; quien controle el DNS o el túnel puede suplantar el sitio y el panel & 2 & 5 & 10 & Medio \\
+R-06 & A18 & Caída del hub VPN & VPS única de un tercero; sin procedimiento de reconstrucción & 2 & 4 & 8 & Medio \\
+R-07 & A04 & Robo de secretos (llaves, .env, token del túnel) & El backend entra a la VPS como root; llaves sin rotación; token del túnel en texto plano en el .env\textsuperscript{v} & 3 & 5 & 15 & Alto \\
+R-08 & A08, A20 & Suplantación (man-in-the-middle) en SSH & El cliente SSH acepta cualquier llave de host (AutoAddPolicy)\textsuperscript{v} & 2 & 4 & 8 & Medio \\
+R-09 & A24, A25 & Phishing e ingeniería social & Sin capacitación; sin MFA en cuentas privilegiadas & 4 & 4 & 16 & Alto \\
+R-10 & A02, A01 & Exposición de datos en el repositorio & 8 fotos de clientes y la IP pública de la VPS versionadas en Git\textsuperscript{v} & 3 & 4 & 12 & Medio \\
+R-11 & A20, A05 & Error de configuración manual en los routers & Sin control de cambios ni respaldo automático de configuración & 3 & 4 & 12 & Medio \\
+R-12 & A22, A21 & Corte de fibra o de energía en una zona & Enlace WAN único en la mayoría de zonas & 4 & 3 & 12 & Medio \\
+R-13 & A12, A08 & Compromiso del host Docker desde un contenedor & Backend y WhatsApp en la red del host; backend con NET\_ADMIN y el puerto 8000 escuchando en todas las interfaces; imagen cloudflared:latest sin versión fija\textsuperscript{v} & 2 & 5 & 10 & Medio \\
+R-14 & A10, A23 & Bloqueo del número de WhatsApp & Librería no oficial (Baileys) sobre un número vinculado\textsuperscript{v} & 3 & 3 & 9 & Medio \\
+R-15 & A08, A11 & Explotación de la aplicación web & Vulnerabilidades de código o dependencias desactualizadas & 3 & 4 & 12 & Medio \\
+R-16 & A20 & Abuso de la terminal RouterOS del panel & Filtro de comandos por lista negra, eludible\textsuperscript{v} & 2 & 4 & 8 & Medio \\
+R-17 & A20, A21 & Robo o sabotaje de equipos en campo & Gabinetes sin cerradura ni alarma & 2 & 3 & 6 & Bajo \\
+R-18 & A07 & Incidentes no detectados & Sin logs centralizados ni IDS; routers sin syslog remoto\textsuperscript{v} & 4 & 4 & 16 & Alto \\
+R-19 & A12 & Falla de hardware del servidor único & PC de escritorio con disco único, 4 GB de RAM y sin equipo de respaldo\textsuperscript{v} & 3 & 5 & 15 & Alto \\
+R-20 & A21, A14 & Acceso de clientes o de un atacante a la gestión de la OLT & VLAN 10 puenteada con ether6 y ether7 en bridgeLAN y sin filtro forward: desde la LAN de clientes 192.168.20.0/24 se llega a la gestión de la OLT 192.168.100.0/24 (ether9, con masquerade)\textsuperscript{v} & 3 & 4 & 12 & Medio \\

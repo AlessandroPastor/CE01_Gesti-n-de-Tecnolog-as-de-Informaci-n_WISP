@@ -1,0 +1,55 @@
+--- Q1: clientes con servicio vencido (candidatos a corte)
+ id |      nombre      |  zona   |  plan  | fecha_vencimiento | dias_mora 
+----+------------------+---------+--------+-------------------+-----------
+  2 | Cliente Demo Dos | SUCASCO | PLAN01 | 2026-10-23        |        26
+(1 row)
+
+--- Q2: ocupación de bornes por caja NAP
+   codigo   | libres | ocupados | danados 
+------------+--------+----------+---------
+ NAP-SUC-01 |      5 |        2 |       1
+ NAP-SUC-02 |      8 |        0 |       0
+(2 rows)
+
+--- Q3: ingresos vs gastos por mes
+   mes   | ingresos | gastos | utilidad 
+---------+----------+--------+----------
+ 2026-09 |       88 |      0 |       88
+ 2026-10 |      118 |    350 |     -232
+(2 rows)
+
+--- Q4: clientes por zona y estado
+  zona   |        estado        | count 
+---------+----------------------+-------
+ HUATA   | pendiente_aprobacion |     1
+ SUCASCO | activo               |     2
+ SUCASCO | suspendido           |     1
+(3 rows)
+
+--- Q5: regla RN-06, número de operación duplicado (debe fallar)
+ERROR:  duplicate key value violates unique constraint "pagos_numero_operacion_key"
+DETAIL:  Key (numero_operacion)=(OP-0001) already exists.
+--- Q6: mismo número de borne dos veces en una caja (debe fallar)
+ERROR:  duplicate key value violates unique constraint "uq_caja_borne_numero"
+DETAIL:  Key (caja_nap_id, numero)=(1, 1) already exists.
+--- Q7: zonas sin túnel WireGuard configurado
+ nombre 
+--------
+ VILQUE
+(1 row)
+
+--- Q8: inventario de ONU por técnico y estado
+      tecnico       |      estado      | count 
+--------------------+------------------+-------
+ Técnico Zona Norte | asignado_tecnico |     1
+ Técnico Zona Norte | instalado        |     2
+(2 rows)
+
+
+--- Prueba adicional: un cliente en dos bornes (RN-01)
+-- Sin restricción en la BD, el UPDATE se acepta (cliente 1 queda en 2 bornes).
+-- Con el índice propuesto:
+CREATE UNIQUE INDEX uq_borne_cliente ON bornes(cliente_id) WHERE cliente_id IS NOT NULL;
+UPDATE bornes SET cliente_id=1 WHERE caja_nap_id=2 AND numero=1;
+ERROR:  duplicate key value violates unique constraint "uq_borne_cliente"
+DETAIL:  Key (cliente_id)=(1) already exists.

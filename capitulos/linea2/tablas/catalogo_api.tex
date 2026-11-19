@@ -1,0 +1,189 @@
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Administración y respaldos} (\texttt{admin}, 3)} \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}admin/\allowbreak{}backup} & admin & Genera un respaldo de la base de datos en el servidor. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}admin/\allowbreak{}backups} & admin & Lista los respaldos disponibles. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}admin/\allowbreak{}backups/\allowbreak{}download/\allowbreak{}\{filename\}} & admin & Descarga un respaldo. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Autenticación y usuarios} (\texttt{auth}, 10)} \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}auth/\allowbreak{}cliente/\allowbreak{}login} & público & Login para clientes en la app móvil. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}auth/\allowbreak{}login} & público & Inicio de sesión del personal; devuelve el JWT. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}auth/\allowbreak{}me} & autenticado & Datos del usuario que inició sesión. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}auth/\allowbreak{}me} & autenticado & Autoservicio: cualquier usuario autenticado puede actualizar su propio teléfono/dirección. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}auth/\allowbreak{}password} & autenticado & Cambia la contraseña propia. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}auth/\allowbreak{}usuarios} & admin & Lista el personal. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}auth/\allowbreak{}usuarios} & admin & Crea una cuenta de personal con su rol. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}auth/\allowbreak{}usuarios/\allowbreak{}\{usuario\_id\}} & admin & Solo se puede borrar un usuario que de verdad nunca hizo nada. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}auth/\allowbreak{}usuarios/\allowbreak{}\{usuario\_id\}} & admin & Editar nombre/rol o activar/desactivar un usuario (técnico, vendedor, etc.). \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}auth/\allowbreak{}usuarios/\allowbreak{}\{usuario\_id\}/\allowbreak{}password} & admin & Le pone una contraseña nueva a otro usuario. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Averías} (\texttt{averias}, 8)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}averias} & autenticado & Lista averías con filtros por estado, zona y técnico. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}averias} & admin, atención, técnico & Registra una avería de un cliente. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}averias/\allowbreak{}\{averia\_id\}} & admin & Borra una avería creada por error (cliente equivocado, duplicada, etc.) junto con sus evidencias. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}averias/\allowbreak{}\{averia\_id\}} & autenticado & Detalle de una avería. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}averias/\allowbreak{}\{averia\_id\}} & admin & Corrige el motivo reportado. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}averias/\allowbreak{}\{averia\_id\}/\allowbreak{}asignar} & admin & Asigna la avería a un técnico. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}averias/\allowbreak{}\{averia\_id\}/\allowbreak{}iniciar} & admin, técnico & El técnico marca que ya está en atención (en camino / trabajando). \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}averias/\allowbreak{}\{averia\_id\}/\allowbreak{}resolver} & admin, técnico & Cierra la avería. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Cajas NAP y bornes} (\texttt{cajas\_nap}, 9)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}cajas-nap} & autenticado & Lista cajas NAP (por zona). \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}cajas-nap} & admin & Registro previo de la caja NAP por el admin (catálogo de infraestructura). \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}cajas-nap/\allowbreak{}bornes/\allowbreak{}\{borne\_id\}/\allowbreak{}marcar} & admin, técnico & Un técnico reporta un borne dañado (o el admin lo vuelve a marcar libre una vez reparado). \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}cajas-nap/\allowbreak{}bornes/\allowbreak{}\{borne\_id\}/\allowbreak{}precinto} & admin, técnico & Registra o corrige el código del precinto físico amarrado al cable drop de un borne ocupado. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}cajas-nap/\allowbreak{}\{caja\_id\}} & admin & Borra una caja registrada por error. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}cajas-nap/\allowbreak{}\{caja\_id\}} & autenticado & Detalle de la caja con su mapa de bornes. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}cajas-nap/\allowbreak{}\{caja\_id\}} & admin & Corrige datos de una caja mal ingresada (código, descripción, ubicación). \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}cajas-nap/\allowbreak{}\{caja\_id\}/\allowbreak{}ampliar} & admin & Agranda la caja (ej. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}cajas-nap/\allowbreak{}\{caja\_id\}/\allowbreak{}estado-pppoe} & admin, técnico & Consulta en una sola sesión SSH si cada abonado ocupando un borne de esta caja está conectado ahora mismo al… \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{App del cliente} (\texttt{cliente\_app}, 3)} \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}cliente/\allowbreak{}cambiar-pin} & cliente (PIN) & Cambia la contraseña del cliente en la app móvil. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}cliente/\allowbreak{}me} & cliente (PIN) & Cuenta del cliente: plan, estado y vencimiento. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}cliente/\allowbreak{}mis-pagos} & cliente (PIN) & Historial de pagos del cliente (paginado). \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Clientes} (\texttt{clientes}, 21)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}clientes} & autenticado & Lista paginada de clientes con filtros por zona, estado y tipo. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}clientes} & admin, atención, técnico, vendedor & Registra un cliente (queda pendiente de aprobación). \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}notificaciones} & admin, atención & Avisos del panel calculados en vivo: ventas por aprobar, instalaciones recientes o fallidas, averías demoradas y estado de WhatsApp. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}resumen-estados} & autenticado & Cuantos clientes hay en cada estado, en UNA consulta. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}} & admin & Elimina un cliente no instalado. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}} & autenticado & Ficha completa del cliente. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}} & admin, atención & Actualiza los datos del cliente. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}activar-satelital} & admin & Activa un cliente satelital ya aprobado. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}aprobar} & admin & Aprueba la venta y la publica para el técnico de la zona. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}calendario-pagos} & autenticado & Calendario anual de pagos del cliente. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}compromiso-pago} & admin, atención & El cliente pidió plazo ('espérame hasta el 25'). \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}cortar} & admin, atención & Avisa por WhatsApp y corta el servicio en el MikroTik. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}datos-de-instalacion} & admin, técnico & Registrar la caja, el borne y el equipo de un cliente ya instalado. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}historial} & autenticado & Bitácora del cliente (activaciones, cortes, pagos, cambios). \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}instalar} & admin, técnico & Cierra la instalación: borne, ONU, evidencias y secreto PPPoE. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}ips-disponibles} & admin & Las IP del pool que estan libres en el router de la zona del cliente. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}no-instalar} & admin, técnico & Registra que no se pudo instalar, con motivo. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}pausar} & admin, atención & Pausa temporal pedida por el propio cliente (ej. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}pppoe-status} & autenticado & Estado de la sesión PPPoE en tiempo real. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}reactivar} & admin, atención & Reactiva el servicio y extiende el vencimiento. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}clientes/\allowbreak{}\{cliente\_id\}/\allowbreak{}rechazar} & admin & Rechaza la venta con motivo. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Consulta DNI/RUC} (\texttt{consultas}, 2)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}consultas/\allowbreak{}documento} & autenticado & Devuelve el nombre asociado a un DNI o la razón social de un RUC. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}consultas/\allowbreak{}uso} & autenticado & Cuántas consultas van este mes, para mostrarlo en el panel. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Dashboard} (\texttt{dashboard}, 3)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}dashboard/\allowbreak{}ingresos-mensual} & admin & Ingresos y gastos por mes para el gráfico. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}dashboard/\allowbreak{}stats} & admin, atención & Indicadores del panel principal. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}dashboard/\allowbreak{}ultimas-activaciones} & admin, atención & Últimas activaciones de clientes. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Evidencias} (\texttt{evidencias}, 4)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}evidencias} & autenticado & Lista fotos de evidencia por cliente, avería o retiro. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}evidencias} & admin, atención, técnico, vendedor & Sube una foto de evidencia. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}evidencias/\allowbreak{}\{evidencia\_id\}} & admin & Borra una foto subida por error. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}evidencias/\allowbreak{}\{evidencia\_id\}/\allowbreak{}archivo} & autenticado & Descarga el archivo de una evidencia. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Gastos} (\texttt{gastos}, 6)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}gastos} & admin & Lista gastos operativos. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}gastos} & admin & Registra un gasto. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}gastos/\allowbreak{}categorias} & admin & Categorías de gasto usadas. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}gastos/\allowbreak{}resumen-por-zona} & admin & Para la grilla de zonas: gastos fijos/variables y margen (ingresos - gastos) de cada zona en el mes, más un balde… \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}gastos/\allowbreak{}\{gasto\_id\}} & admin & Elimina un gasto. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}gastos/\allowbreak{}\{gasto\_id\}} & admin & Actualiza un gasto. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Jornadas de vendedores} (\texttt{jornadas}, 11)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}jornadas} & admin & Lista jornadas de vendedores. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}jornadas/\allowbreak{}activas} & admin & Jornadas en curso con su última ubicación. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}jornadas/\allowbreak{}finalizar} & vendedor & El vendedor cierra su jornada. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}jornadas/\allowbreak{}iniciar} & vendedor & El vendedor inicia su jornada (ubicación de inicio). \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}jornadas/\allowbreak{}mi-jornada-activa} & vendedor & Jornada en curso del vendedor. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}jornadas/\allowbreak{}ping} & vendedor & Registra un punto del recorrido. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}jornadas/\allowbreak{}resumen-pasajes} & admin & Resumen de pasajes y reintegros. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}jornadas/\allowbreak{}\{jornada\_id\}/\allowbreak{}pasaje} & admin & Registra el pasaje entregado. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}jornadas/\allowbreak{}\{jornada\_id\}/\allowbreak{}reclamo-pasaje} & vendedor & El vendedor reporta que la tienda no le dio pasaje y pagó de su bolsillo. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}jornadas/\allowbreak{}\{jornada\_id\}/\allowbreak{}reclamo-pasaje/\allowbreak{}reintegrar} & admin & El admin confirma que ya le pagó al vendedor lo que reclamó. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}jornadas/\allowbreak{}\{jornada\_id\}/\allowbreak{}recorrido} & admin & Recorrido de la jornada para el mapa. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Mufas y corridas} (\texttt{mufas}, 9)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}mufas} & autenticado & Lista mufas (por zona). \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}mufas} & admin & El encargado registra una mufa nueva al mapear la zona. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}mufas/\allowbreak{}\{mufa\_id\}} & admin & Elimina una mufa. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}mufas/\allowbreak{}\{mufa\_id\}} & autenticado & Detalle de la mufa con sus corridas. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}mufas/\allowbreak{}\{mufa\_id\}} & admin & Actualiza una mufa. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}mufas/\allowbreak{}\{mufa\_id\}/\allowbreak{}cajas-nap} & autenticado & Cajas NAP que cuelgan de la mufa. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}mufas/\allowbreak{}\{mufa\_id\}/\allowbreak{}corridas} & admin & Agrega una corrida de fibra (nombre, color, metros, trazado). \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}mufas/\allowbreak{}\{mufa\_id\}/\allowbreak{}corridas/\allowbreak{}\{corrida\_id\}} & admin & Elimina una corrida. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}mufas/\allowbreak{}\{mufa\_id\}/\allowbreak{}corridas/\allowbreak{}\{corrida\_id\}} & admin & Actualiza una corrida. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Inventario de ONU} (\texttt{onus}, 7)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}onus} & autenticado & Inventario de ONU con filtros por estado y técnico. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}onus} & admin & Ingresa una ONU al almacén (lo que capturó la lectora: serie/MAC/marca). \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}onus/\allowbreak{}registrar-propio} & técnico & El técnico registra un equipo que el almacén le entregó sin pasar antes por el sistema (escaneando MAC/serie en campo). \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}onus/\allowbreak{}\{onu\_id\}} & admin & Borra una ONU del inventario (equipo registrado por error, duplicado, etc). \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}onus/\allowbreak{}\{onu\_id\}} & autenticado & Detalle e historial de una ONU. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}onus/\allowbreak{}\{onu\_id\}/\allowbreak{}asignar} & admin & El admin le entrega una ONU a un técnico (sale del stock general). \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}onus/\allowbreak{}\{onu\_id\}/\allowbreak{}marcar} & admin, técnico & Marca una ONU dañada/perdida, o la regresa al almacén (devolución). \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Órdenes de retiro} (\texttt{ordenes\_retiro}, 5)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}ordenes-retiro} & autenticado & Lista órdenes de retiro. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}ordenes-retiro} & admin, atención & Crea una orden de retiro de equipo. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}ordenes-retiro/\allowbreak{}\{orden\_id\}} & autenticado & Detalle de la orden de retiro. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}ordenes-retiro/\allowbreak{}\{orden\_id\}/\allowbreak{}asignar} & admin, atención & Asigna la orden a un técnico. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}ordenes-retiro/\allowbreak{}\{orden\_id\}/\allowbreak{}completar} & admin, técnico & El técnico confirma que recogió el equipo. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Pagos y reportes} (\texttt{pagos}, 17)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos} & admin, atención & Lista pagos con filtros. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}pagos} & admin, atención & Registra un pago (o adelanto), emite recibo y reactiva si corresponde. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}clientes-cortados} & admin, atención & Clientes con el servicio cortado (suspendido), más recientes primero. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}clientes-sin-pago} & admin, atención & Clientes activos cuyo propio ciclo de pago (fecha\_vencimiento) ya llegó o ya pasó. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}exportar} & admin, atención & La lista de pagos con los mismos filtros de la pantalla, pero completa (sin paginar) y lista para descargar en Excel… \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}pausas-por-vencer} & admin, atención & Clientes en pausa temporal (a su propia solicitud) cuyo plazo ya venció o está por vencer en los próximos 7 días. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}reporte-caja} & admin & Reporte de caja del día. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}reporte-caja/\allowbreak{}exportar} & admin & El corte de caja del día, para imprimirlo o archivarlo al cerrar turno. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}reporte-mensual-zonas} & admin & Recaudación del mes por zona. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}reporte-mensual-zonas/\allowbreak{}exportar} & admin & Lo recaudado en el mes, zona por zona. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}resumen-mensual} & admin & Resumen mensual de ingresos. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}\{pago\_id\}} & admin & Elimina un pago registrado por error. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}\{pago\_id\}} & admin, atención & Detalle de un pago. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}\{pago\_id\}/\allowbreak{}comprobante} & admin, atención & Descarga el comprobante adjunto. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}\{pago\_id\}/\allowbreak{}comprobante} & admin, atención & Adjunta la imagen del comprobante. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}\{pago\_id\}/\allowbreak{}recibo-pdf} & admin, atención & El recibo del pago en PDF, con el formato de ticket de la empresa. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}pagos/\allowbreak{}\{pago\_id\}/\allowbreak{}reenviar-whatsapp} & admin, atención & Reenvía manualmente la confirmación de pago por WhatsApp. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Roles y módulos} (\texttt{permisos}, 14)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}mis-modulos} & autenticado (personal o cliente) & Los módulos que le tocan a quien pregunta, en el orden en que se muestran. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}modulos} & admin & Catálogo de módulos del panel y de la app. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}modulos-padre} & admin & Grupos del menú. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}modulos-padre} & admin & Crea un grupo del menú. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}modulos-padre/\allowbreak{}orden} & admin & Ordena los grupos del menú. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}modulos-padre/\allowbreak{}\{padre\_id\}} & admin & Elimina un grupo vacío. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}modulos-padre/\allowbreak{}\{padre\_id\}} & admin & Renombra un grupo o cambia su icono. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}modulos/\allowbreak{}\{modulo\_id\}/\allowbreak{}padre} & admin & Mueve un módulo a otro grupo. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}roles} & admin & Lista roles con sus módulos. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}roles} & admin & Crea un rol a partir de un tipo de cuenta. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}roles/\allowbreak{}\{rol\_id\}} & admin & Elimina un rol sin usuarios. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}roles/\allowbreak{}\{rol\_id\}} & admin & Renombra o describe un rol. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}roles/\allowbreak{}\{rol\_id\}/\allowbreak{}modulos/\allowbreak{}\{modulo\_id\}} & admin & Da o quita un solo módulo. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}permisos/\allowbreak{}roles/\allowbreak{}\{rol\_id\}/\allowbreak{}orden} & admin & Guarda el orden en que este rol ve sus módulos. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Planes} (\texttt{planes}, 6)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}planes} & autenticado & Lista planes comerciales. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}planes} & admin & Crea un plan y su perfil PPPoE en los routers. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}planes/\allowbreak{}perfiles-de-zona/\allowbreak{}\{zona\_id\}} & admin & Los perfiles PPPoE que tiene ese router, tal cual. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}planes/\allowbreak{}verificacion} & admin & Compara los planes del panel con los perfiles reales de cada router. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}planes/\allowbreak{}\{plan\_id\}} & admin & Desactiva un plan. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}planes/\allowbreak{}\{plan\_id\}} & admin & Actualiza un plan y sincroniza los perfiles. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{WhatsApp} (\texttt{whatsapp}, 12)} \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}whatsapp/\allowbreak{}aviso-cobro/\allowbreak{}\{cliente\_id\}} & admin, atención & Envía el aviso de cobro a un cliente. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}whatsapp/\allowbreak{}aviso-corte/\allowbreak{}\{cliente\_id\}} & admin & Envía el aviso de corte a un cliente. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}whatsapp/\allowbreak{}broadcast-cobros} & admin & Recordatorio de pago a todos los activos que no pagaron el mes indicado. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}whatsapp/\allowbreak{}masivos} & admin & Lista envíos masivos. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}whatsapp/\allowbreak{}masivos} & admin & Crea un envío masivo por zona y estado. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}whatsapp/\allowbreak{}masivos/\allowbreak{}destinatarios-count} & admin & Cuenta destinatarios antes de enviar. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}whatsapp/\allowbreak{}masivos/\allowbreak{}\{mensaje\_id\}} & admin & Avance y resultado por destinatario. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}whatsapp/\allowbreak{}masivos/\allowbreak{}\{mensaje\_id\}/\allowbreak{}cancelar} & admin & Cancela un envío en curso. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}whatsapp/\allowbreak{}qr} & autenticado & Código QR para vincular el número. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}whatsapp/\allowbreak{}recordatorio-preventivo/\allowbreak{}ejecutar} & admin & Ejecuta a mano el recordatorio diario. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}whatsapp/\allowbreak{}send} & admin & Envía un mensaje manual. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}whatsapp/\allowbreak{}status} & autenticado & Estado de la sesión de WhatsApp. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Zonas y red} (\texttt{zonas}, 18)} \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}zonas} & autenticado & Lista zonas (la red solo la ve el administrador). \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}zonas} & admin & Crea una zona. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}estado-red} & admin & Si el router de cada zona contesta, en una sola llamada. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}publicas} & público & Lista pública de zonas con cobertura activa. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}publicas/\allowbreak{}resumen} & público & Cifras reales (no estimadas) para la página pública: cuántas zonas activas y cuántos clientes activos hay hoy. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}} & admin & Elimina una zona sin clientes. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}} & autenticado & Detalle de la zona. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}} & admin & Actualiza la zona y su conexión al router. \\
+\texttt{PUT} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}/\allowbreak{}datos} & admin & Corrige nombre/descripción/tiendas de pago, ubicación del servidor y las credenciales del MikroTik (usuario, clave,… \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}/\allowbreak{}datos-del-router} & admin & Lo que el MikroTik puede decir de si mismo, para no escribirlo a mano. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}/\allowbreak{}exec} & admin & Ejecuta un comando RouterOS restringido (terminal). \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}/\allowbreak{}tecnicos} & admin & Quién atiende la zona. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}/\allowbreak{}tecnicos/\allowbreak{}\{tecnico\_id\}} & admin & Quita un técnico de la zona. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}/\allowbreak{}tecnicos/\allowbreak{}\{tecnico\_id\}} & admin & Asigna un técnico a la zona. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}/\allowbreak{}wireguard-status} & admin & Ping, SSH y handshake del túnel de la zona. \\
+\texttt{DELETE} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}/\allowbreak{}wireguard/\allowbreak{}peer} & admin & Revoca el peer WireGuard de la zona. \\
+\texttt{POST} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}/\allowbreak{}wireguard/\allowbreak{}peer} & admin & Agrega el peer WireGuard de la zona. \\
+\texttt{GET} & \texttt{/\allowbreak{}api/\allowbreak{}zonas/\allowbreak{}\{zona\_id\}/\allowbreak{}wireguard/\allowbreak{}peers-activos} & admin & Lista todos los peers activos en wg0 con su estado. \\
+\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{Salud del servicio} (\texttt{main})} \\
+\texttt{GET} & \texttt{/api/health} & público & Verificación de que la API responde. \\

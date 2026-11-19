@@ -1,0 +1,547 @@
+% ======================================================================
+% capitulos/linea2/capitulo10.tex
+% ----------------------------------------------------------------------
+% LÍNEA CE02 — Evidencias CE0221 (modelo de datos relacional documentado y
+% validado) y CE0222 (base de datos relacional implementada y consultable)
+% Fuente: backend/app/models.py y backend/alembic/versions (rama main)
+% Scripts: sql/01_ddl.sql, sql/02_dml.sql, sql/03_consultas.sql
+% ======================================================================
+\chapter{Plataforma de Datos del Sistema}
+\label{chap:ce02-datos}
+
+\entregable{CE02 --- Ingeniería de Software · competencia CE022 Ingeniería de la Información}{Semestre 2 · Entregable 2: Plataforma de Datos del Sistema}{CE0221 Modelo relacional · CE0222 BD implementada · CE0223 Motor transaccional programado · CE0224 BD administrada, asegurada y operativa}{Modelo y BD del producto real; programación, seguridad y respaldo probados en laboratorio, pendientes de pasar a producción.}
+
+
+\section*{Resumen ejecutivo}
+\addcontentsline{toc}{section}{Resumen ejecutivo}
+
+Los datos son el centro del sistema de WISP: de la base de datos salen las credenciales
+PPPoE que se crean en los routers, las fechas que deciden cada corte automático, el
+mapa de bornes que usa el técnico en campo y los ingresos que revisa la gerencia. Una
+inconsistencia en la base se traduce en un cliente cortado por error o en un borne
+asignado dos veces.
+
+Este entregable documenta la plataforma de datos completa: el \textbf{modelo} (21
+tablas, 16 tipos enumerados, diccionario y análisis de normalización), la
+\textbf{implementación} versionada con 32 migraciones Alembic y probada en
+PostgreSQL~15, las \textbf{consultas y la programación} en la base (procedimiento de
+registro de pagos con reactivación atómica, triggers de auditoría y de reglas de planta,
+funciones e índices medidos con planes de ejecución) y la \textbf{seguridad y
+administración} (roles con mínimo privilegio, auditoría inalterable, respaldo y
+restauración probados, y consultas de monitoreo).
+
+Todas las evidencias se ejecutaron sobre el esquema real del sistema, en un contenedor
+\texttt{postgres:15-alpine} limpio y con datos anonimizados. Los resultados más
+relevantes: los índices propuestos reducen la consulta del historial de pagos de
+21,0~ms a 0,09~ms sobre 600\,000 pagos, y una restauración completa de 650\,000 filas
+tomó unos 4~segundos con conteos y sumas idénticos a la base original. La programación
+en base de datos y los roles están probados en laboratorio y pendientes de pasar a
+producción mediante una migración Alembic.
+
+% ======================================================================
+\section{Sección 1: Modelo de datos}
+\label{sec:ce02-modelo}
+
+\subsection{Modelo entidad-relación}
+\label{sec:ce02-er}
+
+La base de datos tiene \textbf{21 tablas} y \textbf{16 tipos enumerados}. La
+\cref{fig:ce02-er} muestra las entidades y relaciones principales.
+
+\tikzset{ent/.style={draw=upeublue,fill=upeublue!6,font=\tiny,align=left,
+  text width=2.75cm,inner sep=2.5pt,rounded corners=1pt},
+  rel/.style={draw=upeublue!70,thick},
+  card/.style={font=\tiny\bfseries,text=red!60!black,inner sep=1pt}}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,scale=0.82,every node/.style={transform shape}]
+  % Fila 0
+  \node[ent] (usu) at (0,0) {\textbf{usuarios}\\PK id · email (UQ), rol};
+  \node[ent] (tz)  at (3.5,0) {\textbf{tecnico\_zona}\\FK tecnico\_id, zona\_id\\UQ(tecnico\_id, zona\_id)};
+  \node[ent] (zon) at (7,0) {\textbf{zonas}\\PK id · nombre (UQ)\\ip\_wireguard, lista\_corte};
+  \node[ent] (muf) at (10.5,0) {\textbf{mufas}\\FK zona\_id · codigo (UQ)};
+  \node[ent] (cor) at (14,0) {\textbf{corridas}\\FK mufa\_id · metros};
+  % Fila 1
+  \node[ent] (jor) at (0,-2.7) {\textbf{jornadas\_vendedor}\\FK vendedor\_id, zona\_id};
+  \node[ent] (gas) at (3.5,-2.7) {\textbf{gastos}\\FK zona\_id · monto};
+  \node[ent] (caj) at (10.5,-2.7) {\textbf{cajas\_nap}\\FK zona\_id, mufa\_id\\codigo (UQ)};
+  \node[ent] (ret) at (14,-2.7) {\textbf{ordenes\_retiro}\\FK cliente\_id, onu\_retirada\_id};
+  % Fila 2
+  \node[ent] (ubi) at (0,-5.4) {\textbf{ubicaciones\_vendedor}\\FK jornada\_id · lat, lng};
+  \node[ent] (pla) at (3.5,-5.4) {\textbf{planes}\\PK id · codigo (UQ)};
+  \node[ent,fill=upeublue!15] (cli) at (7,-5.4) {\textbf{clientes}\\FK zona\_id, plan\_id\\dni (UQ), usuario\_pppoe (UQ)\\estado, fecha\_vencimiento};
+  \node[ent] (bor) at (10.5,-5.4) {\textbf{bornes}\\FK caja\_nap\_id, cliente\_id\\UQ(caja\_nap\_id, numero)};
+  % Fila 3
+  \node[ent] (pag) at (3.5,-8.1) {\textbf{pagos}\\FK cliente\_id\\numero\_operacion (UQ)};
+  \node[ent] (his) at (7,-8.1) {\textbf{historial}\\FK cliente\_id, usuario\_id};
+  \node[ent] (ave) at (10.5,-8.1) {\textbf{averias}\\FK cliente\_id, caja\_nap\_id,\\borne\_id, onu\_*};
+  \node[ent] (onu) at (14,-8.1) {\textbf{onus}\\FK tecnico\_id, cliente\_id\\numero\_serie (UQ)};
+  % Fila 4
+  \node[ent] (mm) at (0,-10.8) {\textbf{mensajes\_masivos}\\FK creado\_por\_id};
+  \node[ent] (mme) at (3.5,-10.8) {\textbf{mensajes\_masivos\_envios}\\FK mensaje\_masivo\_id, cliente\_id};
+  \node[ent] (evi) at (10.5,-10.8) {\textbf{evidencias}\\FK averia\_id, cliente\_id,\\orden\_retiro\_id};
+  % Relaciones (1 ... N)
+  \newcommand{\relac}[3]{\draw[rel] (#1) -- node[card,pos=0.15]{1} node[card,pos=0.85]{#3} (#2);}
+  \relac{usu}{tz}{N} \relac{zon}{tz}{N} \relac{zon}{muf}{N} \relac{muf}{cor}{N}
+  \relac{zon}{cli}{N} \relac{pla}{cli}{N} \relac{zon}{caj}{N} \relac{muf}{caj}{N}
+  \relac{caj}{bor}{N} \relac{cli}{bor}{0..1} \relac{cli}{pag}{N} \relac{cli}{his}{N}
+  \relac{cli}{onu}{N} \relac{cli}{ave}{N} \relac{ave}{evi}{N} \relac{cli}{ret}{N}
+  \relac{usu}{jor}{N} \relac{jor}{ubi}{N} \relac{zon}{gas}{N} \relac{mm}{mme}{N}
+  \relac{cli}{mme}{N}
+\end{tikzpicture}
+\caption{Modelo entidad-relación (tablas principales; cardinalidad 1:N salvo indicación).
+Además, \texttt{clientes} referencia a \texttt{usuarios} tres veces (vendedor, aprobador e
+instalador), \texttt{onus} y \texttt{averias} referencian al técnico, y la tabla
+\texttt{consultas\_documento\_mes} es independiente.}
+\label{fig:ce02-er}
+\end{figure}
+
+% ======================================================================
+\subsection{Modelo lógico relacional}
+\label{sec:ce02-logico}
+
+{\small
+\begin{longtable}{L{3.4cm}L{5.6cm}L{5.0cm}}
+\caption{Modelo lógico: tablas, claves foráneas y restricciones de unicidad.}\label{tab:ce02-logico}\\
+\toprule
+\textbf{Tabla} & \textbf{Claves foráneas} & \textbf{Unicidad / índices} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Tabla} & \textbf{Claves foráneas} & \textbf{Unicidad / índices} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+usuarios & --- & \texttt{email} \\
+tecnico\_zona & tecnico\_id $\rightarrow$ usuarios, zona\_id $\rightarrow$ zonas & (tecnico\_id, zona\_id) \\
+zonas & --- & \texttt{nombre} \\
+mufas & zona\_id $\rightarrow$ zonas & \texttt{codigo} \\
+corridas & mufa\_id $\rightarrow$ mufas & --- \\
+cajas\_nap & zona\_id $\rightarrow$ zonas, mufa\_id $\rightarrow$ mufas & \texttt{codigo} \\
+bornes & caja\_nap\_id $\rightarrow$ cajas\_nap, cliente\_id $\rightarrow$ clientes & (caja\_nap\_id, numero) \\
+planes & --- & \texttt{codigo} \\
+clientes & zona\_id, plan\_id, vendedor\_id, aprobado\_por\_id, tecnico\_instalador\_id & \texttt{dni}, \texttt{ruc}, \texttt{usuario\_pppoe}; índice en \texttt{estado}, \texttt{migrado} \\
+onus & tecnico\_id $\rightarrow$ usuarios, cliente\_id $\rightarrow$ clientes & \texttt{numero\_serie}; índice en \texttt{estado} \\
+ordenes\_retiro & cliente\_id, tecnico\_asignado\_id, onu\_retirada\_id & índice en \texttt{estado} \\
+averias & cliente\_id, caja\_nap\_id, borne\_id, tecnico\_asignado\_id, onu\_reemplazada\_id, onu\_nueva\_id & índice en \texttt{estado} \\
+evidencias & averia\_id, cliente\_id, orden\_retiro\_id, subido\_por\_id & --- \\
+pagos & cliente\_id $\rightarrow$ clientes, registrado\_por $\rightarrow$ usuarios & \texttt{numero\_operacion}; índice en \texttt{grupo\_adelanto} \\
+gastos & zona\_id, registrado\_por & --- \\
+historial & cliente\_id, usuario\_id & --- \\
+mensajes\_masivos & creado\_por\_id $\rightarrow$ usuarios & índice en \texttt{estado} \\
+mensajes\_masivos\_\allowbreak envios & mensaje\_masivo\_id, cliente\_id & índice en \texttt{estado} \\
+jornadas\_vendedor & vendedor\_id, zona\_id & índice en \texttt{estado} \\
+ubicaciones\_vendedor & jornada\_id $\rightarrow$ jornadas\_vendedor & --- \\
+consultas\_documento\_mes & --- & (anio, mes) \\
+\end{longtable}
+}
+
+% ======================================================================
+\subsection{Diccionario de datos}
+\label{sec:ce02-diccionario}
+
+Se documentan las tablas centrales del negocio. Convenciones: \textbf{PK} clave
+primaria, \textbf{FK} clave foránea, \textbf{UQ} único, \textbf{NN} no nulo.
+
+\newcommand{\dictab}[2]{\multicolumn{4}{l}{\cellcolor{upeublue!10}\textbf{#1} --- \textit{#2}}\\}
+
+{\small
+\begin{longtable}{L{3.4cm}L{2.5cm}L{1.4cm}L{6.4cm}}
+\caption{Diccionario de datos de las tablas centrales.}\label{tab:ce02-diccionario}\\
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{Restr.} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{Restr.} & \textbf{Descripción} \\
+\midrule
+\endhead
+\midrule \multicolumn{4}{r}{\textit{Continúa en la página siguiente}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+\dictab{usuarios}{personal de la empresa con acceso al sistema}
+id & integer & PK & Identificador. \\
+nombre & varchar(100) & NN & Nombre completo. \\
+email & varchar(150) & UQ, NN & Usuario de inicio de sesión. \\
+hashed\_password & varchar(255) & NN & Hash bcrypt de la contraseña. \\
+rol & rolusuario & NN & admin, tecnico, vendedor\_campo, atencion\_cliente. \\
+activo & boolean & & Permite deshabilitar sin borrar. \\
+telefono, dni, direccion, fecha\_ingreso & varios & & Ficha de personal (informativa). \\
+\dictab{zonas}{zona de servicio con su router MikroTik}
+id & integer & PK & Identificador. \\
+nombre & varchar(100) & UQ, NN & Nombre de la zona (p.\,ej. SUCASCO). \\
+ip\_lan & varchar(20) & & Gateway de la LAN de clientes de la zona. \\
+ip\_wireguard & varchar(20) & & IP del router en el túnel (10.10.0.0/24); vacía si aún no hay túnel. \\
+wg\_public\_key & varchar(255) & & Llave pública WireGuard del router. \\
+pool\_pppoe & varchar(100) & & Nombre del pool de IP del MikroTik para los perfiles. \\
+lista\_corte & varchar(100) & & Nombre exacto de la address-list de corte de esa zona. \\
+usuario\_mikrotik, password\_mikrotik & varchar & & Credenciales heredadas (ver \cref{sec:ce02-normalizacion}). \\
+lat, lng, descripcion, tiendas\_pago & varios & & Ubicación e información pública. \\
+\dictab{cajas\_nap y bornes}{planta externa de fibra}
+cajas\_nap.codigo & varchar(50) & UQ, NN & Código de la caja. \\
+cajas\_nap.zona\_id / mufa\_id & integer & FK & Zona y mufa de la que cuelga. \\
+cajas\_nap.capacidad\_bornes & integer & NN & Bornes de la caja (8 por defecto). \\
+bornes.caja\_nap\_id, numero & integer & FK, NN & Caja y número; UQ(caja, número). \\
+bornes.estado & estadoborne & NN & libre, ocupado, danado. \\
+bornes.cliente\_id & integer & FK & Cliente conectado (nulo si libre). \\
+bornes.codigo\_precinto & varchar(50) & & Precinto de seguridad colocado. \\
+bornes.potencia\_optica\_dbm & float & & Potencia medida en la instalación. \\
+\dictab{planes}{planes comerciales}
+codigo & varchar(20) & UQ, NN & Código y nombre del perfil PPPoE (PLAN01\ldots). \\
+bajada\_mbps, subida\_mbps & integer & NN & Velocidades contratadas. \\
+precio & float & NN & Precio mensual (S/). \\
+incluye\_tv, tv\_incluidas, precio\_tv\_adicional & varios & & Servicio de TV. \\
+tipo\_conexion & tipoconexion & NN & fibra\_optica, inalambrico, satelital. \\
+costo\_proveedor & float & & Solo satelital: costo pagado al proveedor. \\
+\dictab{clientes}{abonados del servicio}
+id & integer & PK & Identificador. \\
+nombre & varchar(150) & NN & Nombre o razón social. \\
+tipo\_documento & tipodocumento & NN & dni o ruc. \\
+dni / ruc & varchar(15) / (11) & UQ & Documento; del DNI salen las credenciales PPPoE. \\
+telefono\_whatsapp & varchar(20) & & Destino de los avisos. \\
+lat, lng, direccion & varios & & Ubicación de la vivienda (GPS). \\
+usuario\_pppoe & varchar(100) & UQ, NN & Usuario PPPoE en el MikroTik. \\
+password\_pppoe & varchar(100) & NN & Contraseña PPPoE (ver \cref{sec:ce02-normalizacion}). \\
+zona\_id & integer & FK & Zona (nula solo para satelitales). \\
+plan\_id & integer & FK, NN & Plan contratado. \\
+fecha\_instalacion, fecha\_vencimiento & date & & Ciclo de facturación de 30 días. \\
+pausa\_hasta, compromiso\_pago\_hasta & date & & Pausa del servicio y prórroga acordada. \\
+estado & estadocliente & NN & Ciclo de vida (\cref{fig:ce02-est-cliente}). \\
+migrado & boolean & NN & Cliente anterior al sistema (sin datos de planta). \\
+vendedor\_id, aprobado\_por\_id, tecnico\_instalador\_id & integer & FK & Responsables de cada etapa. \\
+pin\_app & varchar(255) & & Hash del PIN de la App del cliente. \\
+equipo\_* & varios & & Datos de equipo heredados (reemplazados por \texttt{onus}). \\
+\dictab{onus}{equipos terminales del cliente}
+numero\_serie & varchar(100) & UQ, NN & Serie del equipo (escaneada). \\
+mac, marca, wifi\_version & varios & & Datos técnicos (wifi5, wifi6). \\
+estado & estadoonu & NN & Ciclo de vida (\cref{fig:ce02-est-onu}). \\
+tecnico\_id / cliente\_id & integer & FK & Técnico que lo tiene / cliente donde está instalado. \\
+\dictab{pagos}{cobros mensuales}
+cliente\_id & integer & FK, NN & Cliente que paga. \\
+monto & float & NN & Importe (S/). \\
+mes\_pagado & varchar(7) & NN & Mes cubierto (AAAA-MM). \\
+fecha\_pago & date & NN & Fecha del cobro. \\
+metodo\_pago & varchar(50) & & efectivo, yape, transferencia\ldots \\
+numero\_operacion & varchar(100) & UQ & Operación bancaria/Yape (RN-06). \\
+grupo\_adelanto, descuento & varchar(36), float & & Adelantos de varios meses con un solo recibo. \\
+registrado\_por & integer & FK & Usuario que registró el pago. \\
+\dictab{historial}{bitácora de eventos del cliente (RNF-08)}
+cliente\_id, usuario\_id & integer & FK & Cliente afectado y autor. \\
+tipo & tipohistorial & NN & activacion, corte, pago, cambio\_plan, cambio\_onu, compromiso\_pago, nota. \\
+descripcion, creado\_en & text, timestamptz & NN & Detalle y momento del evento. \\
+\end{longtable}
+}
+
+% ======================================================================
+\subsection{Normalización y calidad del modelo}
+\label{sec:ce02-normalizacion}
+
+\begin{itemize}
+  \item \textbf{1FN:} todas las tablas tienen clave primaria y atributos atómicos,
+  salvo las columnas JSON \texttt{mufas.trazado}, \texttt{corridas.trazado} y
+  \texttt{mensajes\_masivos.zona\_ids/estados\_incluidos}. Es una excepción
+  consciente: son listas que solo se dibujan o se leen enteras y nunca se filtran
+  por un elemento.
+  \item \textbf{2FN:} todas las claves primarias son simples (\texttt{id}), así que no
+  hay dependencias parciales; las combinaciones naturales se protegen con
+  restricciones \texttt{UNIQUE} (técnico--zona, caja--número de borne, año--mes).
+  \item \textbf{3FN:} los datos de zona, plan, usuario y equipo viven en su propia
+  tabla y se referencian por FK. La excepción son los campos \texttt{clientes.equipo\_*},
+  que se conservan por compatibilidad con clientes antiguos y ya fueron reemplazados
+  por la tabla \texttt{onus}.
+\end{itemize}
+
+\begin{table}[htbp]
+\centering
+\caption{Hallazgos de la validación del modelo y mejoras propuestas.}
+\label{tab:ce02-mejoras-bd}
+\small
+\begin{tabularx}{\textwidth}{L{4cm}XL{3.6cm}}
+\toprule
+\textbf{Hallazgo} & \textbf{Riesgo} & \textbf{Mejora propuesta} \\
+\midrule
+RN-01 no está en la base: un cliente puede quedar en dos bornes (comprobado en la prueba). & Inconsistencia de planta si falla la validación de la aplicación. & Índice único parcial \texttt{uq\_borne\_cliente} (probado, ver DDL). \\
+Importes en \texttt{float}. & Errores de redondeo en sumas de dinero. & Migrar a \texttt{numeric(10,2)}. \\
+Valores por defecto solo en Python (\texttt{default=}); la base no los conoce. & Un \texttt{INSERT} directo falla o queda incompleto (se comprobó con \texttt{cantidad\_tv}). & Agregar \texttt{server\_default} en los modelos. \\
+\texttt{password\_pppoe} y \texttt{password\_mikrotik} en texto plano. & Exposición de credenciales si se filtra un respaldo. & Cifrado reversible en reposo (pgcrypto o cifrado en la aplicación) y respaldos cifrados. \\
+Campos \texttt{clientes.equipo\_*} duplican \texttt{onus}. & Dos fuentes de verdad sobre el equipo. & Migrar los datos antiguos a \texttt{onus} y eliminarlos. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Sección 2: Implementación de la base de datos}
+\label{sec:ce02-implementacion-bd}
+
+\subsection{Versionado del esquema con Alembic}
+
+El esquema no se crea a mano: se versiona con \textbf{32 migraciones Alembic}
+(14/09/2026 a 18/11/2026) que el contenedor del backend aplica en cada arranque. Cada
+cambio del modelo queda como un archivo revisable, lo que permite reconstruir la
+base en cualquier servidor.
+
+\begin{table}[htbp]
+\centering
+\caption{Hitos del historial de migraciones.}
+\label{tab:ce02-alembic}
+\small
+\begin{tabularx}{\textwidth}{L{2cm}L{3cm}X}
+\toprule
+\textbf{Fecha} & \textbf{Revisión} & \textbf{Cambio} \\
+\midrule
+14/09/2026 & \texttt{17fad11bb7fa} & Esquema base (\emph{baseline}). \\
+17/09/2026 & \texttt{744d882a0b25} & Esquema de empresa de fibra óptica (cajas NAP, bornes). \\
+26/09/2026 & \texttt{d879207fee4f} & Mufas y ubicación de zonas. \\
+02/10/2026 & \texttt{e99e87341b4b} & Número de operación único en pagos. \\
+13/10/2026 & \texttt{32da6de8c64b} & Mensajes masivos de WhatsApp. \\
+21/10/2026 & \texttt{e518239e0ea6} & Jornadas y ubicaciones de vendedores. \\
+31/10/2026 & \texttt{b8f41d7a0c52} & Clientes empresa (RUC). \\
+10/11/2026 & \texttt{a3c7e1f20b48} & Modelo de cuatro roles. \\
+15/11/2026 & \texttt{f2a9c81d5e47} & Lista de corte configurable por zona. \\
+18/11/2026 & \texttt{c3f1a8d27b45} & Marca de cliente migrado. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Entorno de prueba}
+
+Para esta evidencia, el DDL se generó desde los modelos con el dialecto PostgreSQL de
+SQLAlchemy~2.0.30 (equivalente al estado \emph{head} de Alembic) y se ejecutó en un
+contenedor \texttt{postgres:15-alpine} limpio, junto con datos de prueba
+\textbf{anonimizados} y las consultas de verificación. Los tres scripts están en la
+carpeta \texttt{sql/} del proyecto y se reproducen con:
+
+\begin{lstlisting}[style=plano]
+docker run -d --name wisp_bd -e POSTGRES_PASSWORD=test -e POSTGRES_DB=wisp postgres:15-alpine
+docker exec -i wisp_bd psql -U postgres -d wisp < sql/01_ddl.sql
+docker exec -i wisp_bd psql -U postgres -d wisp < sql/02_dml.sql
+docker exec -i wisp_bd psql -U postgres -d wisp < sql/03_consultas.sql
+\end{lstlisting}
+
+\subsection{Script DML (datos de prueba)}
+
+\lstinputlisting[style=sqlwisp,caption={Datos de prueba anonimizados (\texttt{sql/02\_dml.sql}).},label={lst:ce02-dml}]{sql/02_dml.sql}
+
+% ======================================================================
+\section{Sección 3: Consultas y programación en base de datos}
+\label{sec:ce02-consultas-prog}
+
+\subsection{Consultas SQL y resultados}
+
+Las consultas responden preguntas reales del negocio y prueban las restricciones de
+integridad (Q5 y Q6 deben fallar).
+
+\lstinputlisting[style=sqlwisp,caption={Consultas de verificación (\texttt{sql/03\_consultas.sql}).},label={lst:ce02-consultas}]{sql/03_consultas.sql}
+
+\lstinputlisting[style=plano,caption={Resultado de la ejecución en PostgreSQL 15 (18/11/2026).},label={lst:ce02-resultados}]{sql/04_resultado_consultas.txt}
+
+\begin{upeubox}{Lectura de los resultados}
+\begin{itemize}[leftmargin=1.2em]
+  \item \textbf{Q1} identifica al cliente vencido hace 26 días, candidato a corte.
+  \item \textbf{Q2} muestra la ocupación de bornes por caja (5 libres, 2 ocupados, 1 dañado).
+  \item \textbf{Q3} calcula ingresos frente a gastos por mes.
+  \item \textbf{Q5} y \textbf{Q6} confirman que la base rechaza un número de operación
+  repetido (RN-06) y un número de borne duplicado en la misma caja.
+  \item \textbf{Q7} lista las zonas que aún no tienen túnel WireGuard.
+\end{itemize}
+\end{upeubox}
+
+
+% ----------------------------------------------------------------------
+\subsection{Programación en la base de datos: funciones, procedimiento y triggers}
+\label{sec:ce02-programacion}
+
+Hoy toda la lógica vive en el backend. Se incorporan a la base las reglas que no deben
+depender de que cada pantalla las valide bien, porque su incumplimiento corrompe datos
+o deja sin rastro una operación de dinero:
+
+\begin{table}[htbp]
+\centering
+\caption{Objetos programados en la base de datos.}
+\label{tab:ce02-objetos-bd}
+\small
+\begin{tabularx}{\textwidth}{L{3.6cm}L{2cm}X}
+\toprule
+\textbf{Objeto} & \textbf{Tipo} & \textbf{Propósito} \\
+\midrule
+\texttt{sp\_registrar\_pago} & Procedimiento & Valida monto y mes, bloquea la fila del cliente (\texttt{FOR UPDATE}), inserta el pago y, si el cliente estaba suspendido, lo reactiva y lo registra en el historial. Es atómico: o se hace todo, o nada (RN-06, RN-08). \\
+\texttt{fn\_dias\_mora} & Función & Días de atraso de un cliente a una fecha; base del corte automático (RN-07). \\
+\texttt{trg\_auditoria\_pagos} & Trigger & Copia en \texttt{auditoria\_pagos} cada alta, cambio o baja de un pago, con el usuario de base de datos y el antes/después en JSON (RNF-08). \\
+\texttt{trg\_validar\_borne} & Trigger & Impide asignar un cliente a un borne dañado y mantiene el estado \texttt{ocupado}/\texttt{libre} coherente con \texttt{cliente\_id} (RN-01). \\
+\texttt{uq\_borne\_cliente} & Índice único parcial & Un cliente ocupa como máximo un borne (RN-01). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\lstinputlisting[style=sqlwisp,caption={Funciones, procedimiento y triggers (\texttt{sql/05\_programacion.sql}).},label={lst:ce02-programacion}]{sql/05_programacion.sql}
+
+\subsubsection*{Pruebas del motor transaccional}
+
+\lstinputlisting[style=sqlwisp,caption={Casos de prueba (\texttt{sql/07\_pruebas\_programacion.sql}).},label={lst:ce02-pruebas-prog}]{sql/07_pruebas_programacion.sql}
+
+\lstinputlisting[style=plano,caption={Resultado de las pruebas en PostgreSQL 15.},label={lst:ce02-res-prog}]{sql/10_resultado_programacion.txt}
+
+\begin{upeubox}{Lectura de las pruebas}
+\begin{itemize}[leftmargin=1.2em]
+  \item \textbf{P2:} un solo \texttt{CALL} registra el pago, reactiva al cliente suspendido,
+  extiende su vencimiento, deja la reactivación en el historial y queda auditado.
+  \item \textbf{P3:} un mes mal escrito se rechaza y no queda ningún pago a medias.
+  \item \textbf{P4 y P5:} la base impide usar un borne dañado y marca como ocupado el
+  borne que recibe un cliente, aunque la aplicación olvide hacerlo.
+  \item \textbf{P6 y P7:} el rol de reportes no lee credenciales y la aplicación no puede
+  borrar la auditoría (ver \cref{sec:ce02-roles}).
+\end{itemize}
+\end{upeubox}
+
+% ----------------------------------------------------------------------
+\subsection{Planes de ejecución y optimización}
+\label{sec:ce02-optimizacion}
+
+Se midieron las dos consultas más frecuentes del sistema ---la ficha del cliente (su
+historial de pagos) y la búsqueda de candidatos del corte automático--- sobre una carga
+sintética de 50\,000 clientes y 600\,000 pagos, muy por encima del volumen real, para que
+la diferencia sea visible. El análisis mostró que \texttt{pagos.cliente\_id}, la columna
+por la que más se consulta, \textbf{no tiene índice} en el modelo actual.
+
+\begin{table}[htbp]
+\centering
+\caption{Efecto de los índices propuestos (EXPLAIN ANALYZE, PostgreSQL 15).}
+\label{tab:ce02-indices}
+\small
+\begin{tabularx}{\textwidth}{XL{2.6cm}L{2.6cm}L{2.4cm}}
+\toprule
+\textbf{Consulta} & \textbf{Sin índice} & \textbf{Con índice} & \textbf{Mejora} \\
+\midrule
+Historial de pagos de un cliente (\texttt{ix\_pagos\_cliente\_fecha}) & 21,01 ms (lectura secuencial en paralelo de 600\,000 filas) & 0,086 ms (búsqueda por índice) & unas 240 veces \\
+Candidatos a corte (\texttt{ix\_clientes\_estado\_venc}) & 4,24 ms (lectura secuencial de 50\,000 filas) & 0,58 ms (búsqueda por índice) & unas 7 veces \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\lstinputlisting[style=plano,caption={Planes de ejecución antes y después de los índices (\texttt{sql/11\_resultado\_rendimiento.txt}).},label={lst:ce02-planes}]{sql/11_resultado_rendimiento.txt}
+
+% ======================================================================
+\section{Sección 4: Seguridad y administración}
+\label{sec:ce02-seguridad-bd}
+
+\subsection{Usuarios y roles}
+\label{sec:ce02-roles}
+
+En el despliegue actual el backend se conecta con un único usuario que es dueño de
+todas las tablas. Si ese usuario se filtra, se puede borrar o alterar cualquier dato,
+incluida la auditoría. El diseño separa los privilegios en cuatro roles:
+
+\begin{table}[htbp]
+\centering
+\caption{Roles de la base de datos (mínimo privilegio).}
+\label{tab:ce02-roles-bd}
+\small
+\begin{tabularx}{\textwidth}{L{2.6cm}L{1.4cm}X}
+\toprule
+\textbf{Rol} & \textbf{Login} & \textbf{Privilegios} \\
+\midrule
+\texttt{wisp\_owner} & No & Dueño de los objetos; solo lo usan las migraciones de Alembic. \\
+\texttt{wisp\_app} & Sí (backend) & \texttt{SELECT/INSERT/UPDATE/DELETE} sobre las tablas, \texttt{EXECUTE} sobre funciones y procedimientos; \textbf{sin} \texttt{UPDATE/DELETE} sobre la auditoría; máximo 30 conexiones. \\
+\texttt{wisp\_lectura} & Sí (reportes) & Solo las vistas \texttt{v\_clientes\_reporte} y \texttt{v\_ingresos\_mes}, que no exponen credenciales PPPoE ni PIN. \\
+\texttt{wisp\_respaldo} & Sí (copias) & Rol predefinido \texttt{pg\_read\_all\_data}: lee todo, no escribe nada. \\
+\texttt{PUBLIC} & --- & Sin privilegios sobre el esquema \texttt{public}. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\lstinputlisting[style=sqlwisp,caption={Roles y privilegios (\texttt{sql/06\_seguridad.sql}). Las contraseñas son de laboratorio.},label={lst:ce02-roles}]{sql/06_seguridad.sql}
+
+\subsection{Auditoría implementada}
+
+La tabla \texttt{historial} ya registra los eventos de negocio del cliente (activación,
+corte, pago, cambio de plan u ONU) con su autor. Se agrega \texttt{auditoria\_pagos}, que
+registra a nivel de base de datos cada operación sobre los pagos ---el dato económico más
+sensible--- con el usuario de conexión y el contenido completo antes y después del
+cambio. Como la aplicación no puede modificar ni borrar esa tabla (prueba P7), un
+atacante que tome el usuario de la aplicación no puede ocultar sus cambios. Para el resto
+de tablas se recomienda la extensión \texttt{pgaudit} cuando la base pase a DB-01 en el
+centro de datos (\cref{chap:ce03-dc}).
+
+\subsection{Estrategias de respaldo y recuperación}
+
+\begin{table}[H]
+\centering
+\caption{Estrategia de respaldo de la base de datos (coherente con el diseño de centro de datos).}
+\label{tab:ce02-respaldo}
+\small
+\begin{tabularx}{\textwidth}{L{3.4cm}L{3.2cm}X}
+\toprule
+\textbf{Mecanismo} & \textbf{Frecuencia} & \textbf{Detalle} \\
+\midrule
+\texttt{pg\_dump} en formato personalizado (\texttt{-Fc}) & Diario, 03:00 & Hecho con \texttt{wisp\_respaldo}; hoy ya existe un respaldo diario con retención de 30 días en el servidor. \\
+Copia fuera del servidor & Diaria & Al NAS local y cifrada a S3 (\cref{chap:ce03-dc}); hoy es una copia manual semanal. \\
+Archivado de WAL & Continuo, cada 15 min & Permite recuperar a un punto en el tiempo (RPO de 15 minutos o menos). \\
+Réplica en flujo & Continua & Hacia EC2-DR, para la contingencia (RPO de 5 minutos o menos). \\
+Prueba de restauración & Trimestral & Restaurar en una base nueva y comparar conteos y sumas. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Se ejecutó una prueba completa: respaldo con el rol de solo lectura, comprobación de que
+ese rol no puede escribir, restauración en una base nueva (simulando la pérdida total) y
+verificación de integridad.
+
+\lstinputlisting[style=plano,caption={Prueba de respaldo y restauración (\texttt{sql/13\_resultado\_respaldo.txt}).},label={lst:ce02-respaldo}]{sql/13_resultado_respaldo.txt}
+
+\noindent La base restaurada tiene los mismos 50\,004 clientes, 600\,005 pagos, la misma
+suma de montos (29\,400\,245) y los dos triggers. La restauración de unos 4~MB comprimidos
+tomó unos 4~segundos, muy por debajo del RTO de 1~hora fijado para la base de datos.
+
+\subsection{Evidencias de monitoreo}
+
+\lstinputlisting[style=sqlwisp,caption={Consultas de monitoreo (\texttt{sql/09\_monitoreo.sql}).},label={lst:ce02-monitoreo}]{sql/09_monitoreo.sql}
+
+\lstinputlisting[style=plano,caption={Resultado del monitoreo en el entorno de prueba.},label={lst:ce02-res-monitoreo}]{sql/12_resultado_monitoreo.txt}
+
+\noindent Estas consultas se programarán en MON-01 (Zabbix) con umbrales: tasa de
+aciertos de caché por debajo de 99\,\%, más de 25 conexiones de \texttt{wisp\_app}, tamaño
+de la base por encima del 70\,\% del disco de DB-01 y respaldo diario no generado.
+
+\begin{upeubox}{Para pasar a producción}
+Los objetos de este capítulo están probados sobre el esquema real, pero todavía no
+están en el sistema en producción. Para incorporarlos: (1) una migración Alembic con la
+auditoría, los triggers, el procedimiento y los índices; (2) cambiar el
+\texttt{DATABASE\_URL} del backend al rol \texttt{wisp\_app}; (3) usar
+\texttt{wisp\_respaldo} en el respaldo diario; (4) adaptar \texttt{pagos.py} para llamar a
+\texttt{sp\_registrar\_pago}; y (5) migrar los importes a \texttt{numeric(10,2)}
+(\cref{tab:ce02-mejoras-bd}).
+\end{upeubox}
+
+% ======================================================================
+\section{Anexos del entregable}
+\label{sec:ce02-e2-anexos}
+
+\begin{table}[H]
+\centering
+\caption{Scripts y resultados entregados (carpeta \texttt{sql/} del proyecto).}
+\label{tab:ce02-scripts}
+\small
+\begin{tabularx}{\textwidth}{L{5.2cm}X}
+\toprule
+\texttt{01\_ddl.sql} & DDL completo generado desde los modelos (\cref{lst:ce02-ddl}). \\
+\texttt{02\_dml.sql} & Datos de prueba anonimizados. \\
+\texttt{03\_consultas.sql}, \texttt{04\_resultado\_consultas.txt} & Consultas de negocio y resultados. \\
+\texttt{05\_programacion.sql} & Funciones, procedimiento y triggers. \\
+\texttt{06\_seguridad.sql} & Roles, privilegios y vistas. \\
+\texttt{07\_pruebas\_programacion.sql}, \texttt{10\_resultado\_programacion.txt} & Pruebas del motor transaccional. \\
+\texttt{08\_rendimiento.sql}, \texttt{11\_resultado\_rendimiento.txt} & Planes de ejecución. \\
+\texttt{09\_monitoreo.sql}, \texttt{12\_resultado\_monitoreo.txt} & Monitoreo. \\
+\texttt{13\_resultado\_respaldo.txt} & Prueba de respaldo y restauración. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent Pendiente: la evidencia de sustentación (exposición breve ante el docente).
+
+\subsection{Script DDL completo}
+
+
+\lstinputlisting[style=sqlwisp,caption={DDL de la base de datos WISP en PostgreSQL 15 (\texttt{sql/01\_ddl.sql}).},label={lst:ce02-ddl}]{sql/01_ddl.sql}

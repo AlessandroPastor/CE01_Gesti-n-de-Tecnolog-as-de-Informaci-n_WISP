@@ -1,0 +1,463 @@
+% ======================================================================
+% capitulos/linea2/capitulo6.tex
+% ----------------------------------------------------------------------
+% LÍNEA CE02 — INGENIERÍA DE SOFTWARE
+% Evidencia CE0211: Especificación de requerimientos validada
+% Fuente: WISP_Entregable1_Linea3.docx + verificación contra el código real
+%         (repositorio Wisp, rama main, 18/11/2026)
+% ======================================================================
+\section{Sección 1: Especificación de Requerimientos}
+\label{chap:ce02-requerimientos}
+
+Esta sección corresponde a la
+evidencia \textbf{CE0211 — Especificación de requerimientos validada}. Define qué
+debe hacer el \textbf{Sistema de Gestión Integral para ISP de Fibra Óptica
+Multi-Zona} (en adelante, \emph{el sistema}) a partir del modelado de procesos TO-BE
+(\cref{chap:procesos}) y de la solución TIC (\cref{chap:soluciontic}) de la línea
+CE01.
+
+\begin{upeubox}{Fundamento metodológico}
+La especificación sigue la estructura de la norma ISO/IEC/IEEE~29148:2018
+(\emph{Requirements engineering}): requerimientos funcionales agrupados por módulo,
+atributos de calidad (no funcionales), reglas de negocio, restricciones e historias
+de usuario con criterios de aceptación verificables. Cada requerimiento tiene un
+identificador único que se rastrea hasta la arquitectura, el diseño y la base de
+datos (\cref{sec:ce02-trazabilidad}).
+\end{upeubox}
+
+\begin{upeubox}{Especificación contrastada con el producto real}
+A diferencia de un SRS escrito solo en papel, esta versión se \textbf{contrastó con el
+código fuente} del repositorio del sistema (rama \texttt{main} al 18/11/2026). Cada
+requerimiento indica su estado: \textbf{Impl.} (implementado, con evidencia en el
+código), \textbf{Parcial} (implementado en parte o de otra forma) o
+\textbf{Pend.} (pendiente, planificado para el semestre~2). Así el documento no
+declara como hecho algo que el producto todavía no hace.
+\end{upeubox}
+
+% ======================================================================
+\subsection{Contexto, problema y usuarios}
+\label{sec:ce02-contexto}
+
+WISP es un proveedor de internet por fibra óptica con sede en Juliaca (Puno) que
+atiende a sus clientes en 13 zonas rurales y periurbanas, cada una con su propio
+router MikroTik RB4011 y una OLT GPON. Antes del sistema, el proceso completo
+—captación, instalación, inventario de equipos, cobranza, cortes y comunicación con
+el cliente— se gestionaba de forma manual y dispersa (cuadernos, hojas de cálculo,
+grupos de WhatsApp y acceso directo a cada router). Esto provocaba errores de
+coordinación entre ventas y técnicos, pérdida de trazabilidad de qué borne y qué
+equipo quedó en cada domicilio, retrasos en la cobranza y cortes inconsistentes.
+
+\begin{table}[htbp]
+\centering
+\caption{Usuarios del sistema (roles reales implementados).}
+\label{tab:ce02-roles}
+\small
+\begin{tabularx}{\textwidth}{L{3.2cm}L{3cm}X}
+\toprule
+\textbf{Rol} & \textbf{Canal} & \textbf{Responsabilidad principal} \\
+\midrule
+Administrador (\texttt{admin}) & Panel web & Gerente/ingeniero: valida ventas, administra zonas, red (WireGuard, MikroTik), planes, inventario, cobranza y usuarios. \\
+Técnico (\texttt{tecnico}) & App móvil & Instala en campo (caja NAP, borne, ONU, fotos), atiende averías y retiros, administra su inventario asignado. \\
+Vendedor de campo (\texttt{vendedor\_campo}) & App móvil & Capta clientes (datos, GPS, fotos) y registra su jornada y recorrido. \\
+Atención al cliente (\texttt{atencion\_cliente}) & Panel web & Caja y mostrador: registra pagos, emite recibos y consulta clientes. \\
+Cliente final & App móvil (PIN) y WhatsApp & Consulta su cuenta y pagos; recibe avisos de cobro y corte. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent\textit{Nota de evolución:} el borrador inicial consideraba tres roles
+internos (Gerente/Ingeniero, Vendedora, Técnico). Durante la validación se separó el
+personal de caja como \emph{Atención al cliente} y se renombró la vendedora como
+\emph{Vendedor de campo}; el modelo final tiene exactamente cuatro roles internos
+(\texttt{RolUsuario} en \texttt{backend/app/models.py}).
+
+% ======================================================================
+\subsection{Requerimientos funcionales}
+\label{sec:ce02-rf}
+
+Los requerimientos se agrupan por módulo siguiendo el flujo del negocio: información
+pública, venta y validación, instalación en campo, inventario, cobranza, cortes y
+comunicación con el cliente.
+
+{\small
+\begin{longtable}{L{1.3cm}L{9.6cm}C{1.4cm}}
+\caption{Requerimientos funcionales y su estado de implementación.}
+\label{tab:ce02-rf}\\
+\toprule
+\textbf{Código} & \textbf{Descripción} & \textbf{Estado} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Código} & \textbf{Descripción} & \textbf{Estado} \\
+\midrule
+\endhead
+\midrule \multicolumn{3}{r}{\textit{Continúa en la página siguiente}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+\multicolumn{3}{l}{\textbf{A. Portal web público}} \\
+RF-01 & Mostrar sin autenticación las zonas con cobertura del servicio. & Impl. \\
+RF-02 & Mostrar sin autenticación los planes disponibles (velocidad y precio). & Impl. \\
+\multicolumn{3}{l}{\textbf{B. Usuarios y roles}} \\
+RF-03 & Inicio de sesión diferenciado para los cuatro roles internos y para el cliente (PIN en la app). & Impl. \\
+RF-04 & Restringir cada módulo según el rol autenticado (RBAC). & Impl. \\
+\multicolumn{3}{l}{\textbf{C. Registro de ventas (vendedor de campo)}} \\
+RF-05 & Registrar DNI/RUC, nombres, teléfono y WhatsApp del cliente, con autocompletado del nombre por consulta de DNI/RUC. & Impl. \\
+RF-06 & Capturar automáticamente las coordenadas GPS de la vivienda. & Impl. \\
+RF-07 & Adjuntar una o más fotografías de la fachada. & Impl. \\
+RF-08 & Registrar dos o más fechas posibles propuestas para la visita técnica. & Pend. \\
+\multicolumn{3}{l}{\textbf{D. Validación de ventas (administrador)}} \\
+RF-09 & Listar las solicitudes pendientes de aprobación. & Impl. \\
+RF-10 & Aprobar o rechazar una solicitud registrando el motivo del rechazo. & Impl. \\
+RF-11 & Al aprobar, publicar la orden en el panel del técnico asignado a la zona del cliente. & Impl. \\
+\multicolumn{3}{l}{\textbf{E. Coordinación de la visita (técnico)}} \\
+RF-12 & El técnico ve únicamente las órdenes aprobadas de sus zonas asignadas. & Impl. \\
+RF-13 & Enviar desde el sistema una plantilla de WhatsApp para coordinar la fecha de instalación. & Pend. \\
+RF-14 & Registrar la fecha finalmente acordada con el cliente. & Pend. \\
+\multicolumn{3}{l}{\textbf{F. Registro de planta externa (técnico)}} \\
+RF-15 & Registrar la caja NAP y el borne utilizados en la instalación (la mufa y la corrida de origen se registran en el mapa de red). & Parcial \\
+RF-16 & Validar que el borne esté libre antes de asignarlo. & Impl. \\
+RF-17 & Vincular automáticamente el borne con el cliente. & Impl. \\
+RF-18 & Mostrar el mapa de ocupación de bornes de cada caja (libre / ocupado / dañado). & Impl. \\
+\multicolumn{3}{l}{\textbf{G. Registro del equipo instalado (técnico)}} \\
+RF-19 & Seleccionar la ONU desde el inventario asignado al técnico. & Impl. \\
+RF-20 & Registrar marca y estándar WiFi (WiFi~5 / WiFi~6) del equipo. & Impl. \\
+RF-21 & Registrar número de serie y MAC, de forma manual o escaneando el código con la cámara. & Impl. \\
+RF-22 & Adjuntar fotografías de evidencia de la instalación. & Impl. \\
+RF-23 & Al cerrar la instalación, pasar la ONU a estado \emph{instalado} y descontarla del inventario del técnico. & Impl. \\
+\multicolumn{3}{l}{\textbf{H. Inventario de equipos (administrador)}} \\
+RF-24 & Registrar nuevas ONU escaneando su código (serie y MAC). & Impl. \\
+RF-25 & Asignar ONU a un técnico específico. & Impl. \\
+RF-26 & Consultar el stock por técnico y por estado (almacén, asignado, instalado, dañado, perdido). & Impl. \\
+RF-27 & Reportar una ONU como dañada indicando el motivo. & Parcial \\
+RF-28 & Al reportarse un equipo dañado, notificar al administrador. & Pend. \\
+\multicolumn{3}{l}{\textbf{I. Pagos y facturación}} \\
+RF-29 & Registrar pagos (efectivo, Yape, transferencia), incluidos adelantos de varios meses con descuento. & Impl. \\
+RF-30 & Listar clientes con pagos vencidos o próximos a vencer. & Impl. \\
+RF-31 & Generar automáticamente un recibo en PDF por cada cobro. & Impl. \\
+RF-32 & Impedir dos pagos con el mismo número de operación. & Impl. \\
+\multicolumn{3}{l}{\textbf{J. Cortes de servicio}} \\
+RF-33 & Cortar manualmente el servicio de un cliente desde el sistema (address-list en el MikroTik de la zona). & Impl. \\
+RF-34 & Ejecutar cortes automáticos diarios para clientes vencidos, respetando días de gracia y compromisos de pago. & Impl. \\
+RF-35 & Reactivar automáticamente el servicio al registrar el pago. & Impl. \\
+\multicolumn{3}{l}{\textbf{K. Notificaciones por WhatsApp}} \\
+RF-36 & Enviar un mensaje de bienvenida al cerrar la instalación (plan, precio, fecha de pago). & Pend. \\
+RF-37 & Enviar recordatorios automáticos de pago antes del vencimiento. & Impl. \\
+RF-38 & Avisar al cliente antes de ejecutar el corte por falta de pago. & Impl. \\
+\multicolumn{3}{l}{\textbf{L. Bot de WhatsApp con IA — validación de pagos}} \\
+RF-39 & Recibir la fotografía de un comprobante (Yape/transferencia) enviada por el cliente. & Pend. \\
+RF-40 & Solicitar DNI o nombre para ubicar al cliente. & Pend. \\
+RF-41 & Extraer con IA (OCR/visión) monto, fecha y número de operación. & Pend. \\
+RF-42 & Validar que el comprobante no esté registrado (duplicados). & Pend. \\
+RF-43 & Confirmar el pago y enviar el recibo automáticamente. & Pend. \\
+\multicolumn{3}{l}{\textbf{M. Autoservicio del cliente}} \\
+RF-44 & Consultar la fecha del próximo pago. & Parcial \\
+RF-45 & Consultar si tiene cuotas vencidas. & Parcial \\
+RF-46 & Consultar el historial de pagos y recibos. & Parcial \\
+\multicolumn{3}{l}{\textbf{N. Requerimientos incorporados durante la validación}} \\
+RF-47 & Registrar averías (motivo, caja, borne, potencia óptica), asignarlas a un técnico y cerrarlas con diagnóstico y fotos. & Impl. \\
+RF-48 & Gestionar órdenes de retiro de equipos (ONU, roseta, patchcord). & Impl. \\
+RF-49 & Registrar la jornada del vendedor de campo (inicio/fin, recorrido GPS, pasaje y reintegros). & Impl. \\
+RF-50 & Enviar mensajes masivos de WhatsApp por zona y estado, con registro por destinatario. & Impl. \\
+RF-51 & Registrar gastos operativos por zona y mostrar ingresos frente a gastos. & Impl. \\
+RF-52 & Gestionar clientes satelitales (Starlink) sin zona ni MikroTik. & Impl. \\
+RF-53 & Administrar el túnel WireGuard de cada zona (alta/baja de peers, estado del enlace) y una terminal RouterOS restringida. & Impl. \\
+RF-54 & Dibujar mufas, corridas de fibra y cajas NAP sobre el mapa de cada zona. & Impl. \\
+RF-55 & Sincronizar los planes como perfiles PPPoE en los MikroTik de todas las zonas. & Impl. \\
+RF-56 & Mostrar el estado de la sesión PPPoE de un cliente en tiempo real. & Impl. \\
+\end{longtable}
+}
+
+\noindent Resumen: de 56 requerimientos funcionales, \textbf{41 están implementados},
+\textbf{5 parcialmente} y \textbf{10 pendientes}. Los requerimientos RF-44 a RF-46 se
+resolvieron mediante la \emph{App del cliente} (consulta de cuenta y pagos con PIN) en
+lugar del bot conversacional; el bot con IA (RF-39 a RF-43) se reprograma para el
+semestre~2 (ver ADR-06 en el \cref{chap:ce02-arquitectura}).
+
+% ======================================================================
+\subsection{Requerimientos no funcionales}
+\label{sec:ce02-rnf}
+
+Los requerimientos no funcionales describen \emph{cómo} debe comportarse el sistema, más
+allá de lo que hace. Se organizan según las características de calidad de la norma
+ISO/IEC~25010 (seguridad, fiabilidad, eficiencia, usabilidad, mantenibilidad y
+portabilidad) y se priorizaron a partir de las condiciones reales de WISP: el sistema
+maneja datos personales y dinero, por lo que la seguridad y la trazabilidad pesan más; el
+técnico trabaja en zonas rurales con señal intermitente, por lo que la usabilidad en el
+celular es crítica; y una MYPE con un solo administrador necesita que el sistema se
+recupere y se mantenga sin depender de una sola persona.
+
+Cada requerimiento indica cómo se verifica, para que pueda comprobarse con una prueba y no
+quede como una intención. La verificación de RNF-10 (recuperación) ya se ejecutó en
+laboratorio en el entregable de plataforma de datos (\cref{chap:ce02-datos}).
+
+\begin{table}[H]
+\centering
+\caption{Requerimientos no funcionales (atributos de calidad ISO/IEC~25010).}
+\label{tab:ce02-rnf}
+\small
+\begin{tabularx}{\textwidth}{L{1.4cm}L{2.3cm}XL{3.3cm}}
+\toprule
+\textbf{Código} & \textbf{Atributo} & \textbf{Requerimiento} & \textbf{Cómo se verifica} \\
+\midrule
+RNF-01 & Seguridad & Autenticación con JWT y control de acceso por rol en cada endpoint. & Pruebas de API con roles distintos. \\
+RNF-02 & Seguridad & Contraseñas con bcrypt; comunicaciones solo por HTTPS/TLS; freno a la fuerza bruta en el login (8 intentos en 5 min, bloqueo de 15 min). & Revisión de configuración y prueba de bloqueo. \\
+RNF-03 & Privacidad & Tratamiento de DNI, ubicación y fotos conforme a la Ley N.\textsuperscript{o}~29733; el token de consulta de DNI vive solo en el servidor. & Auditoría de datos personales. \\
+RNF-04 & Disponibilidad & Recordatorios y cortes automáticos operan a diario (08:00 y 09:00, hora de Lima) sin intervención humana. & Registro del planificador. \\
+RNF-05 & Usabilidad & La app del técnico funciona en smartphones de gama media y con conectividad intermitente. & Prueba en campo. \\
+RNF-06 & Rendimiento & Consultas de borne y estado del cliente en menos de 2~s; el estado de WireGuard se guarda en caché 120~s para no saturar la VPS. & Medición de tiempos de respuesta. \\
+RNF-07 & Confiabilidad & Ante duda en un comprobante, el caso pasa a revisión humana (aplica al bot del semestre~2). & Caso de prueba de baja confianza. \\
+RNF-08 & Trazabilidad & Todo cambio relevante (activación, corte, pago, cambio de plan u ONU) queda en el historial con usuario y fecha. & Consulta de la tabla \texttt{historial}. \\
+RNF-09 & Escalabilidad & Agregar zonas y clientes sin rediseño (zona = registro + peer WireGuard). & Alta de una zona de prueba. \\
+RNF-10 & Recuperación & Respaldo diario de la base de datos con retención de 30 días y copia fuera del servidor. & Prueba de restauración. \\
+RNF-11 & Mantenibilidad & Backend modular por dominio (19 routers) y esquema versionado con migraciones Alembic. & Revisión de código. \\
+RNF-12 & Portabilidad & Todo el sistema se despliega con Docker Compose en cualquier servidor Linux. & Despliegue en un equipo limpio. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\subsection{Reglas de negocio}
+\label{sec:ce02-rn}
+
+Las reglas de negocio son las condiciones propias de la operación de WISP que el sistema
+debe hacer cumplir siempre, sin importar qué usuario opera la pantalla. Se obtuvieron del
+modelado de procesos TO-BE (\cref{chap:procesos}) y de la validación con el personal; por
+ejemplo, que un borne no puede tener dos clientes, que un técnico solo instala equipos de
+su propio inventario o que el aviso de corte se envía \emph{antes} de cortar, para que el
+cliente lo reciba mientras todavía tiene internet.
+
+La tabla indica, para cada regla, dónde se garantiza. Las que protegen la integridad de los
+datos se refuerzan en la propia base de datos ---restricciones \texttt{UNIQUE}, triggers e
+índices probados en el entregable de plataforma de datos---, para que se cumplan aunque una
+pantalla tenga un error; las demás las aplica el backend según el rol y el estado del
+cliente.
+
+\begin{table}[H]
+\centering
+\caption{Reglas de negocio y dónde se hacen cumplir.}
+\label{tab:ce02-reglas}
+\small
+\begin{tabularx}{\textwidth}{L{1.2cm}XL{3.4cm}}
+\toprule
+\textbf{Código} & \textbf{Regla} & \textbf{Dónde se garantiza} \\
+\midrule
+RN-01 & Un borne de una caja NAP no puede estar asignado a más de un cliente. & Aplicación + base de datos: índice \texttt{uq\_borne\_cliente} y trigger \texttt{trg\_validar\_borne} (\cref{sec:ce02-programacion}). \\
+RN-02 & Un técnico solo instala equipos de su propio inventario asignado. & Aplicación. \\
+RN-03 & Una instalación no se cierra sin fotos de evidencia y número de serie de la ONU, salvo clientes \emph{migrados}. & Aplicación. \\
+RN-04 & Un técnico solo ve y atiende órdenes de sus zonas asignadas. & Aplicación (\texttt{tecnico\_zona}). \\
+RN-05 & Una venta debe ser aprobada por el administrador antes de llegar a un técnico. & Aplicación (estado del cliente). \\
+RN-06 & No pueden existir dos pagos con el mismo número de operación. & Base de datos (\texttt{UNIQUE}). \\
+RN-07 & El corte automático se ejecuta solo si se superan los días de gracia configurados y no hay compromiso de pago vigente. & Planificador. \\
+RN-08 & Al registrar el pago de un cliente cortado, el servicio se reactiva automáticamente. & Aplicación + MikroTik; en BD, procedimiento \texttt{sp\_registrar\_pago}. \\
+RN-09 & El aviso de corte por WhatsApp se envía \emph{antes} de cortar, para que el cliente lo reciba con internet. & Aplicación. \\
+RN-10 & La marca de cliente \emph{migrado} solo la pone quien registra desde el panel, nunca el técnico desde la app. & Aplicación. \\
+RN-11 & El usuario y la contraseña PPPoE salen siempre del DNI (nunca del RUC, que es público). & Aplicación. \\
+RN-12 & Solo el administrador ve la configuración de red (túnel, router, IP) y ejecuta cortes manuales. & Aplicación (RBAC). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\subsection{Restricciones del sistema}
+\label{sec:ce02-restricciones}
+
+\begin{itemize}
+  \item \textbf{Presupuesto de MYPE:} se prioriza una arquitectura simple y de bajo
+  costo operativo (un servidor en la oficina y una VPS pequeña) frente a soluciones
+  de alta complejidad.
+  \item \textbf{Conectividad de campo:} los técnicos trabajan en zonas rurales con
+  cobertura móvil intermitente.
+  \item \textbf{Infraestructura heredada:} cada zona ya opera con un MikroTik y
+  convenciones propias (nombres de pool PPPoE y de la lista de corte distintos por
+  zona); el sistema debe adaptarse sin reconfigurar la red de golpe.
+  \item \textbf{Sin IP pública en la oficina:} el sistema se publica mediante un túnel
+  de salida (Cloudflare Tunnel) y la red se gestiona a través de una VPS con WireGuard.
+  \item \textbf{Marco legal:} Ley N.\textsuperscript{o}~29733 de Protección de Datos
+  Personales y su reglamento.
+  \item \textbf{Mensajería:} la integración de WhatsApp depende de una sesión
+  vinculada y de las políticas de la plataforma (riesgo de bloqueo por envíos masivos).
+\end{itemize}
+
+% ======================================================================
+\subsection{Historias de usuario y criterios de aceptación}
+\label{sec:ce02-hu}
+
+Las historias siguen el formato \emph{Como [rol], quiero [acción], para [beneficio]}
+con criterios de aceptación verificables (enfoque \emph{Given/When/Then} resumido).
+
+\newcommand{\historia}[4]{%
+\begin{tcolorbox}[enhanced,breakable,colback=white,colframe=upeublue!60,
+  boxrule=0.5pt,arc=1pt,left=6pt,right=6pt,top=4pt,bottom=4pt,
+  title={\small\textbf{#1} --- #2},coltitle=upeublue,colbacktitle=upeublue!8]
+\small #3
+
+\smallskip\textbf{Criterios de aceptación:}
+\begin{itemize}[leftmargin=1.2em,itemsep=0pt]
+#4
+\end{itemize}
+\end{tcolorbox}}
+
+\historia{HU-01}{Vendedor de campo · RF-05 a RF-07}
+{Como vendedor de campo, quiero registrar los datos, la ubicación y las fotos de un
+cliente potencial, para iniciar su contratación sin papeles.}
+{\item DNI/RUC, nombre y teléfono son obligatorios; al escribir el DNI el nombre se autocompleta.
+ \item Las coordenadas se toman del GPS del dispositivo, no se escriben a mano.
+ \item Se adjunta al menos una foto de la fachada.
+ \item Al guardar, el cliente queda en estado \texttt{pendiente\_aprobacion}.}
+
+\historia{HU-02}{Administrador · RF-09 a RF-11}
+{Como administrador, quiero aprobar o rechazar las ventas registradas, para asegurar
+que los datos son correctos antes de enviar un técnico.}
+{\item El panel lista los clientes en \texttt{pendiente\_aprobacion}.
+ \item Aprobar cambia el estado a \texttt{aprobado}; rechazar exige un motivo.
+ \item Al aprobar, la orden aparece en la app del técnico asignado a esa zona.}
+
+\historia{HU-03}{Técnico · RF-12}
+{Como técnico, quiero ver solo las instalaciones de mis zonas, para saber qué me
+corresponde sin depender de mensajes externos.}
+{\item El listado filtra por las zonas asignadas en \texttt{tecnico\_zona}.
+ \item Cada orden muestra los datos cargados por el vendedor y su ubicación en el mapa.}
+
+\historia{HU-04}{Técnico · RF-15 a RF-18}
+{Como técnico, quiero registrar la caja NAP y el borne que uso, para dejar constancia
+exacta de la conexión física del cliente.}
+{\item El sistema muestra los bornes de la caja diferenciando libres, ocupados y dañados.
+ \item No se puede elegir un borne ocupado.
+ \item Al confirmar, el borne queda vinculado al cliente y en estado \texttt{ocupado}.}
+
+\historia{HU-05}{Técnico · RF-19 a RF-23}
+{Como técnico, quiero registrar la ONU que dejo instalada desde mi inventario, para que
+el sistema controle el stock y la trazabilidad por número de serie.}
+{\item Solo aparecen ONU con estado \texttt{asignado\_tecnico} a ese técnico.
+ \item La serie/MAC se puede escanear con la cámara.
+ \item Al cerrar la instalación, la ONU pasa a \texttt{instalado} y el cliente a \texttt{activo}.}
+
+\historia{HU-06}{Técnico · RF-47}
+{Como técnico, quiero atender averías con diagnóstico, potencia óptica y fotos, para
+resolverlas y dejar evidencia del trabajo.}
+{\item La avería pasa por \texttt{pendiente} $\rightarrow$ \texttt{asignada} $\rightarrow$ \texttt{en\_proceso} $\rightarrow$ \texttt{resuelta}.
+ \item Si se reemplaza la ONU, se registran la retirada y la nueva.}
+
+\historia{HU-07}{Administrador · RF-24 a RF-26}
+{Como administrador, quiero registrar y asignar ONU escaneando su código, para
+controlar el inventario sin digitar cada número de serie.}
+{\item Al escanear, el sistema completa la serie y permite corregirla si la lectura falla.
+ \item El stock se consulta por técnico y por estado.}
+
+\historia{HU-08}{Atención al cliente · RF-29 a RF-32}
+{Como personal de atención, quiero registrar pagos y emitir el recibo, para cobrar en
+mostrador de forma rápida y sin errores.}
+{\item Se puede registrar un adelanto de varios meses con un solo recibo.
+ \item Un número de operación repetido se rechaza.
+ \item Si el cliente estaba cortado, el servicio se reactiva al registrar el pago.}
+
+\historia{HU-09}{Administrador · RF-33 a RF-35}
+{Como administrador, quiero que los cortes por mora sean automáticos y poder cortar
+manualmente, para gestionar la cobranza sin entrar a cada router.}
+{\item Cada día a las 09:00 se cortan los clientes vencidos más allá de los días de gracia.
+ \item Se respetan los compromisos de pago vigentes.
+ \item El corte agrega la IP del cliente a la lista de corte configurada para su zona.}
+
+\historia{HU-10}{Cliente · RF-37, RF-38}
+{Como cliente, quiero recibir avisos antes del vencimiento y antes del corte, para
+pagar a tiempo y no quedarme sin servicio por olvido.}
+{\item El recordatorio se envía unos días antes del vencimiento (08:00).
+ \item El aviso de corte llega antes de que se ejecute el corte.}
+
+\historia{HU-11}{Cliente · RF-44 a RF-46}
+{Como cliente, quiero consultar en la app cuándo vence mi servicio y mis pagos, para
+resolver mis dudas sin llamar a la empresa.}
+{\item El cliente entra con su PIN.
+ \item Ve su plan, el estado de su servicio, su fecha de vencimiento y el historial de pagos.}
+
+\historia{HU-12}{Vendedor de campo · RF-49}
+{Como vendedor de campo, quiero registrar mi jornada y recorrido, para que la empresa
+vea mi trabajo y me reintegre el pasaje.}
+{\item La jornada guarda el punto de inicio, los puntos del recorrido y el de fin.
+ \item El administrador ve el recorrido en el mapa y marca el reintegro.}
+
+% ======================================================================
+\subsection{Validación con los interesados}
+\label{sec:ce02-validacion}
+
+La especificación y el prototipo (\cref{chap:ce02-prototipo}) se revisaron con los
+perfiles de usuario de WISP (gerencia/ingeniería, ventas, técnico de campo y atención).
+Los cambios acordados ya forman parte de este documento:
+
+\begin{itemize}
+  \item La ubicación se captura por GPS y no como texto, para evitar errores de tipeo (RF-06).
+  \item El técnico pidió ver la caja NAP como un mapa visual de bornes y no como lista (RF-18).
+  \item El administrador pidió que, al escanear un equipo, el dato leído se muestre
+  de inmediato para corregirlo si la lectura falla (RF-24).
+  \item Se agregaron los módulos de averías, retiros, jornadas, mensajes masivos,
+  gastos y clientes satelitales (RF-47 a RF-52), que el negocio necesitaba y no
+  estaban en el borrador.
+  \item El cliente prefirió una app con su cuenta en lugar de esperar al bot; el bot
+  con IA queda para una iteración posterior.
+\end{itemize}
+
+\begin{table}[htbp]
+\centering
+\caption{Acta de validación de requerimientos (Anexo de la evidencia CE0211).}
+\label{tab:ce02-acta}
+\small
+\begin{tabularx}{\textwidth}{L{3.6cm}X}
+\toprule
+\textbf{Campo} & \textbf{Detalle} \\
+\midrule
+Proyecto & Sistema de Gestión Integral para ISP de Fibra Óptica Multi-Zona (WISP) \\
+Objetivo de la sesión & Validar la especificación de requerimientos y el prototipo navegable. \\
+Fecha y lugar & \rule{4cm}{0.4pt} \quad Oficina central de WISP, Juliaca \\
+Participantes & Gerente/Ingeniero, vendedor de campo, técnico de campo, personal de atención, equipo del proyecto \\
+Resultado & Requerimientos aprobados con las observaciones listadas arriba. \\
+\bottomrule
+\end{tabularx}
+
+\medskip
+\begin{tabularx}{\textwidth}{XXX}
+\rule{4.2cm}{0.4pt} & \rule{4.2cm}{0.4pt} & \rule{4.2cm}{0.4pt} \\
+Gerente / Ingeniero & Técnico de campo & Vendedor de campo \\
+\end{tabularx}
+\end{table}
+
+\begin{upeubox}{Pendiente antes de la entrega}
+El acta debe completarse con la fecha real de la sesión y las firmas de los
+participantes. Un acta sin firmas no se considera evidencia de validación.
+\end{upeubox}
+
+% ======================================================================
+\subsection{Matriz de trazabilidad de requerimientos}
+\label{sec:ce02-trazabilidad}
+
+{\small
+\begin{longtable}{L{2.5cm}L{1.4cm}L{4.6cm}L{4.4cm}}
+\caption{Trazabilidad requerimiento $\rightarrow$ historia $\rightarrow$ componente $\rightarrow$ diseño/datos.}
+\label{tab:ce02-trazabilidad}\\
+\toprule
+\textbf{Requerimientos} & \textbf{HU} & \textbf{Componente (router / pantalla)} & \textbf{Diseño y datos} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Requerimientos} & \textbf{HU} & \textbf{Componente (router / pantalla)} & \textbf{Diseño y datos} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+RF-01, RF-02 & --- & Sitio público (\texttt{web/}), \texttt{zonas.py} (\texttt{/publicas}) & Tablas \texttt{zonas}, \texttt{planes} \\
+RF-03, RF-04 & --- & \texttt{auth.py}, \texttt{cliente\_app.py} & Tabla \texttt{usuarios}; \texttt{clientes.pin\_app} \\
+RF-05 a RF-07 & HU-01 & \texttt{clientes.py}, \texttt{consultas.py}; app \texttt{(vendedor)/nuevo-cliente} & Secuencia de venta; tabla \texttt{clientes} \\
+RF-09 a RF-11 & HU-02 & \texttt{clientes.py}; panel \texttt{AprobarClienteDialog} & Estados del cliente \\
+RF-12 & HU-03 & \texttt{clientes.py}; app \texttt{(tecnico)/instalaciones} & Tabla \texttt{tecnico\_zona} \\
+RF-15 a RF-18 & HU-04 & \texttt{cajas\_nap.py}, \texttt{mufas.py}; app \texttt{(tecnico)/instalar} & Secuencia de instalación; tablas \texttt{cajas\_nap}, \texttt{bornes} \\
+RF-19 a RF-26 & HU-05, HU-07 & \texttt{onus.py}; app \texttt{escanear-equipo}, \texttt{inventario} & Estados de la ONU; tabla \texttt{onus} \\
+RF-29 a RF-32 & HU-08 & \texttt{pagos.py}, \texttt{recibos.py} & Tabla \texttt{pagos} (\texttt{UNIQUE numero\_operacion}) \\
+RF-33 a RF-35 & HU-09 & \texttt{clientes.py}, \texttt{scheduler.py} & Secuencia de corte; tabla \texttt{historial} \\
+RF-37, RF-38, RF-50 & HU-10 & \texttt{whatsapp.py}, servicio \texttt{whatsapp/} & Tablas \texttt{mensajes\_masivos*} \\
+RF-44 a RF-46 & HU-11 & \texttt{cliente\_app.py}; app \texttt{(cliente)/} & Tablas \texttt{clientes}, \texttt{pagos} \\
+RF-47, RF-48 & HU-06 & \texttt{averias.py}, \texttt{ordenes\_retiro.py}, \texttt{evidencias.py} & Tablas \texttt{averias}, \texttt{ordenes\_retiro}, \texttt{evidencias} \\
+RF-49 & HU-12 & \texttt{jornadas.py}; app \texttt{(vendedor)/jornada} & Tablas \texttt{jornadas\_vendedor}, \texttt{ubicaciones\_vendedor} \\
+RF-51 & --- & \texttt{gastos.py}, \texttt{dashboard.py} & Tabla \texttt{gastos} \\
+RF-53, RF-55, RF-56 & --- & \texttt{zonas.py}, \texttt{planes.py} & Despliegue (WireGuard); tabla \texttt{zonas} \\
+\end{longtable}
+}

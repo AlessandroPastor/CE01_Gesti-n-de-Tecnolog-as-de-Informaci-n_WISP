@@ -1,0 +1,12 @@
+--- B1: respaldo con el rol wisp_respaldo (solo lectura)
+inicio 04:34:17
+archivo 4222044 bytes
+fin 04:34:17
+--- B2: el rol de respaldo no puede escribir
+ERROR:  permission denied for table pagos
+--- B3: restauración en una base nueva (simula pérdida total)
+inicio 04:34:18
+fin 04:34:22
+--- B4: verificación de integridad (original vs restaurada)
+wisp|50004|600005|1|29400245|2
+wisp_restaurada|50004|600005|1|29400245|2

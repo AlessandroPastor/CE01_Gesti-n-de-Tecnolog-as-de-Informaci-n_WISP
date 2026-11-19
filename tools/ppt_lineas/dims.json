@@ -1,0 +1,282 @@
+{
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/cap_panel_login.png": [
+1366,
+900
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/cap_sitio_movil.png": [
+390,
+844
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/cap_sitio_publico.png": [
+1366,
+900
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/casos_uso.png": [
+1421,
+3036
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/clases_dominio.png": [
+3762,
+4154
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/comp_conceptual.png": [
+3764,
+1854
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/d01_mapa_negocio.png": [
+1568,
+672
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/d02_venta_instalacion.png": [
+1568,
+876
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/d03_cobranza_corte.png": [
+1568,
+840
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/d04_averias_retiros.png": [
+1568,
+438
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/d05_jornada_vendedor.png": [
+1568,
+1042
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/d06_roles_modulos.png": [
+1568,
+354
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/d07_app_movil.png": [
+1568,
+752
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/d08_panel_web.png": [
+1568,
+1010
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/d09_alta_zona_wireguard.png": [
+1568,
+780
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/desp_conceptual.png": [
+3760,
+1734
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/est_cliente.png": [
+1395,
+1819
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/est_equipo.png": [
+1226,
+1292
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/est_orden.png": [
+1092,
+1553
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/flujo_navegacion.png": [
+3036,
+2675
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/proto_bot_whatsapp.png": [
+2880,
+1720
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/proto_coordinar_visita.png": [
+2880,
+1720
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/proto_dashboard_tecnico.png": [
+2880,
+1720
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/proto_inventario.png": [
+2880,
+1720
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/proto_pagos_cortes.png": [
+2880,
+1720
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/proto_panel_gerencia.png": [
+2880,
+1720
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/proto_panel_vendedora.png": [
+2880,
+1720
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/proto_portal.png": [
+2880,
+1720
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/proto_registrar_instalacion.png": [
+2880,
+1720
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/proto_registro_cliente.png": [
+2880,
+1720
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/seq_corte.png": [
+2375,
+2140
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/seq_instalacion.png": [
+2511,
+1952
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/seq_pago.png": [
+2860,
+2450
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/seq_venta.png": [
+3096,
+2172
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/calidad/commits_dia.png": [
+1600,
+640
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/calidad/rep-10.png": [
+910,
+1287
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p01_dashboard.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p02_clientes.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p03_cliente_detalle.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p04_zonas.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p05_zona_detalle.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p06_cajas_nap.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p07_inventario.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p08_averias.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p09_pagos.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p10_planes.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p11_usuarios.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p12_roles.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p13_reporte_caja.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/linea2/panel/p14_pendientes.png": [
+2160,
+1350
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f10_1.png": [
+1371,
+747
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f10_2.png": [
+1802,
+1026
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f10_3.png": [
+1536,
+586
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f10_4.png": [
+1474,
+721
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f10_5.png": [
+1666,
+574
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f11_1.png": [
+1518,
+893
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f11_2.png": [
+1332,
+1087
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f11_3.png": [
+1573,
+792
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f11_4.png": [
+1469,
+735
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f12_1.png": [
+1323,
+665
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f12_2.png": [
+1667,
+274
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f12_3.png": [
+1622,
+210
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f6_12.png": [
+1400,
+589
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f6_13.png": [
+1678,
+722
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f6_14.png": [
+1453,
+844
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f6_15.png": [
+1892,
+846
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f7_1.png": [
+1606,
+1140
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/tools/ppt_lineas/fig/f9_2.png": [
+1622,
+656
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/Wisp.png": [
+1573,
+1000
+],
+"C:/Users/USER/Documents/ProyectoEPE/TI/imagenes/logo_upeu.png": [
+1280,
+720
+]
+}

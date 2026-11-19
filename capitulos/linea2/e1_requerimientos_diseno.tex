@@ -1,0 +1,66 @@
+% ======================================================================
+% capitulos/linea2/e1_requerimientos_diseno.tex
+% ----------------------------------------------------------------------
+% LÍNEA CE02 — INGENIERÍA DE SOFTWARE
+% S1 · E1: REQUERIMIENTOS Y DISEÑO DEL SISTEMA (alineado con CE021)
+% Evidencias: CE0211, CE0212, CE0213, CE0214
+% Estructura según la plantilla de la transcripción oficial (secciones 1-4 + anexos)
+% ======================================================================
+\chapter{Requerimientos y Diseño del Sistema}
+\label{chap:ce02-e1}
+
+\entregable{CE02 --- Ingeniería de Software · competencia CE021 Ingeniería de Requerimientos}
+{Semestre 1 · Entregable 1: Requerimientos y Diseño del Sistema}
+{CE0211 Especificación validada · CE0212 Prototipo navegable · CE0213 Diseño arquitectónico · CE0214 Diseño detallado}
+{Completo. Pendiente: fecha y firmas del acta y enlace al prototipo publicado.}
+
+\section*{Resumen ejecutivo}
+\addcontentsline{toc}{section}{Resumen ejecutivo}
+
+\textbf{Problema.} WISP atiende unos 455 clientes de fibra óptica en 13 zonas de Puno con
+un proceso manual y disperso: la venta se anota en papel o WhatsApp, la instalación no
+deja constancia de qué borne y qué equipo quedó en cada casa, los cortes se hacen a mano
+en cada router y toda la administración depende de una sola persona.
+
+\textbf{Usuarios.} Cuatro roles internos ---administrador (gerente/ingeniero), técnico,
+vendedor de campo y atención al cliente--- y el cliente final, que consulta su cuenta en la
+app y recibe avisos por WhatsApp.
+
+\textbf{Alcance.} 56 requerimientos funcionales en 14 módulos (venta, aprobación,
+instalación, planta externa, inventario, cobranza, cortes, comunicación, autoservicio y
+operación de campo), 12 atributos de calidad y 12 reglas de negocio. Cada requerimiento
+indica si ya está implementado en el producto (41), parcialmente (5) o pendiente (10).
+
+\textbf{Solución.} Un monolito modular con API REST (FastAPI) y base PostgreSQL, un panel
+web en React para la oficina y una app móvil en Expo para campo, un servicio propio de
+WhatsApp y la gestión de los 13 MikroTik por SSH a través de una VPN WireGuard. Se
+documenta con las vistas C4 de contexto, contenedores y componentes, nueve decisiones
+arquitectónicas (ADR), diagramas UML de casos de uso, clases, secuencia y estados, y una
+matriz de trazabilidad requerimiento $\rightarrow$ historia $\rightarrow$ componente
+$\rightarrow$ diseño.
+
+\input{capitulos/linea2/e1_s1_requerimientos}
+\input{capitulos/linea2/e1_s2_prototipo}
+\input{capitulos/linea2/e1_s3_arquitectura}
+\input{capitulos/linea2/e1_s4_diseno_detallado}
+
+% ======================================================================
+\section{Anexos del entregable}
+\label{sec:ce02-e1-anexos}
+
+\begin{table}[H]
+\centering
+\caption{Anexos exigidos por la plantilla y dónde se encuentran.}
+\label{tab:ce02-e1-anexos}
+\small
+\begin{tabularx}{\textwidth}{L{5cm}XL{2.2cm}}
+\toprule
+\textbf{Anexo} & \textbf{Ubicación} & \textbf{Estado} \\
+\midrule
+Acta de validación con stakeholders & \cref{tab:ce02-acta} & Falta fecha y firmas \\
+Matriz de trazabilidad de requerimientos & \cref{tab:ce02-trazabilidad} & Completo \\
+Diagramas complementarios & Casos de uso (\cref{fig:ce02-casos-uso}), contexto (\cref{fig:ce02-contexto}) y despliegue (\cref{fig:ce02-despliegue}) & Completo \\
+Evidencia de sustentación & Exposición breve ante el docente & Por realizar \\
+\bottomrule
+\end{tabularx}
+\end{table}

@@ -1,0 +1,33 @@
+%% Flujo implementado: recordatorio, corte automático, pago y reactivación
+sequenceDiagram
+    autonumber
+    participant S as Planificador (APScheduler)
+    participant API as API FastAPI
+    participant DB as PostgreSQL
+    participant WA as Servicio WhatsApp
+    participant MK as MikroTik de la zona
+    actor AT as Atención al cliente (panel)
+    actor C as Cliente
+
+    Note over S: 08:00 hora de Lima
+    S->>DB: clientes que vencen en los próximos días
+    S->>WA: recordatorio de pago
+    WA-->>C: "Tu servicio vence el ..."
+    Note over S: 09:00 hora de Lima
+    S->>DB: activos vencidos + días de gracia, sin compromiso de pago
+    loop por cada candidato
+        S->>WA: aviso de corte (llega mientras aún tiene internet)
+        S->>MK: SSH: agrega la IP a la lista de corte de la zona
+        S->>DB: cliente = suspendido · historial: corte
+    end
+    C->>AT: paga en caja o por Yape
+    AT->>API: POST /pagos (mes, método, N.° de operación único)
+    API->>DB: pago registrado (rechaza operación duplicada)
+    API->>MK: SSH: quita la IP de la lista de corte
+    API->>DB: cliente = activo · vencimiento + 30 días · historial: pago y activación
+    API->>WA: confirmación de pago
+    WA-->>C: confirmación
+    AT->>API: GET /pagos/{id}/recibo-pdf
+    opt el cliente pide plazo
+        AT->>API: POST /clientes/{id}/compromiso-pago (fecha)
+    end

@@ -1,0 +1,32 @@
+%% Mapa del panel web (https://wispfibra.com/app) por grupo de menú
+flowchart LR
+    LG["/login"] --> D["Principal<br/>/dashboard"]
+    D --> CL & RD & OP & FN & AD
+    subgraph CL["Clientes"]
+        c1["/clientes/fibra"]
+        c2["/clientes/inalambricos"]
+        c3["/clientes-satelital"]
+        c4["/clientes/pendientes"]
+        c5["/clientes/:id<br/>ficha: pagos, historial,<br/>PPPoE en vivo, corte"]
+    end
+    subgraph RD["Red"]
+        r1["/zonas · /zonas/:id<br/>WireGuard, terminal, técnicos"]
+        r2["/cajas-nap<br/>mufas, corridas, bornes"]
+        r3["/onus<br/>inventario con lectora"]
+    end
+    subgraph OP["Operaciones"]
+        o1["/averias"]
+        o2["/ordenes-retiro"]
+        o3["/jornadas<br/>recorridos en el mapa"]
+    end
+    subgraph FN["Finanzas"]
+        f1["/pagos<br/>recibo PDF, exportar"]
+        f2["/gastos"]
+        f3["/finanzas/reporte-caja"]
+    end
+    subgraph AD["Administración"]
+        a1["/usuarios"]
+        a2["/planes"]
+        a3["/configuracion/whatsapp"]
+        a4["/configuracion/roles<br/>/configuracion/modulos-padre"]
+    end

@@ -1,0 +1,151 @@
+ruta,url,n,codigo,conexion,tls,ttfb,total,bytes
+Sitio público,https://wispfibra.com/,1,200,129.69,243.512,591.033,598.304,19519
+Sitio público,https://wispfibra.com/,2,200,106.632,216.43699999999998,567.0880000000001,573.883,19519
+Sitio público,https://wispfibra.com/,3,200,132.14600000000002,247.596,592.643,600.749,19519
+Sitio público,https://wispfibra.com/,4,200,121.737,236.744,579.1030000000001,587.138,19519
+Sitio público,https://wispfibra.com/,5,200,112.058,225.476,457.178,465.389,19519
+Sitio público,https://wispfibra.com/,6,200,113.81700000000001,228.59799999999998,466.977,474.496,19519
+Sitio público,https://wispfibra.com/,7,200,125.25,232.639,458.546,466.22999999999996,19519
+Sitio público,https://wispfibra.com/,8,200,142.22099999999998,250.222,470.29900000000004,479.147,19519
+Sitio público,https://wispfibra.com/,9,200,130.03500000000003,242.757,472.25600000000003,478.811,19519
+Sitio público,https://wispfibra.com/,10,200,122.378,240.062,478.224,486.67199999999997,19519
+Sitio público,https://wispfibra.com/,11,200,134.47899999999998,250.212,486.61,492.25600000000003,19519
+Sitio público,https://wispfibra.com/,12,200,137.343,251.35800000000003,491.547,499.17499999999995,19519
+Sitio público,https://wispfibra.com/,13,200,133.64100000000002,246.772,471.966,479.8,19519
+Sitio público,https://wispfibra.com/,14,200,116.745,228.119,457.09499999999997,465.017,19519
+Sitio público,https://wispfibra.com/,15,200,123.101,234.959,467.01,474.86400000000003,19519
+Sitio público,https://wispfibra.com/,16,200,133.74099999999999,242.113,465.096,472.656,19519
+Sitio público,https://wispfibra.com/,17,200,120.607,230.691,463.16200000000003,470.82099999999997,19519
+Sitio público,https://wispfibra.com/,18,200,111.602,223.215,453.563,462.173,19519
+Sitio público,https://wispfibra.com/,19,200,138.819,251.23299999999998,477.105,485.603,19519
+Sitio público,https://wispfibra.com/,20,200,118.26599999999999,234.129,465.88,473.90900000000005,19519
+Sitio público,https://wispfibra.com/,21,200,110.999,220.012,447.65500000000003,454.40799999999996,19519
+Sitio público,https://wispfibra.com/,22,200,134.365,251.722,488.02,495.94500000000005,19519
+Sitio público,https://wispfibra.com/,23,200,118.139,230.08,464.736,472.42,19519
+Sitio público,https://wispfibra.com/,24,200,132.61,245.283,475.33799999999997,483.449,19519
+Sitio público,https://wispfibra.com/,25,200,114.443,227.314,459.212,467.019,19519
+Sitio público,https://wispfibra.com/,26,200,133.683,242.209,464.57300000000004,472.691,19519
+Sitio público,https://wispfibra.com/,27,200,109.908,225.77800000000002,450.638,456.852,19519
+Sitio público,https://wispfibra.com/,28,200,116.107,225.53699999999998,454.736,462.069,19519
+Sitio público,https://wispfibra.com/,29,200,112.405,221.87,449.48199999999997,457.337,19519
+Sitio público,https://wispfibra.com/,30,200,112.79,227.212,449.516,457.14500000000004,19519
+Panel (ingreso),https://wispfibra.com/app/,1,200,116.32199999999999,231.755,463.13599999999997,463.19300000000004,556
+Panel (ingreso),https://wispfibra.com/app/,2,200,110.92699999999999,222.878,452.109,452.159,556
+Panel (ingreso),https://wispfibra.com/app/,3,200,109.376,219.619,441.505,441.55499999999995,556
+Panel (ingreso),https://wispfibra.com/app/,4,200,119.895,233.458,452.36199999999997,452.412,556
+Panel (ingreso),https://wispfibra.com/app/,5,200,121.13,234.99900000000002,467.897,467.941,556
+Panel (ingreso),https://wispfibra.com/app/,6,200,127.40099999999998,241.977,477.531,477.599,556
+Panel (ingreso),https://wispfibra.com/app/,7,200,118.934,233.602,467.28700000000003,467.354,556
+Panel (ingreso),https://wispfibra.com/app/,8,200,121.007,235.067,467.305,467.352,556
+Panel (ingreso),https://wispfibra.com/app/,9,200,122.661,241.783,478.725,478.769,556
+Panel (ingreso),https://wispfibra.com/app/,10,200,116.805,224.302,449.641,449.692,556
+Panel (ingreso),https://wispfibra.com/app/,11,200,113.14,225.745,456.13300000000004,456.189,556
+Panel (ingreso),https://wispfibra.com/app/,12,200,120.20599999999999,229.766,456.652,456.699,556
+Panel (ingreso),https://wispfibra.com/app/,13,200,119.686,234.57500000000002,466.733,466.785,556
+Panel (ingreso),https://wispfibra.com/app/,14,200,131.782,242.13199999999998,464.663,464.708,556
+Panel (ingreso),https://wispfibra.com/app/,15,200,118.749,231.539,456.019,456.06600000000003,556
+Panel (ingreso),https://wispfibra.com/app/,16,200,111.5,221.28300000000002,453.972,454.018,556
+Panel (ingreso),https://wispfibra.com/app/,17,200,113.735,224.108,453.067,453.113,556
+Panel (ingreso),https://wispfibra.com/app/,18,200,133.09199999999998,242.321,469.248,469.3,556
+Panel (ingreso),https://wispfibra.com/app/,19,200,107.38000000000001,215.203,433.36400000000003,433.417,556
+Panel (ingreso),https://wispfibra.com/app/,20,200,117.256,232.276,451.941,451.986,556
+Panel (ingreso),https://wispfibra.com/app/,21,200,114.955,226.65099999999998,458.011,458.055,556
+Panel (ingreso),https://wispfibra.com/app/,22,200,111.703,224.188,459.129,459.176,556
+Panel (ingreso),https://wispfibra.com/app/,23,200,122.935,236.996,468.72799999999995,468.775,556
+Panel (ingreso),https://wispfibra.com/app/,24,200,122.746,236.661,470.771,470.831,556
+Panel (ingreso),https://wispfibra.com/app/,25,200,120.169,233.18,462.188,462.231,556
+Panel (ingreso),https://wispfibra.com/app/,26,200,113.55,226.19,454.63399999999996,454.679,556
+Panel (ingreso),https://wispfibra.com/app/,27,200,115.991,230.19899999999998,461.603,461.65099999999995,556
+Panel (ingreso),https://wispfibra.com/app/,28,200,123.97,236.45,457.31699999999995,457.364,556
+Panel (ingreso),https://wispfibra.com/app/,29,200,139.44500000000002,252.50099999999998,484.657,484.709,556
+Panel (ingreso),https://wispfibra.com/app/,30,200,133.745,246.028,482.8,482.843,556
+API: salud,https://wispfibra.com/api/health,1,200,127.51599999999999,239.843,473.825,473.874,50
+API: salud,https://wispfibra.com/api/health,2,200,123.044,238.09,473.109,473.155,50
+API: salud,https://wispfibra.com/api/health,3,200,121.863,235.12199999999999,461.324,461.366,50
+API: salud,https://wispfibra.com/api/health,4,200,112.978,226.459,451.63100000000003,451.68199999999996,50
+API: salud,https://wispfibra.com/api/health,5,200,132.227,243.631,467.322,467.36899999999997,50
+API: salud,https://wispfibra.com/api/health,6,200,128.791,241.362,490.57099999999997,504.687,50
+API: salud,https://wispfibra.com/api/health,7,200,141.61,251.96600000000004,474.988,475.032,50
+API: salud,https://wispfibra.com/api/health,8,200,137.049,246.393,477.45799999999997,477.568,50
+API: salud,https://wispfibra.com/api/health,9,200,112.547,227.67100000000002,453.876,453.926,50
+API: salud,https://wispfibra.com/api/health,10,200,114.598,227.494,457.787,457.832,50
+API: salud,https://wispfibra.com/api/health,11,200,137.574,250.03900000000002,485.602,485.67,50
+API: salud,https://wispfibra.com/api/health,12,200,112.119,219.726,437.927,437.971,50
+API: salud,https://wispfibra.com/api/health,13,200,115.854,230.682,466.696,466.743,50
+API: salud,https://wispfibra.com/api/health,14,200,115.80600000000001,230.52100000000002,467.29900000000004,467.346,50
+API: salud,https://wispfibra.com/api/health,15,200,113.285,224.094,456.337,456.38,50
+API: salud,https://wispfibra.com/api/health,16,200,131.883,244.01500000000001,480.33500000000004,480.383,50
+API: salud,https://wispfibra.com/api/health,17,200,137.593,243.66,464.28999999999996,464.335,50
+API: salud,https://wispfibra.com/api/health,18,200,123.53500000000001,235.296,469.01,469.05400000000003,50
+API: salud,https://wispfibra.com/api/health,19,200,121.31500000000001,231.792,465.13300000000004,465.17900000000003,50
+API: salud,https://wispfibra.com/api/health,20,200,134.08100000000002,245.63299999999998,468.33799999999997,468.382,50
+API: salud,https://wispfibra.com/api/health,21,200,116.158,230.935,458.75899999999996,458.805,50
+API: salud,https://wispfibra.com/api/health,22,200,110.36,222.06300000000002,464.306,464.353,50
+API: salud,https://wispfibra.com/api/health,23,200,114.44699999999999,227.523,462.002,462.04499999999996,50
+API: salud,https://wispfibra.com/api/health,24,200,125.11900000000001,237.26,466.83200000000005,466.88,50
+API: salud,https://wispfibra.com/api/health,25,200,133.903,242.821,474.662,474.705,50
+API: salud,https://wispfibra.com/api/health,26,200,122.64999999999999,234.396,469.5,469.545,50
+API: salud,https://wispfibra.com/api/health,27,200,125.26499999999999,237.397,478.157,478.20099999999996,50
+API: salud,https://wispfibra.com/api/health,28,200,114.483,224.28400000000002,448.981,449.029,50
+API: salud,https://wispfibra.com/api/health,29,200,141.80499999999998,255.08399999999997,483.74,483.79,50
+API: salud,https://wispfibra.com/api/health,30,200,141.83200000000002,256.11899999999997,486.377,486.422,50
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,1,200,129.589,238.676,478.654,478.699,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,2,200,124.345,240.90300000000002,470.902,470.949,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,3,200,139.35,258.73400000000004,505.378,505.422,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,4,200,123.21300000000001,235.776,476.39300000000003,476.438,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,5,200,112.339,221.36700000000002,456.66200000000003,456.708,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,6,200,128.265,240.226,479.038,479.08099999999996,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,7,200,129.725,243.63000000000002,488.137,530.1550000000001,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,8,200,129.327,239.653,479.693,479.738,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,9,200,150.618,257.959,670.212,670.256,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,10,200,132.28799999999998,240.947,469.094,469.13899999999995,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,11,200,118.76100000000001,231.17499999999998,470.75,470.798,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,12,200,118.173,237.88799999999998,469.442,469.486,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,13,200,133.016,245.989,488.679,488.80600000000004,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,14,200,141.68900000000002,252.45600000000002,483.192,483.235,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,15,200,138.466,253.137,500.163,500.20799999999997,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,16,200,103.932,212.81,438.486,438.531,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,17,200,110.771,224.477,459.571,459.61400000000003,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,18,200,123.354,232.609,470.06199999999995,470.114,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,19,200,133.941,241.73600000000002,477.164,477.207,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,20,200,124.783,237.568,468.052,468.097,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,21,200,114.113,220.239,457.031,457.08,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,22,200,127.184,241.481,480.531,480.58099999999996,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,23,200,116.05799999999999,229.904,463.543,463.59299999999996,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,24,200,123.685,238.084,481.117,481.15799999999996,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,25,200,119.11099999999999,225.86,458.75100000000003,458.798,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,26,200,132.686,241.395,479.38199999999995,479.425,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,27,200,137.36200000000002,252.429,483.031,483.079,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,28,200,116.377,223.986,457.166,457.21099999999996,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,29,200,115.36399999999999,224.479,452.98,453.03700000000003,404
+API: zonas públicas,https://wispfibra.com/api/zonas/publicas,30,200,136.673,245.07000000000002,470.793,470.84,404
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,1,200,129.213,240.44199999999998,481.396,481.442,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,2,200,128.579,235.63500000000002,465.71299999999997,465.76,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,3,200,120.78999999999999,238.5,498.48900000000003,498.53799999999995,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,4,200,140.177,251.654,482.96099999999996,483.08,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,5,200,120.93900000000001,232.65800000000002,475.54400000000004,475.591,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,6,200,134.245,241.71699999999998,472.034,472.078,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,7,200,130.38,241.85799999999998,514.6990000000001,514.7420000000001,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,8,200,129.308,243.969,497.207,497.251,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,9,200,117.571,231.24800000000002,464.648,464.69100000000003,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,10,200,136.56099999999998,246.60000000000002,487.5,487.545,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,11,200,111.999,223.607,456.387,456.43,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,12,200,125.95799999999998,240.146,484.242,484.285,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,13,200,122.325,236.958,470.53000000000003,470.579,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,14,200,133.208,240.03199999999998,638.747,638.796,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,15,200,135.28699999999998,248.857,496.363,496.411,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,16,200,112.17,220.06400000000002,466.349,466.391,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,17,200,136.426,243.756,480.401,480.448,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,18,200,117.74600000000001,228.477,466.097,466.143,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,19,200,119.399,230.765,466.284,466.33599999999996,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,20,200,123.311,237.97099999999998,484.068,484.116,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,21,200,117.878,226.316,465.961,466.006,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,22,200,140.123,253.368,504.424,504.468,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,23,200,116.194,229.24,466.60400000000004,466.646,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,24,200,115.22399999999999,224.62199999999999,454.683,454.726,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,25,200,131.56799999999998,246.979,489.705,489.753,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,26,200,127.65099999999998,241.011,486.716,486.761,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,27,200,105.10300000000001,212.54700000000003,447.494,447.545,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,28,200,132.77700000000002,241.894,474.47,474.514,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,29,200,130.20999999999998,244.528,479.296,479.341,41
+API: resumen público,https://wispfibra.com/api/zonas/publicas/resumen,30,200,121.43299999999999,236.52100000000002,475.616,475.66700000000003,41

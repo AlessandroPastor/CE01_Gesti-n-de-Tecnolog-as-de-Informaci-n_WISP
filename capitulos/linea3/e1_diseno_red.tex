@@ -1,0 +1,728 @@
+% ======================================================================
+% capitulos/linea3/capitulo11.tex
+% ----------------------------------------------------------------------
+% LÍNEA CE03 — INFRAESTRUCTURA TECNOLÓGICA
+% Semestre 1 · Entregable 1 de 2: ANÁLISIS Y DISEÑO DE RED
+% Estructura según la plantilla oficial S1_E1_Analisis_y_Diseno_de_Red.docx
+% Base real: configuración de la zona SUCASCO (RouterOS 7.14.3, 27/08/2026)
+%            y despliegue del sistema (docker-compose.yml, zonas.py)
+% ======================================================================
+\chapter{Análisis y Diseño de Red}
+\label{chap:ce03-red}
+
+\entregable{CE03 --- Infraestructura Tecnológica · competencia CE031 Conectividad}{Semestre 1 · Entregable 1: Análisis y Diseño de Red}{CE0311 Diseño de red}{Completo (diseño, sin implementación).}
+
+
+Este capítulo es el primer entregable de la línea CE03 (Infraestructura
+Tecnológica). Diseña la red que soporta la operación de WISP y el sistema de la línea
+CE02: la red de la oficina central (on-premise), la red virtual en AWS y su
+integración con las 13 zonas de servicio mediante una VPN. Es una fase de
+\textbf{análisis y diseño}: lo que aquí se planifica se implementará, probará y
+monitoreará en el entregable \emph{Implementación, testing y monitoreo de red} del
+semestre~2.
+
+\begin{upeubox}{Regla de este documento: lo real y lo propuesto, separados}
+El diseño parte de la red que ya opera. Cada tabla distingue el estado actual
+(\textbf{AS-IS}, tomado de la configuración real de la zona SUCASCO y del despliegue
+del sistema) del estado propuesto (\textbf{TO-BE}). No se incluyen claves, contraseñas,
+IP públicas reales ni datos personales: los valores sensibles se reemplazan por
+marcadores como \texttt{<EIP-HUB>}.
+\end{upeubox}
+
+% ======================================================================
+\section{Resumen ejecutivo del diseño de red}
+\label{sec:ce03-red-resumen}
+
+\begin{itemize}
+  \item \textbf{Proyecto y organización:} red híbrida de WISP Ingeniería en Redes y
+  Telecomunicaciones (Juliaca, Puno), ISP de fibra óptica con unos 455 clientes en
+  13 zonas.
+  \item \textbf{Problema:} cada zona es una isla administrada a mano. El análisis de la
+  zona SUCASCO mostró \textbf{cero reglas de firewall}, servicios de administración
+  (telnet, ftp, www, winbox, api) abiertos por defecto, DNS recursivo abierto y gestión
+  por SSTP hacia dos VPS. La oficina no tiene IP pública y el sistema corre en un solo
+  equipo sin segmentación.
+  \item \textbf{Topología propuesta:} oficina central segmentada en 5 VLAN detrás de
+  un firewall perimetral; una VPC en AWS (región São Paulo) con subred pública y
+  privadas; y 13 zonas de borde con una plantilla de configuración endurecida.
+  \item \textbf{Integración:} VPN \textbf{WireGuard en topología hub-and-spoke}: el
+  concentrador corre en una instancia EC2 con IP elástica; la oficina y cada zona son
+  \emph{peers}. Es la evolución del túnel que el sistema ya usa hoy.
+  \item \textbf{Zonas de seguridad:} DMZ (publicación y señuelo), servidores, gestión,
+  usuarios, seguridad (IDS/SIEM), VPN y redes de gestión de cada zona.
+  \item \textbf{Riesgos principales:} acceso no autorizado a los routers de zona,
+  exposición de servicios de administración, movimiento lateral entre zonas y caída
+  del único servidor.
+  \item \textbf{Siguiente paso (semestre~2):} desplegar el hub en AWS, migrar zona por
+  zona de SSTP a WireGuard con la plantilla endurecida, levantar IDS/IPS y honeypot, y
+  ejecutar la matriz de pruebas de la \cref{sec:ce03-pruebas}.
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \node[cajaext,minimum width=2.4cm,minimum height=10mm] (inet) at (0,0) {Internet\\(Cloudflare, ISP)};
+  \node[caja,minimum width=3.2cm,minimum height=14mm] (ofi) at (-4.3,-2.6) {\textbf{Oficina central}\\FW01 + 5 VLAN\\host ESXi};
+  \node[caja,minimum width=3.2cm,minimum height=14mm] (aws) at (4.3,-2.6) {\textbf{AWS sa-east-1}\\VPC 10.50.0.0/16\\hub WireGuard};
+  \node[caja,minimum width=3.6cm,minimum height=12mm] (zon) at (0,-5.2) {\textbf{13 zonas de servicio}\\MikroTik + OLT + clientes};
+  \node[cajaext] (usr) at (-4.3,0) {Personal y\\app móvil};
+  \draw[flecha] (usr) -- (inet);
+  \draw[flecha] (ofi) -- node[font=\tiny,sloped,above,pos=0.55]{túnel Cloudflare (salida)} (inet);
+  \draw[flecha] (aws) -- node[font=\tiny,sloped,above,pos=0.55]{UDP 51820} (inet);
+  \draw[tunel] (ofi) -- node[font=\tiny,below,pos=0.25]{WireGuard} (aws);
+  \draw[tunel] (zon) -- node[font=\tiny,sloped,below]{WireGuard ×13} (aws);
+  \draw[flecha,dashed] (zon.north) -- node[font=\tiny,right,pos=0.2,align=left]{internet de\\clientes (ISP local)} (inet.south);
+\end{tikzpicture}
+\caption{Topología ejecutiva simplificada del diseño de red.}
+\label{fig:ce03-ejecutiva}
+\end{figure}
+
+% ======================================================================
+\section{Descripción de la organización y necesidades de red}
+
+\subsection{Descripción general}
+
+WISP es una MYPE que provee internet por fibra óptica (GPON) en 13 zonas rurales y
+periurbanas de Puno. Cada zona tiene un router MikroTik RB4011 que actúa como servidor
+PPPoE, control de ancho de banda (colas CAKE) y salida a internet por un proveedor
+mayorista local, más una OLT VSOL y las ONU de los clientes. La oficina central de
+Juliaca aloja al personal administrativo (gerencia, atención al cliente) y el servidor
+del sistema de gestión; técnicos y vendedores trabajan en campo con la app móvil.
+
+\begin{table}[htbp]
+\centering
+\caption{Necesidades de red de WISP.}
+\label{tab:ce03-necesidades}
+\small
+\begin{tabularx}{\textwidth}{L{3.4cm}X}
+\toprule
+Usuarios y sedes & 1 oficina central (unas 10 estaciones), 13 zonas de servicio, unos 455 clientes, personal de campo con app móvil. \\
+Servicios TI que dependen de la red & Sistema de gestión (panel web, API, app móvil), base de datos, mensajería WhatsApp, gestión remota de los 13 routers, sitio público. \\
+Uso de la nube & Concentrador VPN, réplica de contingencia y respaldos fuera de la oficina (AWS). \\
+Uso local & Servidor del sistema y su base de datos en la oficina, por costo y control de los datos. \\
+Ancho de banda & El tráfico de clientes sale por el ISP local de cada zona (no pasa por la VPN). La VPN solo transporta gestión: SSH, API, SNMP y syslog, estimados en menos de 2~Mbps en total. \\
+Disponibilidad y crecimiento & Gestión disponible en horario extendido; crecimiento previsto al doble de clientes y hasta 25 zonas en 3 años. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Servicios y procesos críticos dependientes de la red}
+
+\begin{table}[H]
+\centering
+\caption{Procesos de negocio, servicios TI y criticidad.}
+\label{tab:ce03-procesos}
+\small
+\begin{tabularx}{\textwidth}{L{3.6cm}XL{1.6cm}}
+\toprule
+\textbf{Proceso} & \textbf{Servicio TI que depende de la red} & \textbf{Criticidad} \\
+\midrule
+Servicio de internet al cliente & Router de zona (PPPoE, colas), OLT, enlace del ISP local & Alta \\
+Cobranza y cortes & API del sistema $\rightarrow$ VPN $\rightarrow$ router de zona (address-list de corte) & Alta \\
+Instalación en campo & App móvil $\rightarrow$ Cloudflare $\rightarrow$ API; creación del secreto PPPoE por VPN & Alta \\
+Facturación y caja & Panel web y base de datos & Alta \\
+Comunicación con clientes & Servicio de WhatsApp (salida a internet) & Media \\
+Supervisión de la red & SNMP y syslog de routers y OLT hacia monitoreo/SIEM & Media \\
+Administración interna & Estaciones de oficina, correo, navegación & Baja \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Partes interesadas relevantes a la red}
+
+\begin{table}[H]
+\centering
+\caption{Partes interesadas y sus expectativas.}
+\label{tab:ce03-interesados}
+\small
+\begin{tabularx}{\textwidth}{L{3.4cm}X}
+\toprule
+Clientes (unos 455) & Servicio estable, cortes justos y privacidad de sus datos. \\
+Gerencia de WISP & Operación centralizada, bajo costo y continuidad del negocio. \\
+Personal de oficina y campo & Acceso confiable al sistema desde la oficina y desde el celular. \\
+Administrador de red & Gestión segura y remota de los 13 routers sin exponerlos a internet. \\
+Proveedores mayoristas (ISP) & Uso correcto de sus enlaces; no admiten tráfico malicioso saliente. \\
+AWS y Cloudflare & Modelo de responsabilidad compartida: ellos aseguran la plataforma; WISP, su configuración. \\
+Reguladores & Cumplimiento de la Ley N.\textsuperscript{o}~29733 y de la normativa de telecomunicaciones (OSIPTEL, MTC). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Alcance del diseño de red}
+
+\subsection{Declaración de alcance}
+El diseño comprende la conectividad, el direccionamiento y la segmentación de la red
+de la oficina central (VLAN de gestión, servidores, usuarios, DMZ y seguridad); la red
+virtual (VPC) en AWS; la VPN WireGuard que integra la oficina, AWS y las 13 zonas; la
+seguridad perimetral (firewall, DMZ) y la planificación de la detección (IDS/IPS y
+honeypot); y la plantilla de configuración de red de los routers de zona.
+
+\subsection{Límites}
+\begin{itemize}
+  \item \textbf{Físicos:} rack de la oficina central (firewall, switch, host ESXi,
+  NAS, UPS) y gabinetes de las 13 zonas.
+  \item \textbf{Tecnológicos:} FW01 (MikroTik RB5009), switch de núcleo, VLAN, VPN
+  WireGuard, IDS/IPS Suricata, honeypots, VPC, subredes, route tables, Security
+  Groups, NACL y routers MikroTik de zona.
+  \item \textbf{Organizacionales:} la red de la oficina, el hub en AWS y la plantilla
+  de zona los administra el \emph{responsable de infraestructura}; el sistema y su
+  base, el \emph{responsable de sistemas}; la planta externa (OLT, fibra, ONU), los
+  \emph{técnicos} bajo supervisión del ingeniero.
+\end{itemize}
+
+\subsection{Exclusiones}
+\begin{itemize}
+  \item \textbf{Red de distribución de fibra (PON, mufas, cajas NAP):} se gestiona en el
+  sistema (CE02) y su diseño óptico es otro dominio de ingeniería.
+  \item \textbf{Red interna del cliente (WiFi de la ONU):} es responsabilidad del
+  usuario; WISP solo entrega la ONU configurada.
+  \item \textbf{Dispositivos personales del personal:} acceden por internet y Cloudflare
+  como cualquier usuario externo; no se integran a la red interna.
+  \item \textbf{Enlaces del ISP mayorista:} son contratados; solo se diseña su uso y la
+  redundancia del lado de WISP.
+\end{itemize}
+
+% ======================================================================
+\section{Objetivos del diseño de red}
+
+\begin{table}[H]
+\centering
+\caption{Objetivos medibles del diseño de red.}
+\label{tab:ce03-objetivos-red}
+\small
+\begin{tabularx}{\textwidth}{XL{3.6cm}L{2cm}L{2.4cm}}
+\toprule
+\textbf{Objetivo} & \textbf{Indicador} & \textbf{Meta} & \textbf{Responsable} \\
+\midrule
+Segmentar el tráfico de la oficina por función & VLAN definidas y documentadas & 5 VLAN, 100\,\% & Infraestructura \\
+Retirar la administración de los routers de internet & Zonas con servicios de gestión accesibles solo por VPN & 13 de 13 & Infraestructura \\
+Política de firewall por defecto restrictiva & Equipos con \emph{default deny} en \texttt{input} y \texttt{forward} & 100\,\% (FW01, hub, 13 zonas) & Seguridad \\
+Unificar la gestión remota & Zonas migradas de SSTP a WireGuard & 13 de 13 al cierre del semestre~2 & Infraestructura \\
+Impedir el movimiento lateral entre zonas & Pruebas zona$\rightarrow$zona denegadas & 100\,\% & Seguridad \\
+Garantizar la disponibilidad del enlace de gestión & Rutas alternas consideradas & $\geq 1$ (WAN secundaria en zonas críticas) & Infraestructura \\
+Visibilidad de eventos & Equipos que envían logs al SIEM & 100\,\% de los equipos de red & Seguridad \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Topologías de red (diseño)}
+\label{sec:ce03-topologias}
+
+\subsection{Topología general de infraestructura de red}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,scale=0.9,every node/.style={transform shape}]
+  % Internet
+  \node[cajaext,minimum width=2.6cm] (cf) at (0,4.2) {Cloudflare\\(publicación HTTPS)};
+  \node[cajaext,minimum width=2.6cm] (isp) at (-4.6,4.2) {ISP oficina\\(sin IP pública)};
+  % Oficina
+  \node[cajasec,minimum width=2.4cm] (fw) at (-4.6,2.2) {FW01\\MikroTik RB5009};
+  \node[caja,minimum width=2.4cm] (sw) at (-4.6,0.6) {SW-CORE\\CRS326 (troncal)};
+  \node[caja,font=\tiny,minimum width=1.5cm] (v10) at (-7.2,-1.1) {VLAN 10\\GESTIÓN};
+  \node[caja,font=\tiny,minimum width=1.5cm] (v20) at (-5.6,-1.1) {VLAN 20\\SERVIDORES};
+  \node[caja,font=\tiny,minimum width=1.5cm] (v30) at (-4.0,-1.1) {VLAN 30\\USUARIOS};
+  \node[caja,font=\tiny,minimum width=1.5cm] (v40) at (-2.4,-1.1) {VLAN 40\\DMZ};
+  \node[caja,font=\tiny,minimum width=1.5cm] (v50) at (-5.6,-2.4) {VLAN 50\\SEGURIDAD};
+  \node[caja,font=\tiny,minimum width=2.6cm] (esx) at (-3.2,-2.4) {ESXI-01\\(VM por VLAN)};
+  \draw[flecha] (isp) -- (fw); \draw[thick,upeublue] (fw) -- (sw);
+  \foreach \v in {v10,v20,v30,v40} \draw[upeublue] (sw.south) -- (\v.north);
+  \draw[upeublue] (v20) -- (v50); \draw[upeublue] (v40.south) -- (esx.north east);
+  \begin{scope}[on background layer]
+    \node[zona,fit=(fw)(sw)(v10)(v40)(v50)(esx),label={[zonatit]below:Oficina central — 10.20.0.0/16}] (ofi) {};
+  \end{scope}
+  \draw[flecha,dashed] (v40.north) to[out=80,in=200] node[font=\tiny,sloped,above]{túnel de salida} (cf.west);
+  % AWS
+  \node[cajaext,minimum width=1.8cm] (igw) at (4.6,4.2) {Internet\\Gateway};
+  \node[caja,minimum width=2.8cm] (hub) at (4.6,2.2) {EC2-WGHUB\\10.50.1.10 + EIP\\WireGuard · Suricata};
+  \node[caja,minimum width=2.8cm] (dr) at (4.6,0.2) {EC2-DR (réplica)\\10.50.2.10};
+  \node[caja,minimum width=2.8cm,fill=upeugray!8] (dat) at (4.6,-1.4) {Subred datos\\10.50.3.0/24 (reserva)};
+  \node[cajaext] (s3) at (7.4,0.2) {S3\\respaldos};
+  \draw[flecha] (igw) -- (hub); \draw[upeublue] (hub) -- (dr); \draw[flecha,dashed] (dr) -- node[font=\tiny,above]{endpoint} (s3);
+  \begin{scope}[on background layer]
+    \node[zona,fit=(hub)(dr)(dat)(s3),label={[zonatit]below:AWS sa-east-1 — VPC 10.50.0.0/16}] (vpc) {};
+  \end{scope}
+  % Zonas
+  \node[caja,minimum width=2.6cm] (z1) at (0.4,-4.4) {RTR-SUCASCO\\10.10.0.101};
+  \node[caja,minimum width=2.6cm] (z2) at (3.4,-4.4) {RTR-HUATA\\10.10.0.102};
+  \node[font=\small] (zd) at (5.6,-4.4) {$\cdots$};
+  \node[caja,minimum width=2.6cm] (zn) at (7.6,-4.4) {RTR-zona $n$\\10.10.0.(100+$n$)};
+  \begin{scope}[on background layer]
+    \node[zona,fit=(z1)(zn),label={[zonatit]below:13 zonas de servicio (RB4011 + OLT + clientes)}] (zz) {};
+  \end{scope}
+  % Túneles
+  \draw[tunel] (fw.east) -- node[font=\tiny,above,pos=0.45]{WireGuard 10.10.0.2} (hub.west);
+  \draw[tunel] (z1.north) -- (hub.south west);
+  \draw[tunel] (z2.north) -- (hub.south);
+  \draw[tunel] (zn.north) to[out=90,in=-30] (hub.south east);
+\end{tikzpicture}
+\caption{Topología general de red propuesta (vista maestra).}
+\label{fig:ce03-general}
+\end{figure}
+
+\subsection{Topología lógica de red — VLAN y subredes}
+
+\begin{table}[H]
+\centering
+\caption{Plan de direccionamiento de la oficina central (TO-BE). Gateway: \texttt{.1} en FW01.}
+\label{tab:ce03-vlan}
+\small
+\begin{tabularx}{\textwidth}{L{1cm}L{2.2cm}L{2.6cm}X}
+\toprule
+\textbf{VLAN} & \textbf{Nombre} & \textbf{Red / CIDR} & \textbf{Propósito y equipos} \\
+\midrule
+10 & GESTIÓN & 10.20.10.0/24 & Interfaces de administración: ESXi (.10), SW-CORE (.2), NAS (.20), estación del administrador (.50). \\
+20 & SERVIDORES & 10.20.20.0/24 & APP-01 (.10, backend y servicios), DB-01 (.11, PostgreSQL), NAS-01 datos (.20). \\
+30 & USUARIOS & 10.20.30.0/24 & Estaciones de oficina por DHCP (.100--.200). \\
+40 & DMZ & 10.20.40.0/24 & PROXY-01 (.10, Nginx + cloudflared) y HONEY-01 (.66, señuelo). \\
+50 & SEGURIDAD & 10.20.50.0/24 & IDS-01 (.10, Suricata), SIEM-01 (.11, Wazuh), MON-01 (.12, Zabbix). \\
+--- & VPN (overlay) & 10.10.0.0/24 & Hub .1, FW01 .2, zonas .101--.199 (\texttt{100 + id de zona}, igual que el sistema). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Direccionamiento de cada zona de servicio: AS-IS (SUCASCO) y TO-BE.}
+\label{tab:ce03-zona-ip}
+\small
+\begin{tabularx}{\textwidth}{L{3cm}L{4.3cm}X}
+\toprule
+\textbf{Segmento} & \textbf{AS-IS (SUCASCO, real)} & \textbf{TO-BE (plantilla para las 13 zonas)} \\
+\midrule
+WAN & WAN1 192.168.1.2/24 hacia el módem del ISP (doble NAT); WAN2--4 deshabilitadas & Igual; WAN2 activa con failover en zonas críticas. \\
+Clientes PPPoE & 192.168.20.0/24 en \texttt{bridgeLAN} (gateway .1, pool .2--.254) & Se mantiene una /24 \textbf{única por zona} en 192.168.0.0/16 (SUCASCO .20, HUATA .2); no se anuncia por la VPN. \\
+Transporte GPON & VLAN 10 sobre ether10, puenteada con ether6/7 & Igual: VLAN 10 solo transporta PPPoE (capa 2, sin IP). \\
+Gestión de OLT & ether9 192.168.100.1/24 (igual en todas las zonas) & \textbf{VLAN 99} 172.16.\textit{id}.0/28: router .1, OLT .2. Única por zona y anunciada por la VPN. \\
+Túnel de gestión & SSTP a dos VPS & WireGuard \texttt{wg-wisp} 10.10.0.(100+\textit{id})/24 hacia el hub en AWS. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Plan de direccionamiento en AWS.}
+\label{tab:ce03-vpc-ip}
+\small
+\begin{tabularx}{\textwidth}{L{3cm}L{2.6cm}X}
+\toprule
+VPC & 10.50.0.0/16 & No se superpone con la oficina (10.20/16), la VPN (10.10.0/24) ni las zonas (192.168/16, 172.16/16). \\
+Subred pública & 10.50.1.0/24 & EC2-WGHUB (10.50.1.10) con IP elástica. \\
+Subred privada app & 10.50.2.0/24 & EC2-DR (10.50.2.10), réplica de contingencia. \\
+Subred privada datos & 10.50.3.0/24 & Reservada para una base gestionada (RDS) futura. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,scale=0.92,every node/.style={transform shape}]
+  \node[cajasec,minimum width=3.4cm,minimum height=10mm] (fw) at (0,0) {FW01 — gateway .1 de cada VLAN\\política \emph{default deny}};
+  \node[caja,text width=2.2cm] (a) at (-6,-2.4) {\textbf{VLAN 10}\\10.20.10.0/24\\gestión};
+  \node[caja,text width=2.2cm] (b) at (-3,-2.4) {\textbf{VLAN 20}\\10.20.20.0/24\\servidores};
+  \node[caja,text width=2.2cm] (c) at (0,-2.4) {\textbf{VLAN 30}\\10.20.30.0/24\\usuarios};
+  \node[caja,text width=2.2cm] (d) at (3,-2.4) {\textbf{VLAN 40}\\10.20.40.0/24\\DMZ};
+  \node[caja,text width=2.2cm] (e) at (6,-2.4) {\textbf{VLAN 50}\\10.20.50.0/24\\seguridad};
+  \node[cajaext,text width=2.6cm] (wan) at (-4,1.6) {WAN (ISP)\\salida con NAT};
+  \node[caja,text width=2.6cm,draw=green!50!black] (wg) at (4,1.6) {wg-hub 10.10.0.2\\rutas a 10.50/16,\\10.10.0/24, 172.16/16};
+  \foreach \n in {a,b,c,d,e} \draw[upeublue,thick] (fw.south) -- (\n.north);
+  \draw[upeublue,thick] (fw) -- (wan); \draw[tunel] (fw) -- (wg);
+\end{tikzpicture}
+\caption{Topología lógica de la oficina: VLAN, subredes y enrutamiento en FW01.}
+\label{fig:ce03-logica}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Resumen de comunicación permitida (P), restringida (R) o denegada (D) entre zonas. Filas: origen; columnas: destino.}
+\label{tab:ce03-matriz-vlan}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Origen $\backslash$ Destino} & \textbf{GEST} & \textbf{SERV} & \textbf{USU} & \textbf{DMZ} & \textbf{SEG} & \textbf{Zonas (VPN)} & \textbf{Internet} \\
+\midrule
+GESTIÓN (10)   & --- & P & P & P & P & R (SSH, Winbox) & P \\
+SERVIDORES (20) & D & --- & D & D & R (logs) & R (SSH, API-SSL) & R (443) \\
+USUARIOS (30)  & D & R (443) & --- & D & D & D & P \\
+DMZ (40)       & D & R (8000) & D & --- & R (logs) & D & R (Cloudflare) \\
+SEGURIDAD (50) & D & D & D & D & --- & R (SNMP, ICMP) & R (actualizaciones) \\
+Zonas (VPN)    & D & D & D & D & R (syslog, traps) & D & --- \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Diseño de seguridad perimetral y zonas}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,scale=0.92,every node/.style={transform shape}]
+  \node[cajaext] (inet) at (0,0) {Internet};
+  \node[cajaext] (cf) at (0,-1.4) {Cloudflare (WAF/HTTPS)};
+  \node[cajasec,minimum width=3cm] (fw) at (0,-2.9) {FW01: filtro con estado,\\\emph{default deny}};
+  \node[cajasec,minimum width=3cm] (ids) at (0,-4.3) {IDS-01 Suricata\\(espejo del troncal)};
+  \node[caja] (dmz) at (-4.2,-5.8) {DMZ\\PROXY-01, HONEY-01};
+  \node[caja] (srv) at (-1.4,-5.8) {SERVIDORES\\APP-01, DB-01};
+  \node[caja] (usu) at (1.4,-5.8) {USUARIOS};
+  \node[caja] (ges) at (4.2,-5.8) {GESTIÓN /\\SEGURIDAD};
+  \draw[flecha] (inet) -- (cf); \draw[flecha] (cf) -- node[font=\tiny,right]{solo conexión de salida del túnel} (fw);
+  \draw[flecha] (fw) -- (ids);
+  \foreach \n in {dmz,srv,usu,ges} \draw[flecha] (ids.south) -- (\n.north);
+  \node[cajaext] (vpn) at (6.4,-2.9) {VPN WireGuard\\(hub AWS)};
+  \node[cajasec] (sur2) at (6.4,-1.4) {Suricata + Cowrie\\en EC2-WGHUB};
+  \draw[tunel] (vpn) -- (fw); \draw[flecha] (sur2) -- (vpn);
+  \node[cajasec] (zfw) at (6.4,-4.6) {Firewall de cada zona\\(plantilla endurecida)};
+  \draw[tunel] (vpn) -- (zfw);
+\end{tikzpicture}
+\caption{Topología de seguridad: controles que atraviesa el tráfico antes de llegar a cada zona.}
+\label{fig:ce03-seguridad}
+\end{figure}
+
+\subsection{Diseño de conectividad VPN híbrida}
+
+\begin{table}[H]
+\centering
+\caption{Parámetros de la VPN (sin secretos).}
+\label{tab:ce03-vpn}
+\small
+\begin{tabularx}{\textwidth}{L{2.6cm}L{3.6cm}L{3.4cm}X}
+\toprule
+\textbf{Parámetro} & \textbf{Extremo on-premise (FW01)} & \textbf{Extremo AWS (EC2-WGHUB)} & \textbf{Extremo zona (RTR-Zxx)} \\
+\midrule
+Dispositivo & MikroTik RB5009, RouterOS 7 & Ubuntu 24.04, WireGuard (kernel) & MikroTik RB4011, RouterOS 7 \\
+Dirección de túnel & 10.10.0.2/24 & 10.10.0.1/24 & 10.10.0.(100+\textit{id})/24 \\
+Endpoint & Inicia la conexión (detrás de CGNAT) & \texttt{<EIP-HUB>} puerto 51820/UDP & Inicia la conexión \\
+Redes anunciadas & 10.20.10.0/24, 10.20.20.0/24, 10.20.50.0/24 & 10.50.0.0/16 & 172.16.\textit{id}.0/28 (gestión de zona) \\
+Tipo de túnel & WireGuard, hub-and-spoke & Hub (reenvío controlado por nftables) & WireGuard, spoke \\
+Cifrado & \multicolumn{3}{p{10.8cm}}{Noise\_IKpsk2: Curve25519, ChaCha20-Poly1305, BLAKE2s; \emph{preshared key} por peer} \\
+Keepalive & 25~s & --- & 25~s \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \node[caja,minimum width=3.4cm,minimum height=12mm,fill=green!6,draw=green!50!black] (hub) at (0,0) {\textbf{EC2-WGHUB}\\wg0 10.10.0.1 · \texttt{<EIP-HUB>}:51820\\VPC 10.50.0.0/16};
+  \node[caja,minimum width=3cm] (of) at (-5.4,-2.4) {FW01 (oficina)\\10.10.0.2\\anuncia 10.20.\{10,20,50\}.0/24};
+  \node[caja,minimum width=2.8cm] (z1) at (-1.8,-3.6) {RTR-SUCASCO\\10.10.0.101\\anuncia 172.16.1.0/28};
+  \node[caja,minimum width=2.8cm] (z2) at (1.8,-3.6) {RTR-HUATA\\10.10.0.102\\anuncia 172.16.2.0/28};
+  \node[caja,minimum width=2.8cm] (zn) at (5.4,-2.4) {RTR-zona $n$\\10.10.0.(100+$n$)\\anuncia 172.16.$n$.0/28};
+  \foreach \n in {of,z1,z2,zn} \draw[tunel] (hub) -- (\n);
+  \node[font=\tiny,align=center,text=red!60!black] at (0,-4.8) {Tráfico zona $\leftrightarrow$ zona: DENEGADO en el hub};
+\end{tikzpicture}
+\caption{Topología VPN híbrida (hub-and-spoke) y redes anunciadas por cada peer.}
+\label{fig:ce03-vpn}
+\end{figure}
+
+\begin{upeubox}{¿Por qué WireGuard y no IPsec con un VPN Gateway de AWS?}
+\begin{itemize}[leftmargin=1.2em]
+  \item La oficina y varias zonas están detrás de CGNAT, sin IP pública fija; una
+  conexión Site-to-Site de AWS necesita un \emph{customer gateway} con IP pública y se
+  factura por conexión (serían 14).
+  \item El sistema (CE02) ya administra peers WireGuard (alta/baja y estado del
+  \emph{handshake}); el diseño reutiliza esa capacidad en vez de introducir otra
+  tecnología.
+  \item WireGuard tiene un código mucho más pequeño que IPsec, criptografía moderna
+  fija (sin negociación de algoritmos débiles) y RouterOS~7 lo soporta de forma nativa.
+\end{itemize}
+Contrapartida: el hub es una instancia que WISP administra (parches, nftables). Se
+mitiga con una plantilla de lanzamiento (AMI) y la recuperación descrita en el
+\cref{chap:ce03-dc}.
+\end{upeubox}
+
+\begin{upeubox}{Cambio respecto al AS-IS: las LAN de clientes ya no viajan por la VPN}
+Hoy el sistema agrega la LAN de clientes de cada zona a los \emph{AllowedIPs} del peer.
+Como varias zonas pueden repetir la misma /24, WireGuard solo podría enrutar una de
+ellas. En el diseño TO-BE cada zona anuncia únicamente su red de gestión
+172.16.\textit{id}.0/28, que es única; la LAN de clientes se queda local. En la
+implementación se ajusta el parámetro \texttt{lan\_network} del endpoint de alta de
+peers (\texttt{zonas.py}).
+\end{upeubox}
+
+\subsection{Diagrama de flujo de información planeado}
+
+{\small
+\begin{longtable}{L{3cm}L{3.1cm}L{3.3cm}L{4.3cm}}
+\caption{Flujos de información: origen, protocolo/puerto y destino.}\label{tab:ce03-flujos}\\
+\toprule
+\textbf{Origen} & \textbf{Protocolo · puerto} & \textbf{Destino} & \textbf{Propósito} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Origen} & \textbf{Protocolo · puerto} & \textbf{Destino} & \textbf{Propósito} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+Usuario / app móvil & HTTPS · 443 & Cloudflare & Acceso al panel, API y sitio. \\
+cloudflared (PROXY-01) & QUIC/HTTPS · 7844/443 saliente & Cloudflare & Túnel de publicación (sin puertos de entrada). \\
+PROXY-01 (Nginx) & HTTP · 8000 & APP-01 & API REST. \\
+PROXY-01 (Nginx) & HTTP · 3000 / 3002 & APP-01 & Panel web y sitio público. \\
+APP-01 & PostgreSQL · 5432 & DB-01 & Datos del sistema. \\
+APP-01 & SSH · 22 (por VPN) & EC2-WGHUB & Alta/baja de peers y estado del túnel. \\
+APP-01 & SSH · 22 / API-SSL · 8729 (por VPN) & RTR de zona & PPPoE, perfiles, corte y reactivación. \\
+APP-01 & HTTPS · 443 & WhatsApp, APIs Perú & Avisos y consulta de DNI/RUC. \\
+MON-01 & SNMPv3 · 161/UDP (por VPN) & RTR y OLT de zona & Monitoreo de disponibilidad y tráfico. \\
+RTR / OLT de zona & Syslog · 514/UDP, traps · 162/UDP & SIEM-01 / MON-01 & Eventos de firewall, accesos y alarmas. \\
+DB-01 & PostgreSQL · 5432 (por VPN) & EC2-DR & Réplica en flujo (contingencia). \\
+APP-01 / DB-01 & HTTPS · 443 & S3 (AWS) & Respaldos cifrados fuera de la oficina. \\
+ONU del cliente & PPPoE (capa 2, VLAN 10) & RTR de zona & Autenticación y servicio. \\
+Cliente & Todo tráfico & ISP local de la zona & Navegación (no pasa por la VPN). \\
+Administrador (VLAN 10) & SSH · 22, Winbox · 8291 (por VPN) & RTR de zona & Administración manual excepcional. \\
+\end{longtable}
+}
+
+\subsection{Matriz de componentes de red}
+
+{\small
+\begin{longtable}{L{2.7cm}L{3.2cm}L{2.2cm}L{3.9cm}L{1.4cm}}
+\caption{Matriz de componentes de red (cubre todo lo dibujado en las topologías).}\label{tab:ce03-componentes-red}\\
+\toprule
+\textbf{Componente} & \textbf{IP planeada} & \textbf{Zona} & \textbf{Función} & \textbf{Criticidad} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Componente} & \textbf{IP planeada} & \textbf{Zona} & \textbf{Función} & \textbf{Criticidad} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+FW01 (RB5009) & .1 de cada VLAN; 10.10.0.2 & Perímetro & Firewall, enrutamiento, peer VPN & Alta \\
+SW-CORE (CRS326) & 10.20.10.2 & Gestión & Switch troncal, puerto espejo & Alta \\
+ESXI-01 & 10.20.10.10 & Gestión & Hipervisor & Alta \\
+APP-01 & 10.20.20.10 & Servidores & Backend, panel, WhatsApp & Alta \\
+DB-01 & 10.20.20.11 & Servidores & PostgreSQL 15 & Alta \\
+NAS-01 & 10.20.20.20 / 10.20.10.20 & Servidores & Respaldos locales & Media \\
+PROXY-01 & 10.20.40.10 & DMZ & Nginx + cloudflared & Alta \\
+HONEY-01 & 10.20.40.66 & DMZ & Honeypot interno (OpenCanary) & Media \\
+IDS-01 & 10.20.50.10 & Seguridad & Suricata (IDS) & Media \\
+SIEM-01 & 10.20.50.11 & Seguridad & Wazuh (SIEM) & Media \\
+MON-01 & 10.20.50.12 & Seguridad & Zabbix (monitoreo) & Media \\
+Estaciones de oficina & 10.20.30.100--200 & Usuarios & Trabajo administrativo & Baja \\
+EC2-WGHUB & 10.50.1.10 + EIP; 10.10.0.1 & AWS pública & Hub VPN, Suricata, Cowrie & Alta \\
+EC2-DR & 10.50.2.10 & AWS privada & Réplica de contingencia & Media \\
+Internet Gateway & --- & AWS & Salida de la subred pública & Alta \\
+S3 (respaldos) & Endpoint de VPC & AWS & Almacenamiento de respaldos & Media \\
+RTR-Zxx (13) & 10.10.0.(100+\textit{id}); 172.16.\textit{id}.1 & Zona & PPPoE, colas, NAT, firewall & Alta \\
+OLT-Zxx (13) & 172.16.\textit{id}.2 & Zona (gestión) & Concentrador GPON & Alta \\
+\end{longtable}
+}
+
+% ======================================================================
+\section{Diseño de conectividad híbrida}
+
+Los peers de zona y la oficina inician la conexión hacia la IP elástica del hub (por
+eso funciona aunque estén detrás de CGNAT) y la mantienen con \emph{keepalive} de
+25~s. El hub reenvía tráfico entre peers solo según la política de la
+\cref{tab:ce03-hub-politica}; no hace NAT, para que los routers vean la IP real del
+servidor que los administra y puedan filtrar por ella.
+
+\begin{table}[htbp]
+\centering
+\caption{Política de reenvío en el hub (nftables): todo lo no listado se descarta y registra.}
+\label{tab:ce03-hub-politica}
+\small
+\begin{tabularx}{\textwidth}{L{3.4cm}L{3.6cm}L{2.6cm}X}
+\toprule
+\textbf{Origen} & \textbf{Destino} & \textbf{Servicio} & \textbf{Motivo} \\
+\midrule
+APP-01 (10.20.20.10) & RTR de zona (10.10.0.101--199) & TCP 22, 8729 & Gestión del sistema \\
+MON-01, SIEM-01 & RTR y OLT (172.16.0.0/16) & UDP 161, ICMP & Monitoreo \\
+RTR / OLT de zona & SIEM-01, MON-01 & UDP 514, 162 & Logs y alarmas \\
+DB-01 (10.20.20.11) & EC2-DR (10.50.2.10) & TCP 5432 & Réplica \\
+GESTIÓN (10.20.10.0/24) & RTR de zona, VPC & TCP 22, 8291 & Administración manual \\
+Zona & Otra zona & Todo & \textbf{Denegado} (aislamiento) \\
+Zona & Oficina (salvo logs) & Todo & \textbf{Denegado} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection*{Matriz de pruebas de conectividad planeadas}
+\label{sec:ce03-pruebas}
+
+{\small
+\begin{longtable}{L{0.9cm}L{6.4cm}L{2.6cm}L{3.6cm}}
+\caption{Pruebas de conectividad que se ejecutarán en el semestre 2.}\label{tab:ce03-pruebas}\\
+\toprule
+\textbf{ID} & \textbf{Prueba planeada} & \textbf{Resultado esperado} & \textbf{Evidencia} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Prueba planeada} & \textbf{Resultado esperado} & \textbf{Evidencia} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+PC-01 & Oficina (APP-01) $\rightarrow$ AWS (EC2-DR), ping y TCP 5432 & Permitido (VPN) & \texttt{ping}, \texttt{psql} \\
+PC-02 & AWS (EC2-DR) $\rightarrow$ oficina (DB-01) por VPN & Permitido solo 5432 & \texttt{nc -zv} \\
+PC-03 & APP-01 $\rightarrow$ RTR-SUCASCO SSH por 10.10.0.101 & Permitido & Sesión SSH + log \\
+PC-04 & \emph{Handshake} WireGuard de cada zona & $< 180$~s & \texttt{wg show}, panel del sistema \\
+PC-05 & RTR-SUCASCO $\rightarrow$ RTR-HUATA (ping 10.10.0.102) & Denegado y registrado & Log del hub \\
+PC-06 & Internet $\rightarrow$ Winbox/SSH de un router de zona por su WAN & Denegado & \texttt{nmap} externo \\
+PC-07 & DMZ (PROXY-01) $\rightarrow$ AWS & Denegado & \texttt{nc} \\
+PC-08 & Internet $\rightarrow$ subred privada de AWS & Denegado & \texttt{nmap} + VPC Flow Logs \\
+PC-09 & USUARIOS $\rightarrow$ GESTIÓN (ESXi 443) & Denegado & Log de FW01 \\
+PC-10 & Cliente moroso navega a cualquier web & Redirigido a la página de aviso & Captura \\
+PC-11 & Caída de WAN1 en zona crítica & Conmuta a WAN2 en $< 60$~s & Log del failover \\
+PC-12 & Caída del hub: el servicio de internet de los clientes continúa & Sin impacto en clientes & Prueba de navegación \\
+PC-13 & MON-01 consulta SNMPv3 a la OLT de SUCASCO (172.16.1.2) & Permitido & Gráfica en Zabbix \\
+\end{longtable}
+}
+
+% ======================================================================
+\section{Diseño de seguridad perimetral}
+
+\subsection{Firewall}
+
+\begin{table}[H]
+\centering
+\caption{Firewall perimetral de la oficina (FW01).}
+\label{tab:ce03-fw01}
+\small
+\begin{tabularx}{\textwidth}{L{3cm}X}
+\toprule
+Producto & MikroTik RB5009UG+S+IN con RouterOS~7: misma plataforma que las 13 zonas (una sola curva de aprendizaje), firewall con estado, VLAN, WireGuard nativo y puerto SFP+ hacia el switch. \\
+Interfaces & \texttt{ether1} WAN (ISP); \texttt{sfp-sfpplus1} troncal 802.1Q hacia SW-CORE (VLAN 10--50); \texttt{ether8} gestión fuera de banda; \texttt{wg-hub} túnel a AWS. \\
+Zonas & WAN, GESTIÓN, SERVIDORES, USUARIOS, DMZ, SEGURIDAD, VPN. \\
+Política por defecto & \texttt{input}: descartar; \texttt{forward}: descartar. Se aceptan conexiones establecidas/relacionadas, se descartan las inválidas y se registra todo lo descartado. \\
+Criterio de reglas & Mínimo privilegio por origen, destino y puerto según la \cref{tab:ce03-matriz-vlan}; cada regla con comentario que referencia el requerimiento o riesgo; revisión trimestral. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+En las zonas, el hallazgo más grave del análisis es la ausencia total de reglas de
+filtrado. La \cref{tab:ce03-asis-tobe} resume el endurecimiento planificado y el
+\cref{lst:ce03-plantilla} la plantilla que se aplicará en cada router.
+
+\begin{table}[htbp]
+\centering
+\caption{Router de zona: AS-IS (SUCASCO) frente a TO-BE.}
+\label{tab:ce03-asis-tobe}
+\small
+\begin{tabularx}{\textwidth}{L{3cm}L{4.6cm}X}
+\toprule
+\textbf{Aspecto} & \textbf{AS-IS (export real)} & \textbf{TO-BE (diseño)} \\
+\midrule
+Filtro de firewall & Sin reglas en \texttt{/ip firewall filter} & \emph{Default deny} en \texttt{input} y \texttt{forward} \\
+Servicios de gestión & Por defecto: telnet, ftp, www, ssh, api, winbox abiertos & telnet, ftp, www y api deshabilitados; ssh, winbox y api-ssl solo desde direcciones de gestión \\
+DNS & Resolutor abierto (\texttt{allow-remote-requests}) & Solo desde la LAN de clientes \\
+Proxy de corte (:998) & Sin restricción de origen & Solo desde la LAN de clientes \\
+Gestión remota & SSTP a dos VPS & WireGuard al hub en AWS \\
+Red de la OLT & ether9 192.168.100.0/24 (repetida en todas las zonas) & VLAN 99 172.16.\textit{id}.0/28 \\
+Descubrimiento de vecinos & Por defecto en todas las interfaces & Solo en la LAN \\
+Registro y hora & Sin syslog remoto ni NTP & Syslog al SIEM, cliente NTP \\
+Failover WAN & Scripts para 4 ISP, solo 1 activo & WAN2 activa en zonas críticas; scripts depurados \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\lstinputlisting[style=routeros,caption={Plantilla TO-BE de router de zona (extracto, sin secretos; \texttt{ZZ} = id de zona).},label={lst:ce03-plantilla}]{config/plantilla_zona_tobe.rsc}
+
+\subsection{DMZ}
+
+En la DMZ (VLAN 40) se ubican \textbf{PROXY-01} (Nginx + cloudflared), único punto por el
+que entra el tráfico publicado, y \textbf{HONEY-01}, el señuelo interno. Gracias a
+Cloudflare Tunnel la DMZ no recibe conexiones desde internet: es PROXY-01 quien abre la
+conexión de salida. Desde la DMZ solo se alcanza APP-01 en los puertos 8000, 3000 y 3002
+y el SIEM para enviar logs; no se alcanzan la base de datos, la gestión, los usuarios
+ni la VPN. Si PROXY-01 se viera comprometido, el atacante no llegaría directamente a
+los datos ni a los routers.
+
+\subsection{Segmentación planeada}
+
+\begin{table}[H]
+\centering
+\caption{Comportamiento esperado de la segmentación (se validará en el semestre 2).}
+\label{tab:ce03-segmentacion}
+\small
+\begin{tabularx}{\textwidth}{XL{4.6cm}}
+\toprule
+\textbf{Origen $\rightarrow$ Destino} & \textbf{Resultado esperado} \\
+\midrule
+Internet $\rightarrow$ DMZ (directo) & DENEGADO (solo vía túnel de Cloudflare) \\
+Internet $\rightarrow$ LAN interna & DENEGADO \\
+DMZ $\rightarrow$ base de datos (DB-01) & DENEGADO \\
+APP-01 $\rightarrow$ DB-01 & Solo TCP 5432 \\
+Usuarios $\rightarrow$ gestión & DENEGADO \\
+Gestión $\rightarrow$ todas las VLAN & PERMITIDO \\
+Zona $\rightarrow$ zona & DENEGADO \\
+Zona $\rightarrow$ SIEM & Solo syslog y traps \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Diseño de detección — IDS/IPS y honeypot}
+\label{sec:ce03-deteccion}
+
+\begin{table}[H]
+\centering
+\caption{Planificación de la detección (se implementa en el semestre 2).}
+\label{tab:ce03-deteccion}
+\small
+\begin{tabularx}{\textwidth}{L{2.4cm}L{3.2cm}XL{3.6cm}}
+\toprule
+\textbf{Tecnología} & \textbf{Ubicación} & \textbf{Qué detectará} & \textbf{Cómo se validará} \\
+\midrule
+Suricata IDS-01 (modo IDS) & VLAN 50; recibe el espejo del troncal FW01--SW-CORE (\emph{port group} promiscuo en ESXi) & Escaneos internos, movimiento lateral, firmas de malware (ET Open), tráfico hacia RouterOS (Winbox) desde segmentos no autorizados & \texttt{nmap} desde USUARIOS; descarga de prueba EICAR; alerta en Wazuh \\
+Suricata en EC2-WGHUB (modo IPS en línea sobre \texttt{wg0}) & Hub en AWS & Tráfico anómalo desde un router de zona comprometido (patrones de botnet RouterOS), escaneos a la IP elástica & Ping zona$\rightarrow$zona; escaneo controlado desde una zona de laboratorio \\
+Cowrie (honeypot SSH) & EC2-WGHUB, puerto público TCP 22 (la administración real va por AWS Systems Manager) & Intentos de fuerza bruta, credenciales y comandos usados por atacantes reales & Intento de login SSH desde internet; sesión registrada en Cowrie y Wazuh \\
+OpenCanary HONEY-01 & DMZ (10.20.40.66) & Cualquier conexión interna a servicios señuelo (SSH, HTTP, telnet, banner TCP 8291): nadie legítimo debería tocarlo & Conexión desde USUARIOS; alerta inmediata \\
+Wazuh SIEM-01 & VLAN 50 & Correlación de alertas de Suricata, Cowrie, OpenCanary, syslog de FW01 y de las zonas & Tablero con las alertas de las pruebas anteriores \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\section{Consideraciones de escalabilidad y disponibilidad}
+
+\begin{itemize}
+  \item \textbf{Direccionamiento:} el overlay 10.10.0.0/24 admite hasta 154 zonas
+  (.101--.254) y el bloque 172.16.0.0/16 de gestión, más de 4000 zonas /28; cada VLAN de
+  la oficina usa una /24 con amplio margen.
+  \item \textbf{Nuevas zonas:} alta de la zona en el sistema, generación de llaves en el
+  router, aplicación de la plantilla y alta del peer desde el panel. No se toca la
+  configuración de las demás.
+  \item \textbf{Aislamiento por diseño:} la caída del hub solo afecta la gestión; el
+  internet de los clientes sale por el ISP local de cada zona (PC-12).
+  \item \textbf{Redundancia:} WAN secundaria con failover en las zonas de mayor
+  demanda; hub reconstruible en minutos desde una AMI (\cref{chap:ce03-dc}).
+  \item \textbf{Capacidad del hub:} la gestión consume menos de 2~Mbps; WireGuard en una
+  instancia de 2 vCPU soporta cientos de Mbps, de modo que el crecimiento no exige
+  cambiar de instancia.
+\end{itemize}
+
+% ======================================================================
+\section{Conclusiones del diseño y siguientes pasos}
+
+El diseño transforma 13 islas administradas a mano, sin firewall, en una red
+segmentada y gestionada por una VPN única con política de mínimo privilegio, apoyada
+en lo que el sistema de gestión ya sabe hacer. Queda pendiente para el entregable
+\emph{Implementación, testing y monitoreo de red} del semestre~2:
+
+\begin{enumerate}
+  \item Desplegar EC2-WGHUB con nftables, Suricata y Cowrie.
+  \item Configurar FW01, SW-CORE y las 5 VLAN de la oficina.
+  \item Migrar las zonas de SSTP a WireGuard con la plantilla endurecida, empezando por SUCASCO.
+  \item Ajustar el alta de peers del sistema para anunciar la red de gestión de cada zona.
+  \item Levantar IDS-01, HONEY-01, SIEM-01 y MON-01, y ejecutar la matriz de pruebas PC-01 a PC-13.
+\end{enumerate}
+
+% ======================================================================
+\section*{Referencias}
+\addcontentsline{toc}{section}{Referencias}
+{\small
+\begin{enumerate}[label={[\arabic*]},leftmargin=2em]
+  \item ISO/IEC 27001:2022, \emph{Information security management systems --- Requirements}. Ginebra: ISO, 2022.
+  \item ISO/IEC 27002:2022, \emph{Information security controls} (controles 8.20 Seguridad de redes, 8.21 Seguridad de los servicios de red, 8.22 Segregación de redes). Ginebra: ISO, 2022.
+  \item Y. Rekhter \emph{et al.}, ``Address Allocation for Private Internets'', IETF RFC 1918, 1996.
+  \item J. A. Donenfeld, ``WireGuard: Next Generation Kernel Network Tunnel'', en \emph{Proc. NDSS}, 2017.
+  \item Amazon Web Services, ``Amazon VPC User Guide'' y ``AWS Site-to-Site VPN User Guide''. [En línea]. Disponible: https://docs.aws.amazon.com
+  \item MikroTik, ``RouterOS v7 Manual: Firewall, WireGuard, VLAN, IP Services''. [En línea]. Disponible: https://help.mikrotik.com
+  \item OISF, ``Suricata User Guide''. [En línea]. Disponible: https://docs.suricata.io
+  \item Wazuh Inc., ``Wazuh Documentation''. [En línea]. Disponible: https://documentation.wazuh.com
+  \item IEEE 802.1Q-2022, \emph{Bridges and Bridged Networks}. IEEE, 2022.
+\end{enumerate}
+}

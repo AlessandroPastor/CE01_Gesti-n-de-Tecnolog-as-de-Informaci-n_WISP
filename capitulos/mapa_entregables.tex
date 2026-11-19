@@ -1,0 +1,51 @@
+% ======================================================================
+% capitulos/mapa_entregables.tex
+% Mapa de entregables del Proyecto de Evaluación de Fin de Carrera, según la
+% codificación de la transcripción oficial (upeuoficial/planb, transcripcion.md).
+% ======================================================================
+\chapter*{Mapa de Entregables del Proyecto}
+\addcontentsline{toc}{chapter}{Mapa de Entregables del Proyecto}
+\markboth{Mapa de entregables}{}
+
+El documento agrupa los entregables de las tres líneas de especialidad según la
+codificación oficial de la evaluación de fin de carrera. Cada capítulo corresponde a un
+entregable y comienza con una ficha que indica la línea, el entregable, los códigos de
+competencia que evalúa y su estado.
+
+{\small
+\begin{longtable}{L{2.1cm}L{1.5cm}L{6.1cm}L{1.7cm}L{2.2cm}}
+\caption{Entregables por línea, código de competencia y ubicación en el documento.}\label{tab:mapa-entregables}\\
+\toprule
+\textbf{Códigos} & \textbf{Momento} & \textbf{Entregable} & \textbf{Capítulo} & \textbf{Estado} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Códigos} & \textbf{Momento} & \textbf{Entregable} & \textbf{Capítulo} & \textbf{Estado} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\multicolumn{5}{l}{\cellcolor{upeublue!10}\textbf{CE01 --- Gestión de Tecnologías de Información}} \\
+CE0111--CE0115 & S1 · E1 & Diagnóstico Organizacional y Alineamiento Estratégico & \ref{chap:diagnostico} & Completo \\
+CE0113 & S1 · E2 & Business Case del Proyecto & \ref{chap:businesscase} & Completo \\
+CE0121--CE0125 & S1 · E3 & Plan de Gestión del Proyecto & \ref{chap:plangestion} & Completo \\
+CE0131--CE0135 & S1 · E4 & Modelado de Procesos AS-IS / TO-BE & \ref{chap:procesos} & Completo \\
+CE0141--CE0145 & S2 · E5 & Propuesta de Solución TIC Integrada & \ref{chap:soluciontic} & Completo \\
+\multicolumn{5}{l}{\cellcolor{upeublue!10}\textbf{CE02 --- Ingeniería de Software}} \\
+CE021 & S1 · E1 & Requerimientos y Diseño del Sistema & \ref{chap:ce02-e1} & Completo (acta por firmar) \\
+CE022 & S2 · E2 & Plataforma de Datos del Sistema & \ref{chap:ce02-datos} & Completo en laboratorio \\
+CE023 & S2 · E3 & Sistema de Software Funcional Integrado & \ref{chap:ce02-e3} & En producción (capturas de la app por tomar) \\
+CE024 & S2 · E4 & Gestión del Proyecto y Calidad de Software & \ref{chap:ce02-e4} & Completo (CI por activar) \\
+\multicolumn{5}{l}{\cellcolor{upeublue!10}\textbf{CE03 --- Infraestructura Tecnológica}} \\
+CE0311 & S1 · E1 & Análisis y Diseño de Red & \ref{chap:ce03-red} & Completo \\
+CE0331 & S1 · E2 & Análisis y Diseño de Centro de Datos Híbrido & \ref{chap:ce03-dc} & Completo \\
+CE0321--CE0324 & S2 · E1 & Planificación e Implementación del SGSI (anexos A--F y libro Excel de matrices) & \ref{chap:ce03-sgsi} & Completo (declaración por firmar) \\
+CE0312--CE0313 & S2 · E2 & Implementación, Testing y Monitoreo de Red & --- & Pendiente \\
+CE0332--CE0333 & S2 · E3 & Implementación, Gestión y Control de Centro de Datos & --- & Pendiente \\
+\end{longtable}
+}
+
+\noindent Los entregables pendientes dependen de la implementación real (despliegue del
+hub en AWS, del host ESXi, del pipeline de integración continua y de las pruebas
+sobre el sistema en producción); se incorporarán como capítulos nuevos en la parte de
+su línea cuando exista la evidencia técnica correspondiente.

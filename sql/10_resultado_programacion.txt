@@ -1,0 +1,56 @@
+--- P1: días de mora del cliente 2 (suspendido) al 18/11/2026
+ dias_mora 
+-----------
+        26
+(1 row)
+
+--- P2: sp_registrar_pago reactiva al cliente suspendido y audita
+CALL
+ id | estado | vencimiento_extendido 
+----+--------+-----------------------
+  2 | activo | t
+(1 row)
+
+    tipo    |               descripcion                
+------------+------------------------------------------
+ activacion | Reactivación automática por pago 2026-11
+(1 row)
+
+ pago_id | operacion | usuario_bd | operacion_bancaria 
+---------+-----------+------------+--------------------
+       5 | I         | postgres   | OP-0100
+(1 row)
+
+--- P3: mes con formato inválido (debe fallar y no dejar nada a medias)
+psql:/tmp/07_pruebas_programacion.sql:15: ERROR:  Mes inválido (formato AAAA-MM): 11-2026
+CONTEXT:  PL/pgSQL function sp_registrar_pago(integer,double precision,character varying,character varying,character varying,integer) line 9 at RAISE
+ pagos_con_op_0101 
+-------------------
+                 0
+(1 row)
+
+--- P4: asignar un cliente a un borne dañado (debe fallar)
+psql:/tmp/07_pruebas_programacion.sql:19: ERROR:  El borne 8 de la caja 1 está dañado: no se puede asignar a un cliente
+CONTEXT:  PL/pgSQL function fn_validar_borne() line 4 at RAISE
+--- P5: asignar cliente a borne libre: el trigger lo marca ocupado
+UPDATE 1
+ numero | estado  | cliente_id 
+--------+---------+------------
+      1 | ocupado |          3
+(1 row)
+
+--- P6: rol de reportes ve la vista, pero no las credenciales PPPoE
+SET
+ id |      nombre       |  zona   | estado 
+----+-------------------+---------+--------
+  1 | Cliente Demo Uno  | SUCASCO | activo
+  2 | Cliente Demo Dos  | SUCASCO | activo
+  3 | Cliente Demo Tres | SUCASCO | activo
+(3 rows)
+
+psql:/tmp/07_pruebas_programacion.sql:28: ERROR:  permission denied for table clientes
+RESET
+--- P7: la aplicación no puede borrar la auditoría
+SET
+psql:/tmp/07_pruebas_programacion.sql:33: ERROR:  permission denied for table auditoria_pagos
+RESET

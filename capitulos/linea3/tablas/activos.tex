@@ -1,0 +1,34 @@
+\multicolumn{9}{l}{\textit{Información}} \\
+A01 & Base de datos de clientes, cobros y planta (PostgreSQL 15) & Resp. de sistemas & Contenedor wisp\_postgres, volumen postgres\_data & A & A & A & Conf. & Crítica \\
+A02 & Evidencias fotográficas (fachadas, cajas NAP, comprobantes) & Resp. de sistemas & Servidor de oficina, /opt/wisp-isp/media & A & M & M & Conf. & Alta \\
+A03 & Credenciales PPPoE y de routers guardadas en la base & Resp. de sistemas & Tablas clientes y zonas & A & A & M & Conf. & Crítica \\
+A04 & Secretos del sistema: .env, llaves SSH, llaves WireGuard, token del túnel & Resp. de infraestructura & Servidor de oficina, VPS, routers & A & A & A & Conf. & Crítica \\
+A05 & Configuraciones de los routers de zona (.rsc) & Resp. de infraestructura & Routers y copia del administrador & M & A & A & Conf. & Alta \\
+A06 & Respaldos de la base de datos (pg\_dump) & Resp. de sistemas & /opt/wisp-isp/backups y laptop (copia semanal) & A & A & A & Conf. & Alta \\
+A07 & Registros (logs) de contenedores, Nginx y routers & Oficial de seguridad & Servidor de oficina y routers & M & A & M & Int. & Media \\
+\multicolumn{9}{l}{\textit{Software}} \\
+A08 & Sistema de gestión: API FastAPI, panel React, sitio público & Resp. de sistemas & Contenedores wisp\_backend, wisp\_frontend, wisp\_web & A & A & A & Conf. & Crítica \\
+A09 & App móvil (técnico, vendedor, cliente) & Resp. de sistemas & Celulares del personal y clientes & M & M & M & Int. & Media \\
+A10 & Servicio de WhatsApp y su sesión vinculada & Resp. de sistemas & Contenedor wisp\_whatsapp, volumen whatsapp\_session & A & M & M & Conf. & Alta \\
+A11 & Publicación de wispfibra.com: Nginx y conector del túnel & Resp. de infraestructura & Contenedores wisp\_nginx y wisp\_cloudflared & M & A & A & Púb. & Alta \\
+\multicolumn{9}{l}{\textit{Infraestructura}} \\
+A12 & Servidor de oficina (host Docker, Ubuntu 24.04, AMD A8-7600, 4 GB, disco único) & Resp. de infraestructura & Oficina central & A & A & A & Conf. & Crítica \\
+A13 & Router de la oficina (salida a internet, sin puertos de entrada) & Resp. de infraestructura & Oficina central & M & A & A & Int. & Alta \\
+A14 & Segmentación de red de cada zona: VLAN 10 de transporte GPON/PPPoE (bridgeLAN) y red de gestión de la OLT (ether9) & Resp. de infraestructura & Routers de zona & M & A & A & Int. & Alta \\
+A15 & UPS y energía del servidor & Resp. de infraestructura & Oficina central & B & B & A & Int. & Alta \\
+A16 & Estaciones de trabajo de la oficina & Gerencia & Oficina central & M & M & M & Int. & Media \\
+\multicolumn{9}{l}{\textit{Servicios externos}} \\
+A17 & Cuenta Cloudflare: DNS de wispfibra.com y túnel publicado & Resp. de infraestructura & Cloudflare & M & A & A & Conf. & Crítica \\
+A18 & VPS con el hub WireGuard (wg0, UDP 51820) & Resp. de infraestructura & Proveedor de VPS & A & A & A & Conf. & Crítica \\
+A19 & Cuentas de proveedores (VPS, dominio, APIs Perú) & Gerencia & Portales de los proveedores & A & A & M & Conf. & Alta \\
+\multicolumn{9}{l}{\textit{Red de zonas}} \\
+A20 & 13 routers MikroTik RB4011 (PPPoE, colas, cortes) & Resp. de infraestructura & Gabinetes de zona & M & A & A & Conf. & Crítica \\
+A21 & 13 OLT VSOL (GPON) & Resp. de infraestructura & Gabinetes de zona & B & M & A & Int. & Alta \\
+A22 & Enlaces del proveedor mayorista & Gerencia & 13 zonas & B & B & A & Int. & Alta \\
+\multicolumn{9}{l}{\textit{Servicios externos}} \\
+A23 & Número de WhatsApp de la empresa & Gerencia & Teléfono vinculado & M & A & M & Conf. & Alta \\
+\multicolumn{9}{l}{\textit{Personas}} \\
+A24 & Administrador de sistemas y red & Gerencia & Oficina & — & — & A & — & Crítica \\
+A25 & Técnicos (4) y personal comercial (6) & Gerencia & Campo y tienda & — & — & M & — & Media \\
+\multicolumn{9}{l}{\textit{Intangible}} \\
+A26 & Reputación y confianza de los clientes & Gerencia & — & — & A & — & — & Alta \\

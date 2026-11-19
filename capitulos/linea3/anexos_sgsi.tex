@@ -1,0 +1,813 @@
+% ======================================================================
+% capitulos/linea3/anexos_sgsi.tex
+% ----------------------------------------------------------------------
+% ANEXOS DEL SGSI (CE03 · S2-E1). Cada anexo es un documento del equipo
+% (carpeta ProyectoEPE/sgsi), actualizado a la infraestructura real:
+%   A  Procedimiento PR-SI-001 de control de accesos (Word)
+%   B  Línea base de controles para riesgos críticos (Excel, Unidad II)
+%   C  Plan de gestión de incidentes (presentación Unidad II)
+%   D  Plan de continuidad del negocio (Word, metodología INCIBE)
+%   E  Plan de concientización y sensibilización (Word)
+%   F  Informe ético-legal y Código de Ética y Conducta (Word)
+% ======================================================================
+
+% ======================================================================
+\chapter{Procedimiento PR-SI-001: Gestión de Control de Accesos}
+\label{anx:sgsi-accesos}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{L{3cm}X}
+\toprule
+Código y versión & PR-SI-001 · versión 02 \\
+Aprueba & Gerencia General \\
+Documento de origen & \emph{Procedimiento de control de accesos --- WISP} (v01, setiembre 2026) \\
+Cambio de esta versión & Se adapta a los 4 roles reales del sistema y a la infraestructura en operación (servidor Docker, Cloudflare, VPS y routers). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Objetivo y alcance}
+Gestionar y estandarizar el alta, la modificación y la baja de accesos a los sistemas de
+información (sistema de gestión, base de datos) y a los recursos tecnológicos (servidor de
+oficina, cuenta de Cloudflare y dominio, VPS con el hub WireGuard, 13 routers MikroTik y 13
+OLT) de WISP, para proteger la confidencialidad, integridad y disponibilidad de los datos de
+la empresa y de sus clientes. Es obligatorio para todo el personal y para cualquier tercero
+con acceso lógico.
+
+\section{Base legal y normativa}
+Ley N.\textsuperscript{o}~29733 de Protección de Datos Personales; NTP-ISO/IEC 27001
+(controles A.5.15 a A.5.18 y A.8.2 a A.8.5); regulación de OSIPTEL y MTC.
+
+\section{Definiciones}
+\begin{itemize}
+  \item \textbf{RBAC:} control de acceso basado en roles. El sistema define cuatro roles
+  internos ---\texttt{admin}, \texttt{tecnico}, \texttt{vendedor\_campo} y
+  \texttt{atencion\_cliente}--- y el acceso del cliente a su cuenta con PIN.
+  \item \textbf{Cuenta privilegiada:} la que administra el servidor, la base de datos,
+  Cloudflare, la VPS o los routers.
+  \item \textbf{Cuenta de emergencia:} cuenta privilegiada sellada que custodia la Gerencia y
+  se usa solo si el administrador no está disponible.
+\end{itemize}
+
+\section{Responsabilidades}
+\begin{itemize}
+  \item \textbf{Gerencia:} aprueba altas, cambios y bajas; garantiza el mínimo privilegio;
+  custodia la cuenta de emergencia.
+  \item \textbf{Administrador de sistemas y red:} ejecuta las altas y bajas en el sistema, el
+  servidor, Cloudflare, la VPS y los routers, previa autorización.
+  \item \textbf{Oficial de seguridad:} revisa los accesos cada trimestre y audita el uso de las
+  cuentas privilegiadas.
+  \item \textbf{Usuarios:} mantienen sus credenciales en reserva y reportan de inmediato la
+  pérdida de su celular o la sospecha de uso indebido.
+\end{itemize}
+
+\section{Reglas generales}
+\begin{enumerate}
+  \item \textbf{Cuentas nominales:} prohibidas las cuentas compartidas o genéricas
+  (\texttt{admin}/\texttt{admin}, \texttt{tecnico1}). Todo acceso se vincula a una persona.
+  \item \textbf{Mínimo privilegio:} el vendedor registra clientes y ve cobertura; el técnico ve
+  solo las órdenes de sus zonas; la red (túnel, routers, IP) solo la ve el administrador.
+  \item \textbf{Acceso remoto:} los routers se administran solo por WireGuard; el servidor de
+  oficina solo desde la red interna y por SSH con llave; ningún puerto de administración
+  se publica en el túnel ni en el DNS.
+  \item \textbf{MFA:} obligatoria en Cloudflare, en el registrador del dominio y en el
+  proveedor de la VPS; el panel de administración queda detrás de Cloudflare Access.
+  \item \textbf{Contraseñas:} temporales al crear la cuenta y cambio obligatorio en el primer
+  ingreso; mínimo 12 caracteres; renovación cada 90 días en cuentas privilegiadas; el sistema
+  bloquea 15 minutos tras 8 intentos fallidos en 5 minutos.
+  \item \textbf{Secretos del sistema:} el archivo \texttt{.env} tiene permisos 600 y nunca se
+  versiona; las llaves privadas de WireGuard se generan en cada equipo.
+  \item \textbf{Cierre de sesión:} el personal cierra sesión al terminar la jornada; la sesión
+  del panel expira a las 8 horas.
+\end{enumerate}
+
+\section{Desarrollo del procedimiento}
+
+\begin{table}[H]
+\centering
+\caption{Flujo de alta, cambio y baja de accesos.}
+\label{tab:anx-accesos-flujo}
+\small
+\begin{tabularx}{\textwidth}{C{0.5cm}XL{2.4cm}L{3cm}}
+\toprule
+\textbf{N.\textsuperscript{o}} & \textbf{Actividad} & \textbf{Responsable} & \textbf{Registro} \\
+\midrule
+1 & \textbf{Solicitud:} al ingresar o cesar un colaborador se solicita el alta o la baja, indicando rol y zonas asignadas. & Gerencia & Solicitud por el canal interno oficial \\
+2 & \textbf{Evaluación:} se verifica que el rol corresponda a las funciones. & Gerencia y Oficial & --- \\
+3 & \textbf{Ejecución:} se crea el usuario en el panel con su rol y zonas (\texttt{tecnico\_zona}); si es técnico de red, se genera su peer WireGuard o su usuario de solo lectura en los routers. & Administrador & Historial del sistema; registro de RouterOS \\
+4 & \textbf{Entrega:} se entregan credenciales temporales en privado. & Administrador & Acta de entrega y compromiso de confidencialidad \\
+5 & \textbf{Primer acceso:} el usuario cambia su contraseña temporal. & Usuario & Registro del sistema \\
+6 & \textbf{Revisión trimestral:} se comparan los usuarios activos con la planilla vigente. & Oficial & Informe de revisión \\
+7 & \textbf{Baja por cese:} se desactiva el usuario en el sistema, se revoca su peer WireGuard desde el panel, se retiran sus llaves y, si tuvo acceso privilegiado, se rotan las credenciales compartidas. & Administrador & Registro de baja \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Registros}
+Acta de entrega de credenciales y compromiso de confidencialidad firmada; historial del
+sistema (usuario, fecha y acción); registros de acceso de Cloudflare, de la VPS y de RouterOS;
+informe trimestral de revisión de accesos.
+
+% ======================================================================
+\chapter{Línea Base de Controles para Riesgos Críticos}
+\label{anx:sgsi-lineabase}
+
+Este anexo conserva la matriz \emph{Controles de riesgos críticos} (Excel) elaborada en la
+Unidad~II del curso de Seguridad de la Información, cuando WISP operaba con el sistema
+heredado en PHP, registros en papel y túneles SSTP. Registra 22 combinaciones riesgo--activo
+de nivel alto (9 con valor 16 y 13 con valor 12, en la escala 1--16 de esa matriz), que se
+agrupan en cinco tipos de riesgo:
+
+\begin{table}[htbp]
+\centering
+\caption{Riesgos críticos de la línea base (Unidad II) agrupados por tipo.}
+\label{tab:anx-lineabase}
+\small
+\begin{tabularx}{\textwidth}{L{3.2cm}L{3.4cm}C{0.8cm}L{2.8cm}X}
+\toprule
+\textbf{Riesgo} & \textbf{Activos afectados} & \textbf{Valor} & \textbf{Controles Anexo A} & \textbf{Acción propuesta} \\
+\midrule
+Error o indisponibilidad del administrador único & BD heredada, cobros, credenciales, configuraciones PPPoE, registros en papel, administrador, 13 MikroTik, túneles SSTP, WhatsApp operativo (9) & 16 & 5.2, 5.3, 5.30 & Suplente capacitado, procedimientos documentados y separación de funciones. \\
+Fuga o divulgación de datos personales & BD heredada, configuraciones PPPoE, registros en papel (3) & 12 & 5.34, 5.14, 8.24 & Base de datos única cifrada; prohibir el envío de datos por WhatsApp; acuerdos de confidencialidad. \\
+Pérdida de información sin respaldos verificados & BD heredada, configuraciones PPPoE, hosting heredado (3) & 12 & 8.13, 8.9 & Respaldo diario automático de la base y de los 13 MikroTik con prueba de restauración. \\
+Mal manejo de credenciales y privilegios & Cobros, credenciales, sistema heredado PHP (3) & 12 & 5.16, 5.17, 8.15 & Cuentas nominales por rol, rotación de contraseñas, registro de accesos. \\
+Interrupción por falla de hardware o caída del mayorista & Administrador, 13 MikroTik, enlace mayorista, hosting heredado (4) & 12 & 5.30, 8.14, 5.22 & SLA con el mayorista, enlace alterno, tiempos de recuperación por zona. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Qué cambió desde la línea base}
+
+\begin{table}[H]
+\centering
+\caption{Correspondencia entre la línea base y la evaluación actual.}
+\label{tab:anx-lineabase-cambios}
+\small
+\begin{tabularx}{\textwidth}{L{3.6cm}XL{1.6cm}}
+\toprule
+\textbf{Riesgo de la línea base} & \textbf{Situación al 18/11/2026} & \textbf{Riesgo actual} \\
+\midrule
+Administrador único & Persiste: aún no hay suplente formal. & R-04 \\
+Fuga de datos personales & Reducido: los datos ya están en una base única con acceso por rol; persisten credenciales en texto plano y fotos en el repositorio. & R-02, R-10 \\
+Pérdida sin respaldos & Reducido: existe \texttt{pg\_dump} diario con 30 días de retención, pero en el mismo disco. & R-03, R-19 \\
+Mal manejo de credenciales & Reducido: cuentas nominales con bcrypt y freno a la fuerza bruta en el sistema; faltan MFA y cuentas nominales en routers. & R-05, R-07, R-09 \\
+Falla de hardware o mayorista & Persiste y se suma el servidor único de la oficina. & R-12, R-19 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ======================================================================
+\chapter{Plan de Gestión de Incidentes de Seguridad}
+\label{anx:sgsi-incidentes}
+
+Adaptación del \emph{Plan de Gestión de Incidentes} de la Unidad~II del equipo (setiembre
+2026), basado en ISO/IEC~27035, NIST SP 800-61 e ISO 22301, a la infraestructura en
+operación. Los controles del SGSI reducen la probabilidad de que un riesgo ocurra; este plan
+define qué hacer cuando, aun así, ocurre.
+
+\section{Evento, incidente y crisis}
+
+\begin{table}[H]
+\centering
+\caption{Diferencia entre evento, incidente y crisis.}
+\label{tab:anx-inc-niveles}
+\small
+\begin{tabularx}{\textwidth}{L{1.6cm}XXL{2.6cm}}
+\toprule
+& \textbf{Definición} & \textbf{Ejemplo en WISP} & \textbf{Lo gestiona} \\
+\midrule
+Evento & Algo observable que podría afectar la seguridad; la mayoría no llega a incidente. & 3 intentos fallidos de inicio de sesión de una vendedora. & Administrador (registro) \\
+Incidente & Eventos que comprometen, o muy probablemente comprometen, la C-I-D. & La cuenta de una vendedora consulta cientos de clientes a las 2 a.\,m. desde otra ciudad. & CSIRT, liderado por el Oficial \\
+Crisis & Incidente que amenaza la continuidad, la reputación o el cumplimiento legal. & Datos de los clientes publicados en redes, o 3 zonas o más sin servicio por más de 24 h. & Comité de crisis, presidido por el Gerente \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Tipos de incidente}
+
+\begin{table}[H]
+\centering
+\caption{Tipos de incidente y riesgos del SGSI asociados.}
+\label{tab:anx-inc-tipos}
+\small
+\begin{tabularx}{\textwidth}{L{3.4cm}XL{2.4cm}}
+\toprule
+\textbf{Tipo} & \textbf{Ejemplo} & \textbf{Riesgos} \\
+\midrule
+Acceso no autorizado & Credenciales robadas usadas en el panel, en la VPS o en un router. & R-01, R-05, R-07 \\
+Fuga o pérdida de datos personales & Lista de clientes filtrada; fotos de clientes expuestas. & R-02, R-10 \\
+Phishing e ingeniería social & Mensaje falso ``de Cloudflare'' o ``del proveedor'' que pide claves al administrador. & R-09 \\
+Malware y explotación & Explotación de la aplicación web o de un contenedor; ransomware en la PC administrativa. & R-13, R-15 \\
+Interrupción del servicio & Falla del servidor de oficina, caída del hub, error de configuración, corte de fibra. & R-06, R-11, R-12, R-19 \\
+Incidente físico & Robo o sabotaje de un MikroTik u OLT en campo. & R-17 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Matriz de severidad y tiempos de respuesta}
+
+\begin{table}[H]
+\centering
+\caption{Severidad, notificación interna, respuesta inicial y escalamiento. Basta con que se cumpla un criterio; ante la duda, se clasifica en el nivel superior.}
+\label{tab:anx-inc-severidad}
+\small
+\begin{tabularx}{\textwidth}{L{1.5cm}XL{1.6cm}L{1.6cm}L{2.6cm}}
+\toprule
+\textbf{Nivel} & \textbf{Criterios} & \textbf{Notificación interna} & \textbf{Respuesta inicial} & \textbf{Se activa} \\
+\midrule
+Crítico & Datos personales comprometidos; 3 o más zonas o el servidor central sin servicio; ransomware o extorsión; cuenta de Cloudflare o del dominio tomada & $\leq$ 15 min & $\leq$ 1 h & Comité de crisis + CSIRT \\
+Alto & Cuenta privilegiada comprometida sin fuga confirmada; 1 o 2 zonas sin servicio; malware en un equipo administrativo & $\leq$ 30 min & $\leq$ 2 h & CSIRT completo \\
+Medio & Cuenta operativa comprometida; degradación parcial; clic en phishing sin entregar credenciales & $\leq$ 2 h & $\leq$ 8 h & Oficial + administrador \\
+Bajo & Evento sin impacto confirmado; phishing reportado sin clic & $\leq$ 24 h & Ordinaria & Administrador \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent La severidad mide lo que ya pasó; el nivel de riesgo del SGSI mide lo que podría
+pasar. Un riesgo alto como R-02 puede materializarse como un incidente medio si se detecta y
+contiene a tiempo.
+
+\section{Equipo de respuesta (CSIRT)}
+
+\begin{table}[H]
+\centering
+\caption{Roles del CSIRT, funciones y suplentes.}
+\label{tab:anx-inc-csirt}
+\small
+\begin{tabularx}{\textwidth}{L{2.4cm}L{2.6cm}XL{2.6cm}}
+\toprule
+\textbf{Rol} & \textbf{Asignado a} & \textbf{Funciones} & \textbf{Suplente} \\
+\midrule
+Líder de crisis & Gerente & Activa el comité de crisis; autoriza notificaciones externas y gastos de emergencia. & Oficial de seguridad \\
+Coordinador & Oficial de seguridad & Clasifica la severidad, coordina, lleva la bitácora y el reporte. & Gerente \\
+Analista técnico & Administrador & Contiene y erradica en el servidor, el túnel, la VPS y los routers; restaura desde respaldo. & Técnico con cuenta de emergencia \\
+Soporte de campo & Técnicos (4) & Revisan los equipos en la zona; recogen evidencia y fotos. & Técnico de la zona vecina \\
+Atención al cliente & Personal comercial (6) & Canaliza reportes de clientes; envía solo mensajes aprobados. & Vendedora de turno \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Fases de respuesta}
+
+\begin{enumerate}
+  \item \textbf{Preparación:} CSIRT y directorio de contactos (proveedor de la VPS,
+  Cloudflare, mayorista, CNSD, ANPD, DIVINDAT) revisados cada trimestre; respaldos probados;
+  cuenta de emergencia; capacitación (Anexo~E).
+  \item \textbf{Detección y análisis:} registros del backend y de Nginx, estado de los túneles
+  WireGuard en el panel, alertas de monitoreo y reportes de campo; se abre el ticket
+  \texttt{INC-2026-NNN} y se clasifica la severidad.
+  \item \textbf{Contención:} desactivar el usuario en el sistema; invalidar todas las sesiones
+  cambiando \texttt{SECRET\_KEY} (cierra todas las sesiones abiertas); desactivar la ruta
+  pública en el túnel de Cloudflare si el panel está comprometido; revocar el peer WireGuard
+  desde el panel; detener el contenedor afectado; aislar el router de zona.
+  \item \textbf{Erradicación:} parche, rotación de credenciales y del token del túnel,
+  corrección de la configuración.
+  \item \textbf{Recuperación:} restaurar desde el último respaldo verificado, validar la
+  integridad y vigilar de 24 a 48 horas.
+  \item \textbf{Lecciones aprendidas:} reunión en $\leq$ 5 días hábiles; se actualizan el
+  registro de riesgos y, si hace falta, la SoA.
+\end{enumerate}
+
+\section{Playbooks}
+
+\begin{table}[H]
+\centering
+\caption{Playbook 1 --- Acceso no autorizado a datos de clientes (R-02). Severidad: crítico.}
+\label{tab:anx-inc-pb1}
+\small
+\begin{tabularx}{\textwidth}{L{1.6cm}X}
+\toprule
+\textbf{Tiempo} & \textbf{Acción} \\
+\midrule
+T + 0 & \textbf{Detectar:} el registro del backend muestra una cuenta consultando cientos de fichas fuera de horario desde una IP fuera de Puno. \\
+T + 15 min & \textbf{Reportar y clasificar:} el Oficial abre el ticket, lo clasifica como crítico y avisa al Gerente. \\
+T + 1 h & \textbf{Contener:} desactivar la cuenta, cambiar \texttt{SECRET\_KEY} para cerrar todas las sesiones, bloquear la IP en Cloudflare. \\
+T + 2 h & \textbf{Preservar evidencia:} exportar registros de Nginx, del backend y de Cloudflare y calcular su \emph{hash}; no reiniciar el servidor todavía. \\
+T + 24 h & \textbf{Erradicar:} identificar el origen (contraseña filtrada o phishing), rotar credenciales, activar MFA. \\
+$\leq$ 48 h & \textbf{Notificar:} a la ANPD y al CNSD; a los clientes afectados, sin dilación, si hay alto riesgo. \\
+$\leq$ 5 días & \textbf{Aprender:} informe post-incidente; actualizar R-02, la capacitación y los umbrales de alerta. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Playbook 2 --- Caída del servicio en varias zonas (R-06, R-11, R-12). Severidad: crítico si son 3 o más zonas.}
+\label{tab:anx-inc-pb2}
+\small
+\begin{tabularx}{\textwidth}{L{1.6cm}X}
+\toprule
+\textbf{Tiempo} & \textbf{Acción} \\
+\midrule
+T + 0 & \textbf{Detectar:} el panel marca varios túneles WireGuard caídos y llegan reclamos de las mismas zonas. \\
+T + 10 min & \textbf{Diagnosticar:} ¿energía, fibra, configuración, hub o ataque? Revisar primero el último cambio registrado y el estado de la VPS. \\
+T + 15 min & \textbf{Informar:} mensaje oficial a los clientes de las zonas afectadas con la hora de la próxima actualización. \\
+T + 1 h & \textbf{Contener:} revertir la configuración al último respaldo; si falla el hub, reconstruirlo en otra VPS; si es daño físico, enviar al técnico. \\
+$\leq$ 4 h & \textbf{Recuperar (RTO):} servicio restablecido y verificado zona por zona. \\
+Mismo día & \textbf{Registrar:} interrupción en el registro para OSIPTEL; reportarla si es masiva; calcular compensaciones. \\
+$\leq$ 5 días & \textbf{Aprender:} control de cambios obligatorio; todo cambio se prueba primero en una sola zona. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Playbook 3 --- Compromiso del servidor de oficina o del túnel (R-05, R-13, R-19). Severidad: crítico.}
+\label{tab:anx-inc-pb3}
+\small
+\begin{tabularx}{\textwidth}{L{1.6cm}X}
+\toprule
+\textbf{Tiempo} & \textbf{Acción} \\
+\midrule
+T + 0 & \textbf{Detectar:} cambios no autorizados en el DNS o en el túnel, contenedores desconocidos, uso anómalo de CPU o del disco, o el panel publica contenido extraño. \\
+T + 15 min & \textbf{Contener la exposición:} desactivar las rutas públicas del túnel en Cloudflare (el sitio deja de publicarse sin tocar el servidor). \\
+T + 30 min & \textbf{Recuperar el control de las cuentas:} cambiar contraseñas y MFA de Cloudflare y del dominio; revisar miembros y tokens de la cuenta. \\
+T + 1 h & \textbf{Preservar evidencia:} copiar registros de Docker, Nginx y del sistema; tomar el \emph{hash}; desconectar el servidor de la red solo después. \\
+$\leq$ 8 h & \textbf{Recuperar:} levantar el sistema en un equipo limpio con el último respaldo verificado y un token nuevo del túnel; rotar todos los secretos del \texttt{.env}. \\
+$\leq$ 48 h & \textbf{Notificar:} CNSD (incidente crítico) y ANPD si hubo acceso a datos personales. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Detección e indicadores de compromiso}
+
+\begin{table}[H]
+\centering
+\caption{Fuentes de detección, umbrales de alerta y responsables.}
+\label{tab:anx-inc-ioc}
+\small
+\begin{tabularx}{\textwidth}{L{2.8cm}L{3.2cm}XL{1.8cm}}
+\toprule
+\textbf{Fuente} & \textbf{Qué vigila} & \textbf{Umbral de alerta} & \textbf{La recibe} \\
+\midrule
+Registro del sistema & Inicios de sesión, consultas, cambios de rol & 5 o más intentos fallidos en 10 min; acceso fuera de horario; más de 50 fichas consultadas en 10 min & Administrador \\
+Estado WireGuard (panel) & Túneles de las 13 zonas & Túnel sin \emph{handshake} por más de 3 min & Administrador \\
+Servidor de oficina & Contenedores, CPU, disco, respaldo & Contenedor detenido más de 2 min; disco sobre 90\,\%; respaldo diario no generado & Administrador \\
+Cloudflare & DNS, túnel, miembros de la cuenta & Cambio de DNS o de rutas no registrado; nuevo miembro o token & Oficial \\
+Personal y clientes & Equipos, mensajes, fallas & Equipo faltante; mensaje que pide claves o pagos; 5 o más reclamos de una zona en 15 min & Oficial \\
+Terceros & Avisos de proveedores, CNSD & Cualquier aviso de seguridad o de corte & Gerente \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Notificación externa}
+
+\begin{table}[H]
+\centering
+\caption{A quién, cuándo y en qué plazo se notifica (según la revisión normativa del equipo, octubre de 2026; se confirma con el texto vigente antes de aplicar).}
+\label{tab:anx-inc-notificacion}
+\small
+\begin{tabularx}{\textwidth}{L{2.4cm}XL{2.4cm}L{2.2cm}}
+\toprule
+\textbf{Entidad} & \textbf{Cuándo} & \textbf{Plazo} & \textbf{Responsable} \\
+\midrule
+CNSD (PCM) & Incidente crítico de seguridad digital (WISP es proveedor de internet) & 48 h desde que se conoce & Gerente con el Oficial \\
+ANPD (MINJUSDH) & Incidente que afecta datos personales de clientes & 48 h & Oficial \\
+Clientes afectados & Alto riesgo para sus derechos & Sin dilación & Comercial, mensaje aprobado \\
+OSIPTEL & Interrupción masiva; registro de toda interrupción & Según su reglamento de calidad & Administrador / Gerente \\
+DIVINDAT y Fiscalía & Indicios de delito informático (Ley N.\textsuperscript{o}~30096) & Lo antes posible & Gerente \\
+Proveedores & Cuando el origen o la solución dependen de ellos & Inmediato & Administrador \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Gestión de crisis y comunicación}
+El comité de crisis lo forman el Gerente (preside y es vocero único), el Oficial (coordina y
+notifica), el Administrador (recuperación técnica), un representante comercial (mensajes a
+clientes) y un asesor legal externo si hay datos personales o posible delito. Se activa con
+un incidente crítico y se cierra cuando el servicio lleva 24 h estable, la causa está
+erradicada, las notificaciones se enviaron y el informe post-crisis se entregó en $\leq$ 5
+días hábiles. Reglas de comunicación: un solo vocero, solo hechos confirmados, actualizaciones
+con hora fija y el recordatorio de que WISP nunca pide claves ni pagos por WhatsApp.
+
+\section{Pruebas, indicadores y hoja de ruta}
+
+\begin{table}[H]
+\centering
+\caption{Ejercicios y metas del plan de incidentes.}
+\label{tab:anx-inc-pruebas}
+\small
+\begin{tabularx}{\textwidth}{XL{2.2cm}X}
+\toprule
+\textbf{Ejercicio o indicador} & \textbf{Frecuencia / meta} & \textbf{Escenario} \\
+\midrule
+Ejercicio de mesa & Semestral & Playbook 1 (fuga de datos) \\
+Prueba de restauración & Trimestral & Restaurar la base en un equipo de prueba \\
+Simulacro de caída de zona & Anual & Playbook 2 \\
+Simulacro de compromiso del túnel & Anual & Playbook 3 (desactivar y reactivar rutas) \\
+Phishing simulado & Semestral & Personal comercial y técnico \\
+MTTD de incidentes de disponibilidad & $\leq$ 30 min & --- \\
+MTTR de una zona & $\leq$ 4 h & --- \\
+Notificaciones legales en plazo & 100\,\% & --- \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent\textbf{Hoja de ruta:} 0--3 meses: aprobar el plan, designar al Oficial, formar el
+CSIRT y el directorio, activar alertas; 3--6 meses: primer ejercicio de mesa, MFA en todas las
+cuentas privilegiadas, control de cambios en routers; 6--12 meses: simulacros de los playbooks
+2 y 3, medición de MTTD y MTTR, revisión por la dirección.
+
+% ======================================================================
+\chapter{Plan de Continuidad del Negocio}
+\label{anx:sgsi-continuidad}
+
+Adaptación del \emph{Plan de Continuidad del Negocio frente al riesgo crítico de la
+organización} del equipo (octubre 2026), elaborado con la metodología de seis fases de INCIBE
+y la referencia de ISO 22301. Responde a la pregunta: ¿cómo sobrevive WISP si un evento
+interrumpe sus procesos críticos durante un tiempo prolongado?
+
+\section{Alcance y tipo de plan}
+Es un \textbf{Plan de Continuidad del Negocio} (no solo un plan TIC), con enfoque por proceso,
+porque en una empresa de 11 personas los procesos críticos dependen a la vez de tecnología,
+personas, proveedores y procedimientos manuales. Cubre a todo el personal, la oficina central
+con el servidor de gestión, las 13 zonas y los proveedores críticos.
+
+\section{Comité de Continuidad del Negocio (CCN)}
+
+\begin{table}[H]
+\centering
+\caption{Comité de Continuidad del Negocio.}
+\label{tab:anx-pcn-ccn}
+\small
+\begin{tabularx}{\textwidth}{L{3.4cm}L{2.6cm}X}
+\toprule
+\textbf{Rol en el CCN} & \textbf{Rol en WISP} & \textbf{Responsabilidad} \\
+\midrule
+Presidente & Gerente & Decide la activación, autoriza recursos de emergencia, dirige la comunicación con proveedores y autoridades. \\
+Coordinador de continuidad & Oficial de seguridad & Coordina la ejecución, evalúa el alcance y mantiene el plan actualizado. \\
+Recuperación de información y sistemas & Administrador & Restaura el servidor, la base de datos, el túnel, la VPS y los routers. \\
+Logística y terreno & Técnicos & Recuperan fibra, routers, OLT y energía en las 13 zonas. \\
+Comunicaciones & Personal comercial & Informa a los clientes por los canales oficiales y gestiona reclamos. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Procesos críticos y Análisis de Impacto al Negocio (BIA)}
+
+\begin{table}[H]
+\centering
+\caption{BIA actualizado a la infraestructura en operación (RTO real frente a MTD).}
+\label{tab:anx-pcn-bia}
+\small
+\begin{tabularx}{\textwidth}{L{3.2cm}L{2.3cm}C{1cm}L{1.9cm}L{2.2cm}L{1.4cm}}
+\toprule
+\textbf{Proceso crítico} & \textbf{RTO real} & \textbf{MTD} & \textbf{RPO real} & \textbf{MBCO} & \textbf{Brecha} \\
+\midrule
+Provisión del servicio de internet & 24 h & 4 días & --- & $\geq$ 70\,\% de las zonas con servicio & OK \\
+Gestión de datos de clientes, cobros y facturación & $\approx$ 4 h si hay respaldo; indefinido si se pierde el disco & 7 días & 24 h (mismo disco) / 7 días (copia semanal) & Padrón vigente y 3 meses de cobros & Atención \\
+Atención al cliente y soporte & 24 h & 5 días & --- & 1 persona en el canal oficial & OK \\
+Administración de sistemas, red y accesos & 8 h con suplente / indefinido sin él & 48 h & 24 h & 1 persona capacitada & Atención \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent En el BIA original (octubre 2026) la gestión de datos tenía una brecha
+\textbf{crítica}: los registros vivían en papel y WhatsApp, sin respaldo. Con el sistema en
+producción y su \texttt{pg\_dump} diario, la brecha baja a \emph{atención}, pero no
+desaparece: el respaldo está en el mismo disco del único servidor, por lo que una falla de
+ese disco reproduce el escenario original.
+
+\section{El riesgo que podría quebrar a WISP}
+La pérdida irreversible de los datos de clientes y cobros sigue siendo el riesgo existencial:
+sin ese registro WISP no puede cobrar ni demostrar pagos, enfrenta sanciones de la Ley
+N.\textsuperscript{o}~29733 y pierde la confianza de una base de clientes pequeña. Hoy puede
+materializarse por la \textbf{falla del servidor único} (R-19) combinada con
+\textbf{respaldos que no salen de él} (R-03). Lo agrava la interrupción prolongada de la
+conectividad (R-12): una empresa que pierde a la vez la capacidad de cobrar y de prestar el
+servicio pierde en pocos días su ingreso y sus clientes.
+
+\section{Estrategia de continuidad}
+
+\begin{table}[H]
+\centering
+\caption{Estrategias de continuidad (INCIBE: transferir, eliminar, asumir o mitigar).}
+\label{tab:anx-pcn-estrategia}
+\small
+\begin{tabularx}{\textwidth}{L{3.2cm}L{1.6cm}XL{1.6cm}}
+\toprule
+\textbf{Riesgo} & \textbf{Estrategia} & \textbf{Acciones} & \textbf{Plazo} \\
+\midrule
+Pérdida de datos / servidor único (R-03, R-19) & Mitigar & Copia diaria automática y cifrada fuera del servidor; disco externo; prueba trimestral; servidor definitivo con RAID~1. & 0--3 meses \\
+Corte de fibra o energía (R-12) & Mitigar & Equipos de reemplazo para las 13 zonas; UPS en puntos críticos; acuerdo con la empresa eléctrica local. & 3--6 meses \\
+Administrador único (R-04) & Mitigar & Suplente formal capacitado y procedimientos escritos. & 0--3 meses \\
+Acceso no autorizado (R-01, R-02, R-05) & Mitigar & MFA, plantilla de routers, roles de base de datos. & 3--6 meses \\
+Phishing y fraude en cobros (R-09) & Asumir + mitigar & Capacitación (Anexo~E) y monitoreo de los canales de cobro. & Continuo \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Plan de crisis}
+\begin{itemize}
+  \item \textbf{Condiciones de activación:} pérdida o alteración confirmada de los datos;
+  servidor de oficina sin servicio por más de 4 horas; interrupción de conectividad mayor a
+  24 horas en una o más zonas; administrador no disponible más de 8 horas sin suplente.
+  \item \textbf{Flujo:} detección $\rightarrow$ aviso al Coordinador $\rightarrow$ evaluación
+  frente al MBCO $\rightarrow$ activación por el Presidente $\rightarrow$ plan operativo del
+  entorno $\rightarrow$ comunicación $\rightarrow$ cierre y regreso a la normalidad.
+  \item \textbf{Prioridad de recuperación:} 1.\textsuperscript{o} datos de clientes y cobros;
+  2.\textsuperscript{o} conectividad; 3.\textsuperscript{o} sistemas y accesos;
+  4.\textsuperscript{o} oficina y personal.
+  \item \textbf{Canal:} grupo de WhatsApp del CCN respaldado por llamada directa.
+\end{itemize}
+
+\section{Planes operativos por entorno}
+
+\begin{table}[H]
+\centering
+\caption{Planes operativos de recuperación.}
+\label{tab:anx-pcn-entornos}
+\small
+\begin{tabularx}{\textwidth}{L{2.4cm}XL{2.1cm}L{1.8cm}}
+\toprule
+\textbf{Entorno} & \textbf{Acciones principales} & \textbf{Responsable} & \textbf{RTO / MTD} \\
+\midrule
+A. Datos y facturación & Restaurar el último respaldo verificado en el servidor o en un equipo de reemplazo; reconstruir lo faltante con comprobantes de pago; validar saldos con los clientes. & Administrador & 4 h / 7 días \\
+B. Red y conectividad & Diagnosticar fibra, energía o equipo; desplegar al técnico con repuestos; priorizar las zonas con más clientes. & Técnicos & 24 h / 4 días \\
+C. Sistemas y accesos & Verificar el túnel, la VPS y el servidor; aislar el componente afectado; restablecer accesos por rol. & Administrador & 8 h / 48 h \\
+D. Oficina y personal & Validar la seguridad del personal; habilitar trabajo remoto; activar al suplente. & Gerente & 24 h / 5 días \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Protocolos antes, durante y después}
+
+\begin{table}[H]
+\centering
+\caption{Protocolos de respuesta por evento disruptivo.}
+\label{tab:anx-pcn-protocolos}
+\small
+\begin{tabularx}{\textwidth}{L{2.4cm}XXX}
+\toprule
+\textbf{Evento} & \textbf{Antes} & \textbf{Durante} & \textbf{Después} \\
+\midrule
+Pérdida de datos o del servidor & Copia externa diaria; dos personas con acceso a los respaldos; procedimiento de migración probado. & No editar los datos disponibles; avisar al Coordinador; aislar el equipo sin borrarlo. & Restaurar y validar; reconstruir faltantes; informar a los clientes según la Ley 29733. \\
+Corte prolongado de conectividad & Inventario de repuestos; UPS; acuerdo con la empresa eléctrica. & Diagnosticar; informar a los clientes; desplegar al técnico. & Verificar el servicio; compensar si corresponde; reponer inventario. \\
+Ciberataque o intrusión & MFA, respaldos verificados, capacitación anti-phishing. & Activar el plan de incidentes (Anexo~C); desconectar lo afectado si no se contiene. & Restaurar desde copias no afectadas; corregir la vulnerabilidad; informe. \\
+Ausencia del administrador & Suplente capacitado; procedimientos escritos; cuenta de emergencia. & Activar al suplente o a soporte externo. & Verificar que se mantuvo el MBCO; reforzar la capacitación. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Procedimiento técnico de recuperación del servidor}
+
+Basado en la guía de despliegue del sistema (\texttt{docs/DESPLIEGUE-OFICINA.md}), sin
+secretos. Se ejecuta en un equipo de reemplazo con Ubuntu Server 24.04 y Docker:
+
+\begin{lstlisting}[style=plano]
+# 1. Recuperar del almacenamiento externo: respaldo de la base, archivo de evidencias y .env cifrado
+# 2. Clonar el repositorio y colocar el .env (permisos 600)
+docker compose up -d postgres
+gunzip -c db_AAAA-MM-DD.sql.gz | docker exec -i wisp_postgres psql -U <USUARIO> <BASE>
+tar xzf media.tar.gz -C /opt/wisp-isp
+# 3. Crear un token nuevo del túnel en Cloudflare y ponerlo en el .env
+docker compose -f docker-compose.yml -f docker-compose.cloudflare.yml up -d --build
+# 4. Verificar: contenedores en ejecución, panel accesible por el dominio, conteo de clientes y pagos
+\end{lstlisting}
+
+\noindent El dominio no cambia: el mismo nombre DNS apunta al túnel nuevo. La sesión de
+WhatsApp se pierde y se vuelve a vincular escaneando el código QR.
+
+\section{Pruebas, mantenimiento y regreso a la normalidad}
+
+\begin{table}[H]
+\centering
+\caption{Programa anual de pruebas del plan.}
+\label{tab:anx-pcn-pruebas}
+\small
+\begin{tabularx}{\textwidth}{L{2.6cm}XL{1.6cm}X}
+\toprule
+\textbf{Responsable} & \textbf{Simulacro} & \textbf{Frecuencia} & \textbf{Objetivo} \\
+\midrule
+Administrador & Restauración completa del servidor en otro equipo & Anual (base de datos: trimestral) & RTO real menor que 4 h \\
+Técnicos & Corte de conectividad en una zona & Anual & Medir despliegue y reemplazo \\
+Gerente & Activación del suplente del administrador & Anual & Operar sin el titular \\
+Oficial & Simulación de intrusión o phishing & Anual & Coordinación con el plan de incidentes \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent El plan se revisa cada año o ante un cambio significativo (migración al servidor
+definitivo o al diseño híbrido, nuevas zonas, cambios en el CCN). Al cerrar una contingencia,
+el CCN elabora un informe con evidencias, se reponen los equipos dañados, se verifica el
+MBCO y se registra el evento en el registro de incidentes.
+
+% ======================================================================
+\chapter{Plan de Concientización y Sensibilización}
+\label{anx:sgsi-concientizacion}
+
+Adaptación del \emph{Plan de Concientización y Sensibilización en Seguridad de la
+Información} del equipo (setiembre 2026), basado en el control A.6.3 de ISO/IEC~27001:2022 y
+en NIST SP 800-16 y 800-50. Es el componente humano del SGSI: la mayoría de los riesgos
+priorizados (phishing, manejo de datos, credenciales, configuración manual) dependen del
+comportamiento de las personas.
+
+\section{Objetivos}
+Informar, motivar e involucrar a los 11 colaboradores en el cumplimiento de los controles del
+SGSI para reducir la probabilidad y el impacto de los riesgos: dar a conocer el SGSI y su
+política; enseñar los riesgos priorizados y sus controles; fortalecer el manejo de
+credenciales y el acceso por rol; preparar al personal para reconocer y reportar incidentes
+en los plazos del Anexo~C; reducir la dependencia del administrador único; y fomentar la
+mejora continua.
+
+\section{Audiencia y enfoque}
+
+\begin{table}[H]
+\centering
+\caption{Audiencia del plan y enfoque de la capacitación.}
+\label{tab:anx-conc-audiencia}
+\small
+\begin{tabularx}{\textwidth}{L{3.2cm}X}
+\toprule
+\textbf{Rol} & \textbf{Enfoque} \\
+\midrule
+Gerencia & Normativa aplicable, liderazgo visible del SGSI, aprobación de la política y del presupuesto; protección de sus cuentas (Cloudflare, dominio, bancos). \\
+Oficial de seguridad & ISO/IEC 27001, gestión de riesgos, controles del Anexo~A y coordinación del CSIRT. \\
+Administrador de sistemas & Acceso por rol, MFA, manejo de secretos (\texttt{.env}, llaves, token del túnel), configuración segura de routers y WireGuard, respaldos y parches. \\
+Técnicos de campo & Protección física de routers y OLT, uso de la app (no guardar fotos en el celular), reporte de anomalías. \\
+Personal comercial & Phishing e ingeniería social, manejo de datos de clientes, verificación de cobros digitales. \\
+Clientes & Uso de los canales oficiales; WISP nunca pide claves ni pagos por mensajes no oficiales. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Actividades}
+
+\begin{table}[H]
+\centering
+\caption{Plan de acción (7 actividades).}
+\label{tab:anx-conc-actividades}
+\small
+\begin{tabularx}{\textwidth}{C{0.5cm}XL{2.4cm}L{1.8cm}L{1.6cm}}
+\toprule
+\textbf{N.\textsuperscript{o}} & \textbf{Actividad y objetivo} & \textbf{Riesgos / controles} & \textbf{Cuándo} & \textbf{Frecuencia} \\
+\midrule
+1 & Encuesta de conocimiento: línea base del personal. & Todos & Mes 1 & Semestral \\
+2 & Campaña de difusión del SGSI y de la política (mensajes y afiche). & A.5.1 & Meses 1--2 & Quincenal \\
+3 & Charla de phishing e ingeniería social con el caso del playbook 1. & R-09 · A.6.3 & Mes 2 & Trimestral \\
+4 & Taller de contraseñas, MFA y acceso por rol. & R-05, R-07 · A.8.2, A.8.5 & Mes 3 & Semestral \\
+5 & Charla de protección y configuración de equipos en campo. & R-11, R-17 · A.8.9, A.7.9 & Meses 3--4 & Semestral \\
+6 & Simulacro de incidente (fases, roles y tiempos del CSIRT). & R-18 · A.5.24--5.28 & Mes 6 & Anual \\
+7 & Boletín de seguridad por WhatsApp y correo. & Todos & Todo el año & Mensual \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent Se agrega una sesión sobre el plan de continuidad (Anexo~D): el riesgo crítico, el
+rol de cada integrante del CCN y los protocolos de respuesta.
+
+\section{Cronograma, recursos y evaluación}
+\begin{itemize}
+  \item \textbf{0--3 meses:} actividades 1, 2 y 3. \textbf{3--6 meses:} 4, 5 y 6.
+  \textbf{6--12 meses:} boletín continuo, segunda encuesta y actualización del plan.
+  \item \textbf{Recursos:} facilitadores internos (Oficial y administrador), herramientas
+  gratuitas (formularios en línea, WhatsApp Business, afiches impresos) y bloques de 30 a 45
+  minutos en horario laboral, incluidos en los gastos administrativos 2026--2027.
+  \item \textbf{Indicadores:} asistencia a charlas; aprobación de cuestionarios; tasa de
+  personal que identifica el phishing simulado; incidentes reportados dentro del plazo;
+  diferencia entre la encuesta inicial y la final.
+  \item \textbf{Mejora:} revisión semestral con los resultados, los incidentes y los cambios de
+  infraestructura, alineada al ciclo PHVA del SGSI.
+\end{itemize}
+
+% ======================================================================
+\chapter{Informe Ético-Legal y Código de Ética}
+\label{anx:sgsi-etica}
+
+Síntesis del \emph{Informe ético y legal} del equipo (noviembre 2026). Su conclusión: el
+problema de WISP no es la mala fe, sino que nadie tiene a su cargo el cumplimiento; la
+gestión informal de datos, cobros y reclamos genera riesgos éticos y legales concretos.
+
+\section{Marco legal aplicable}
+
+\begin{table}[H]
+\centering
+\caption{Normas aplicables a WISP (verificadas por el equipo en noviembre de 2026; los puntos ``por verificar'' se confirman con asesoría legal).}
+\label{tab:anx-etica-marco}
+\small
+\begin{tabularx}{\textwidth}{L{2.6cm}L{4.2cm}X}
+\toprule
+\textbf{Ámbito} & \textbf{Norma} & \textbf{Obligación principal} \\
+\midrule
+Protección de datos & Ley N.\textsuperscript{o}~29733 y su Reglamento (D.S. N.\textsuperscript{o}~016-2024-JUS) & Consentimiento informado, inscripción de bancos de datos, documento de seguridad, notificación de incidentes a la ANPD en 48 h. \\
+Seguridad digital & D.U. N.\textsuperscript{o}~007-2020 y su reglamento; Ley N.\textsuperscript{o}~30096 & Notificar al CNSD los incidentes críticos de seguridad digital. \\
+Telecomunicaciones & TUO de la Ley de Telecomunicaciones y su reglamento & Concesión y registros ante el MTC; aportes. \\
+Usuarios & Condiciones de Uso y Reglamento de Calidad de OSIPTEL & Información previa, reglas de corte y reclamos, velocidad mínima garantizada, registro de interrupciones. \\
+Laboral y SST & Régimen MYPE; Ley N.\textsuperscript{o}~29783 & Contratos y planilla; IPERC, EPP y capacitación para el trabajo en altura. \\
+Hostigamiento & Ley N.\textsuperscript{o}~27942 & Política, canal de quejas y capacitación. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Obligaciones de protección de datos}
+
+\begin{table}[H]
+\centering
+\caption{Estado de las obligaciones de protección de datos personales.}
+\label{tab:anx-etica-datos}
+\small
+\begin{tabularx}{\textwidth}{L{0.7cm}XL{3.4cm}}
+\toprule
+\textbf{Cód.} & \textbf{Obligación} & \textbf{Estado} \\
+\midrule
+D1 & Consentimiento y aviso de privacidad en el contrato, la app y WhatsApp & No implementado \\
+D2 & Inscripción de los bancos de datos ``Clientes'', ``Prospectos'' y ``Trabajadores'' & No implementado \\
+D3 & Documento de seguridad y respaldos al menos semanales & Parcial (respaldo diario local) \\
+D4 & Procedimiento de notificación de incidentes a la ANPD en 48 h & Diseñado (Anexo~C) \\
+D5 & Atención de derechos de acceso, rectificación, cancelación y oposición & No implementado \\
+D6 & Contratos con encargados de tratamiento (proveedores de nube y de mensajería) & No implementado \\
+D7 & Oficial de Datos Personales & Pendiente con plazo \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Matriz de riesgos ético-legales}
+
+{\small
+\begin{longtable}{L{1.1cm}L{6.0cm}L{4.2cm}C{0.7cm}L{1.0cm}}
+\caption{Riesgos éticos y legales (P $\times$ I).}\label{tab:anx-etica-riesgos}\\
+\toprule
+\textbf{ID} & \textbf{Riesgo} & \textbf{Consecuencia legal} & \textbf{P$\times$I} & \textbf{Nivel} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Riesgo} & \textbf{Consecuencia legal} & \textbf{P$\times$I} & \textbf{Nivel} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+R-EL1 & Datos de clientes en WhatsApp, papel y celulares, sin consentimiento ni banco inscrito & Ley 29733; multas de hasta 100 UIT & 20 & Alto \\
+R-EL2 & Pagos por Yape/Plin sin comprobante electrónico ni conciliación & Incumplimiento tributario; reclamos ante OSIPTEL & 16 & Alto \\
+R-EL3 & Cortes y reclamos sin procedimiento formal ni registro & Condiciones de Uso de OSIPTEL & 16 & Alto \\
+R-EL4 & Decisiones, cobros, accesos y red concentrados en una persona sin control cruzado & Dificulta probar diligencia ante ANPD u OSIPTEL & 15 & Alto \\
+R-EL5 & Trabajo en postes sin sistema de SST formal & Ley 29783 & 15 & Alto \\
+R-EL6 & Fotos de fachadas y documentos sin informar su finalidad & Deber de información de la Ley 29733 & 12 & Medio \\
+R-EL7 & Venta sin explicar velocidad mínima, cortes ni permanencia & Ley 31207 y normas de OSIPTEL & 12 & Medio \\
+R-EL8 & Posibles brechas laborales formales (por verificar) & Multas de SUNAFIL & 12 & Medio \\
+R-EL9 & Sin código de ética, política de hostigamiento ni canal de denuncias & Ley 27942 & 12 & Medio \\
+R-EL10 & Sin procedimiento para reportar al CNSD y a OSIPTEL & Normas de seguridad digital y de calidad & 12 & Medio \\
+R-EL11 & Conflictos de interés (descuentos a conocidos, uso de material propio) & Riesgo penal y de responsabilidad & 10 & Medio \\
+R-EL12 & Disposición informal de equipos en desuso & Normas de residuos electrónicos & 6 & Bajo \\
+\end{longtable}
+}
+
+\noindent La plataforma ya reduce parte de estos riesgos: los cortes quedan registrados en el
+historial del cliente con autor y fecha (R-EL3), los pagos emiten recibo (R-EL2) y los datos
+pasan a una base con acceso por rol (R-EL1); faltan el consentimiento, la inscripción de los
+bancos y el comprobante electrónico.
+
+\section{Políticas del plan ético-legal}
+
+\begin{table}[H]
+\centering
+\caption{Políticas P1 a P8.}
+\label{tab:anx-etica-politicas}
+\small
+\begin{tabularx}{\textwidth}{L{3.6cm}X}
+\toprule
+P1 Código de Ética y Conducta & Valores, conductas esperadas y prohibidas; firma anual; régimen de consecuencias con derecho de defensa. \\
+P2 Protección de datos y confidencialidad & Consentimiento antes de registrar un prospecto; datos solo en el sistema con roles, nunca en celulares personales; fotos con aviso de finalidad. \\
+P3 Conflictos de interés y anticorrupción & Declaración jurada anual; registro de regalos mayores a S/~100; prohibición de pagos indebidos. \\
+P4 Transparencia comercial, cobros y reclamos & Hoja resumen firmada en cada venta; comprobante por cada cobro y cuenta empresarial; aviso previo de corte; reclamos registrados en plazo. \\
+P5 Seguridad y salud en el trabajo de campo & No se sube a un poste sin IPERC, EPP ni permiso; trabajo en altura acompañado; reporte de todo accidente. \\
+P6 Hostigamiento y no discriminación & Tolerancia cero; delegado e investigación confidencial. \\
+P7 Canal de denuncias y no represalia & Reporte anónimo; respuesta en 15 días hábiles; protección del denunciante. \\
+P8 Cumplimiento laboral, sectorial y ambiental & Matriz legal y calendario de obligaciones; revisión trimestral; manejo de residuos electrónicos con gestor autorizado. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent El plan se ejecuta en 12 meses con un presupuesto referencial de unos S/~7\,850
+(alrededor del 2,6\,\% del ingreso anual), frente a multas que pueden superar los S/~500\,000.
+Sus indicadores principales: personal que firmó el código (meta 100\,\%), capacitados en ética
+y hostigamiento (100\,\%), contratos con consentimiento (100\,\%), cobros con comprobante
+(100\,\%), reclamos atendidos en plazo ($\geq$ 95\,\%) y accidentes con tiempo perdido (0).
+
+\section{Código de Ética y Conducta de WISP}
+
+\begin{upeubox}{Diez compromisos de conducta (redactados en primera persona)}
+\begin{enumerate}[leftmargin=1.4em]
+  \item Digo la verdad al cliente sobre planes, precios y velocidades, incluida la velocidad mínima garantizada.
+  \item Entrego un comprobante por cada pago y uso solo las cuentas de la empresa.
+  \item Uso los datos de los clientes solo para prestar el servicio y nunca los guardo en mi celular personal.
+  \item Cuido mi vida y la de mis compañeros: no subo a un poste sin EPP ni permiso de trabajo.
+  \item Trato a todos con respeto; no tolero el acoso ni la discriminación.
+  \item Declaro cualquier conflicto de interés y no acepto regalos que influyan en mis decisiones.
+  \item No ofrezco ni acepto pagos indebidos de funcionarios, proveedores ni clientes.
+  \item Uso los materiales y equipos de WISP solo para los trabajos de WISP.
+  \item Reporto los incidentes, errores y faltas sin temor a represalias.
+  \item Cumplo las leyes y normas del sector y pregunto cuando tengo dudas.
+\end{enumerate}
+\end{upeubox}
+
+\noindent El código se construye con la participación de técnicos y vendedoras para que sea
+propio y no solo un documento firmado. Cada colaborador firma una declaración de conocimiento
+y compromiso, que se renueva cada año.
+
+\medskip
+\begin{tabularx}{\linewidth}{L{5cm}X}
+Nombre del colaborador: & \rule{7cm}{0.4pt} \\[6pt]
+Firma y fecha: & \rule{7cm}{0.4pt} \\
+\end{tabularx}

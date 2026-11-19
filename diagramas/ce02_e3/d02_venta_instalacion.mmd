@@ -1,0 +1,35 @@
+%% Flujo implementado: captación, aprobación e instalación de un cliente de fibra
+sequenceDiagram
+    autonumber
+    actor V as Vendedor de campo (app)
+    actor A as Administrador (panel)
+    actor T as Técnico (app)
+    participant API as API FastAPI
+    participant PE as APIs Perú
+    participant DB as PostgreSQL
+    participant MK as MikroTik de la zona
+
+    V->>API: GET /consultas/documento?tipo=dni
+    API->>PE: consulta nombre (token solo en el servidor)
+    PE-->>API: nombre completo
+    API-->>V: autocompleta el formulario
+    V->>API: POST /clientes (DNI, plan, GPS, fotos)
+    API->>DB: cliente = pendiente_aprobacion
+    A->>API: GET /clientes?estado=pendiente_aprobacion
+    alt datos correctos
+        A->>API: POST /clientes/{id}/aprobar
+        API->>DB: cliente = aprobado (visible al técnico de la zona)
+        API->>MK: SSH por WireGuard: crea el secreto PPPoE con el perfil del plan
+        MK-->>API: secreto creado (o vinculado si ya existía)
+    else datos con error
+        A->>API: POST /clientes/{id}/rechazar (motivo)
+        API->>DB: cliente = rechazado
+    end
+    T->>API: GET /clientes (solo sus zonas)
+    T->>API: GET /cajas-nap/{id} (mapa de bornes)
+    T->>API: POST /clientes/{id}/instalar (borne, ONU escaneada, fotos)
+    API->>DB: borne = ocupado · ONU = instalado · cliente = activo · fecha de pago
+    API-->>T: instalación cerrada (la ONU ya autentica con su secreto PPPoE)
+    opt no se pudo instalar
+        T->>API: POST /clientes/{id}/no-instalar (motivo)
+    end

@@ -1,0 +1,34 @@
+%% Mapa del giro del negocio de WISP y módulos del sistema que lo soportan
+flowchart TB
+    subgraph GES["Procesos de gestión"]
+        direction LR
+        G1["Planes y precios<br/><i>Planes</i>"]
+        G2["Zonas y red<br/><i>Zonas · WireGuard · MikroTik</i>"]
+        G3["Finanzas<br/><i>Pagos · Gastos · Reporte de caja</i>"]
+        G4["Personal y accesos<br/><i>Usuarios · Roles y módulos</i>"]
+    end
+
+    subgraph CORE["Proceso principal: ciclo de vida del cliente"]
+        direction LR
+        P1["1. Captación<br/>vendedor · app"] --> P2["2. Aprobación<br/>admin · panel<br/>crea PPPoE"]
+        P2 --> P3["3. Instalación<br/>técnico · app"]
+        P3 --> P4["4. Servicio<br/>activo"]
+        P4 --> P5["5. Cobranza<br/>atención · panel"]
+        P5 -- "vence +<br/>días de gracia" --> P6["6. Corte<br/>09:00 o manual"]
+        P6 -- "paga" --> P7["7. Reactivación"]
+        P7 --> P4
+        P4 -- "baja" --> P8["8. Retiro<br/>de equipo"]
+    end
+
+    subgraph APO["Procesos de apoyo"]
+        direction LR
+        A1["Soporte técnico<br/><i>Averías</i> · paso 4"]
+        A2["Planta externa<br/><i>Mufas · Cajas NAP · Bornes</i> · paso 3"]
+        A3["Inventario<br/><i>ONU por serie</i> · pasos 3 y 8"]
+        A4["Comunicación<br/><i>WhatsApp</i> · pasos 5 y 6"]
+        A5["Seguimiento de campo<br/><i>Jornadas</i> · paso 1"]
+    end
+
+    G1 ~~~ G2 ~~~ G3 ~~~ G4
+    A1 ~~~ A2 ~~~ A3 ~~~ A4 ~~~ A5
+    GES ~~~ CORE ~~~ APO
